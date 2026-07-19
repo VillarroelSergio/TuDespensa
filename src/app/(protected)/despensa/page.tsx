@@ -1,7 +1,7 @@
-import { PantryList } from '@/modules/pantry/PantryList'
 import { getPantryListItems } from '@/modules/pantry/actions'
+import { PantryWorkspace } from '@/modules/pantry/PantryWorkspace'
 
 export default async function PantryPage() {
   const items = await getPantryListItems()
-  return <PantryList initialItems={items} />
+  return <PantryWorkspace initialItems={items} />
 }

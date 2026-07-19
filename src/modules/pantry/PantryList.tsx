@@ -8,7 +8,10 @@ import {
   type PresentedPantryItem,
 } from './presentation'
 
-type Props = { initialItems: PantryListItem[] }
+type Props = {
+  initialItems: PantryListItem[]
+  onMarkLow?: (item: PresentedPantryItem) => void
+}
 
 const statusCopy = {
   out: 'Se terminó',
@@ -16,18 +19,38 @@ const statusCopy = {
   available: 'Hay',
 } as const
 
-function PantryRow({ item }: { item: PresentedPantryItem }) {
+function PantryRow({
+  item,
+  onMarkLow,
+}: {
+  item: PresentedPantryItem
+  onMarkLow?: (item: PresentedPantryItem) => void
+}) {
   return (
-    <button
-      className={`pantry-row pantry-row--${item.status}`}
-      type="button"
-      aria-label={`Abrir ${item.name}. ${statusCopy[item.status]}`}
-    >
-      <span className="pantry-row__dot" aria-hidden="true" />
-      <span className="pantry-row__name">{item.name}</span>
-      {item.quantityLabel ? <span className="pantry-row__quantity">{item.quantityLabel}</span> : null}
-      <span className="pantry-row__status">{statusCopy[item.status]}</span>
-    </button>
+    <div className={`pantry-row pantry-row--${item.status}`}>
+      <button
+        className="pantry-row__detail"
+        type="button"
+        aria-label={`Abrir ${item.name}. ${statusCopy[item.status]}`}
+      >
+        <span className="pantry-row__dot" aria-hidden="true" />
+        <span className="pantry-row__name">{item.name}</span>
+        {item.quantityLabel ? (
+          <span className="pantry-row__quantity">{item.quantityLabel}</span>
+        ) : null}
+        <span className="pantry-row__status">{statusCopy[item.status]}</span>
+      </button>
+      {onMarkLow && item.status === 'available' ? (
+        <button
+          className="pantry-quick-action"
+          type="button"
+          onClick={() => onMarkLow(item)}
+          aria-label={`Marcar ${item.name} como queda poco`}
+        >
+          Queda poco
+        </button>
+      ) : null}
+    </div>
   )
 }
 
@@ -38,7 +61,7 @@ function Navigation({ className }: { className: string }) {
   </nav>
 }
 
-export function PantryList({ initialItems }: Props) {
+export function PantryList({ initialItems, onMarkLow }: Props) {
   const [query, setQuery] = useState('')
   const rows = useMemo(() => prioritizePantryItems(initialItems).filter((item) => item.name.toLocaleLowerCase('es').includes(query.toLocaleLowerCase('es'))), [initialItems, query])
   const urgent = rows.filter((item) => item.status !== 'available')
@@ -51,8 +74,8 @@ export function PantryList({ initialItems }: Props) {
       <label className="sr-only" htmlFor="pantry-search">Buscar en despensa</label>
       <input id="pantry-search" className="pantry-search" type="search" role="searchbox" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar en despensa…" />
       <section className="pantry-list" aria-label="Inventario de despensa">
-        {urgent.length ? <div className="pantry-list__priority"><h2>Requieren atención</h2>{urgent.map((item) => <PantryRow item={item} key={item.id} />)}</div> : null}
-        {regular.length ? <div className={urgent.length ? 'pantry-list__regular' : undefined}>{regular.map((item) => <PantryRow item={item} key={item.id} />)}</div> : null}
+        {urgent.length ? <div className="pantry-list__priority"><h2>Requieren atención</h2>{urgent.map((item) => <PantryRow item={item} key={item.id} onMarkLow={onMarkLow} />)}</div> : null}
+        {regular.length ? <div className={urgent.length ? 'pantry-list__regular' : undefined}>{regular.map((item) => <PantryRow item={item} key={item.id} onMarkLow={onMarkLow} />)}</div> : null}
         {!rows.length ? <p className="pantry-empty">{query ? `No encontramos «${query}».` : 'Añade lo que tienes o termina una compra.'}</p> : null}
       </section>
       {rows.length ? <p className="pantry-hint">Toca una fila para ver el detalle del producto.</p> : null}
