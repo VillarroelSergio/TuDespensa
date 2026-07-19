@@ -10,6 +10,7 @@ import {
 
 type Props = {
   initialItems: PantryListItem[]
+  onAdd?: () => void
   onMarkLow?: (item: PresentedPantryItem) => void
   onOpen?: (item: PresentedPantryItem) => void
   selectedId?: string | null
@@ -72,6 +73,7 @@ function Navigation({ className }: { className: string }) {
 
 export function PantryList({
   initialItems,
+  onAdd,
   onMarkLow,
   onOpen,
   selectedId,
@@ -86,7 +88,7 @@ export function PantryList({
   return <main className="pantry-page">
     <aside className="pantry-sidebar"><a className="pantry-brand" href="/plan"><span aria-hidden="true" /> MiDespensa</a><Navigation className="pantry-sidebar__nav" /></aside>
     <section className="pantry-content" aria-labelledby="pantry-title">
-      <header className="pantry-header"><h1 id="pantry-title">Despensa</h1><button className="pantry-add" type="button">+ Añadir producto</button></header>
+      <header className="pantry-header"><h1 id="pantry-title">Despensa</h1><button className="pantry-add" onClick={onAdd} type="button">+ Añadir producto</button></header>
       <label className="sr-only" htmlFor="pantry-search">Buscar en despensa</label>
       <input id="pantry-search" className="pantry-search" type="search" role="searchbox" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar en despensa…" />
       {status ? <p className="pantry-sync-status" aria-live="polite">{status}</p> : null}

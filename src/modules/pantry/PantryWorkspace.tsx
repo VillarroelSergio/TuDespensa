@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
-import { correctPantryItem, markPantryLow } from './actions'
+import { correctPantryItem, markPantryLow, recordPantryEntry } from './actions'
 import { PantryDetail } from './PantryDetail'
+import { PantryEntryForm } from './PantryEntryForm'
 import { PantryList } from './PantryList'
 import type { PantryListItem, PresentedPantryItem } from './presentation'
 import type { PantryMutationInput } from './types'
@@ -20,6 +21,7 @@ export function PantryWorkspace({ initialItems }: Props) {
   const [status, setStatus] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<PresentedPantryItem | null>(null)
+  const [isAdding, setIsAdding] = useState(false)
   const refresh = useCallback(() => router.refresh(), [router])
 
   useEffect(() => {
@@ -82,14 +84,43 @@ export function PantryWorkspace({ initialItems }: Props) {
     }
   }
 
+  async function handleCreate(input: {
+    zone: 'pantry'
+    foodName: string
+    trackingMode: PantryMutationInput['trackingMode']
+    approximateState: PantryMutationInput['approximateState']
+    quantity: PantryMutationInput['quantity']
+    unitCode: PantryMutationInput['unitCode']
+  }) {
+    setPendingId('new-pantry-item')
+    setStatus('')
+    try {
+      await recordPantryEntry(input)
+      setStatus(`${input.foodName}: añadido a la despensa.`)
+      setIsAdding(false)
+      refresh()
+    } catch {
+      setStatus('No hemos podido añadir el producto. Conservamos el formulario para que puedas reintentarlo.')
+    } finally {
+      setPendingId(null)
+    }
+  }
+
   return (
     <>
       <PantryList
         initialItems={initialItems}
         onMarkLow={pendingId ? undefined : handleMarkLow}
-        onOpen={(item) => setSelectedItem(item)}
+        onAdd={() => {
+          setSelectedItem(null)
+          setIsAdding(true)
+        }}
+        onOpen={(item) => {
+          setIsAdding(false)
+          setSelectedItem(item)
+        }}
         selectedId={selectedItem?.id}
-        detail={selectedItem ? <PantryDetail item={selectedItem} onClose={() => setSelectedItem(null)} onSave={handleSave} /> : null}
+        detail={isAdding ? <PantryEntryForm onClose={() => setIsAdding(false)} onSave={handleCreate} /> : selectedItem ? <PantryDetail item={selectedItem} onClose={() => setSelectedItem(null)} onSave={handleSave} /> : null}
         status={status}
       />
     </>
