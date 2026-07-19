@@ -15,6 +15,7 @@ const item = (overrides: Partial<PantryListItem>): PantryListItem => ({
   approximateState: 'plenty',
   quantity: null,
   unitCode: null,
+  consumeSoon: false,
   ...overrides,
 })
 
@@ -22,7 +23,7 @@ describe('pantry presentation', () => {
   it('places exhausted and low products before available products', () => {
     const rows = prioritizePantryItems([
       item({ id: 'available', name: 'Yogures', trackingMode: 'units', quantity: 4, unitCode: 'unit', approximateState: null }),
-      item({ id: 'low', name: 'Arroz', trackingMode: 'measure', quantity: 200, unitCode: 'g', approximateState: null }),
+      item({ id: 'low', name: 'Arroz', trackingMode: 'measure', quantity: 200, unitCode: 'g', approximateState: null, consumeSoon: true }),
       item({ id: 'out', name: 'Leche', trackingMode: 'units', quantity: 0, unitCode: 'unit', approximateState: null }),
     ])
 
@@ -31,6 +32,14 @@ describe('pantry presentation', () => {
       ['Arroz', 'low'],
       ['Yogures', 'available'],
     ])
+  })
+
+  it('does not mark a measured item as low solely because it has a quantity', () => {
+    const [macarrones] = prioritizePantryItems([
+      item({ trackingMode: 'measure', quantity: 500, unitCode: 'g', approximateState: null }),
+    ])
+
+    expect(macarrones?.status).toBe('available')
   })
 
   it('renders only the meaningful quantity for each tracking mode', () => {
