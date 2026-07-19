@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
-import { markPantryLow } from './actions'
+import { correctPantryItem, markPantryLow } from './actions'
+import { PantryDetail } from './PantryDetail'
 import { PantryList } from './PantryList'
 import type { PantryListItem, PresentedPantryItem } from './presentation'
+import type { PantryMutationInput } from './types'
 
 type Props = {
   initialItems: PantryListItem[]
@@ -17,6 +19,7 @@ export function PantryWorkspace({ initialItems }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
+  const [selectedItem, setSelectedItem] = useState<PresentedPantryItem | null>(null)
   const refresh = useCallback(() => router.refresh(), [router])
 
   useEffect(() => {
@@ -64,15 +67,31 @@ export function PantryWorkspace({ initialItems }: Props) {
     }
   }
 
+  async function handleSave(input: PantryMutationInput) {
+    setPendingId(input.itemId)
+    setStatus('')
+    try {
+      await correctPantryItem(input)
+      setStatus('Cambios guardados.')
+      setSelectedItem(null)
+      refresh()
+    } catch {
+      setStatus('No hemos podido guardar el cambio. Conservamos el detalle para que puedas reintentarlo.')
+    } finally {
+      setPendingId(null)
+    }
+  }
+
   return (
     <>
       <PantryList
         initialItems={initialItems}
         onMarkLow={pendingId ? undefined : handleMarkLow}
+        onOpen={(item) => setSelectedItem(item)}
+        selectedId={selectedItem?.id}
+        detail={selectedItem ? <PantryDetail item={selectedItem} onClose={() => setSelectedItem(null)} onSave={handleSave} /> : null}
+        status={status}
       />
-      <p className="sr-only" aria-live="polite">
-        {status}
-      </p>
     </>
   )
 }

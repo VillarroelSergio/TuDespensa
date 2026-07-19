@@ -55,6 +55,7 @@ flowchart LR
 - No ejecutar por iniciativa propia `test`, `test:e2e`, `lint`, `typecheck` ni `build`; la verificación manual queda a cargo de la persona responsable hasta que se solicite expresamente.
 - Mantener la futura automatización E2E como trabajo planificado, sin sustituirla por ejecuciones automáticas ad hoc durante el desarrollo.
 - La ruta raíz de desarrollo debe mostrar el flujo real de la aplicación: autenticación, onboarding o área principal según el estado de sesión; no páginas temporales.
+- En `next dev`, la autenticación y las redirecciones por onboarding se omiten temporalmente para revisar la interfaz local sin credenciales. Esta excepción debe limitarse a `NODE_ENV=development`; producción conserva Auth y RLS.
 
 ## Al terminar
 

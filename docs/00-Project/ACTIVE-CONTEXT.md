@@ -96,6 +96,7 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - **UX/UI:** conservar los wireframes finales como fuente de verdad y resolver en Figma únicamente las correcciones detectadas durante la revisión de implementación.
 - **Arquitectura:** Fase 3 bloque 2 — completar UI de `DESPENSA` sobre la capa de datos ya aprobada; después Recetas (Fase 4) según el plan maestro.
 - **Desarrollo:** no ejecutar verificaciones automáticamente; la persona responsable las realizará bajo demanda. Planificar una cobertura E2E automatizada antes de declarar los flujos completos.
+- **Desarrollo local:** `next dev` permite acceder a la interfaz sin autenticación ni redirecciones de onboarding; el bypass está limitado a `NODE_ENV=development` y no habilita datos privados sin sesión de Supabase.
 
 ## Bloqueos
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import {
   prioritizePantryItems,
@@ -11,6 +11,10 @@ import {
 type Props = {
   initialItems: PantryListItem[]
   onMarkLow?: (item: PresentedPantryItem) => void
+  onOpen?: (item: PresentedPantryItem) => void
+  selectedId?: string | null
+  detail?: ReactNode
+  status?: string
 }
 
 const statusCopy = {
@@ -22,16 +26,21 @@ const statusCopy = {
 function PantryRow({
   item,
   onMarkLow,
+  onOpen,
+  selected,
 }: {
   item: PresentedPantryItem
   onMarkLow?: (item: PresentedPantryItem) => void
+  onOpen?: (item: PresentedPantryItem) => void
+  selected?: boolean
 }) {
   return (
-    <div className={`pantry-row pantry-row--${item.status}`}>
+    <div className={`pantry-row pantry-row--${item.status}${selected ? ' pantry-row--selected' : ''}`}>
       <button
         className="pantry-row__detail"
         type="button"
         aria-label={`Abrir ${item.name}. ${statusCopy[item.status]}`}
+        onClick={() => onOpen?.(item)}
       >
         <span className="pantry-row__dot" aria-hidden="true" />
         <span className="pantry-row__name">{item.name}</span>
@@ -61,7 +70,14 @@ function Navigation({ className }: { className: string }) {
   </nav>
 }
 
-export function PantryList({ initialItems, onMarkLow }: Props) {
+export function PantryList({
+  initialItems,
+  onMarkLow,
+  onOpen,
+  selectedId,
+  detail,
+  status,
+}: Props) {
   const [query, setQuery] = useState('')
   const rows = useMemo(() => prioritizePantryItems(initialItems).filter((item) => item.name.toLocaleLowerCase('es').includes(query.toLocaleLowerCase('es'))), [initialItems, query])
   const urgent = rows.filter((item) => item.status !== 'available')
@@ -73,12 +89,18 @@ export function PantryList({ initialItems, onMarkLow }: Props) {
       <header className="pantry-header"><h1 id="pantry-title">Despensa</h1><button className="pantry-add" type="button">+ Añadir producto</button></header>
       <label className="sr-only" htmlFor="pantry-search">Buscar en despensa</label>
       <input id="pantry-search" className="pantry-search" type="search" role="searchbox" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar en despensa…" />
-      <section className="pantry-list" aria-label="Inventario de despensa">
-        {urgent.length ? <div className="pantry-list__priority"><h2>Requieren atención</h2>{urgent.map((item) => <PantryRow item={item} key={item.id} onMarkLow={onMarkLow} />)}</div> : null}
-        {regular.length ? <div className={urgent.length ? 'pantry-list__regular' : undefined}>{regular.map((item) => <PantryRow item={item} key={item.id} onMarkLow={onMarkLow} />)}</div> : null}
-        {!rows.length ? <p className="pantry-empty">{query ? `No encontramos «${query}».` : 'Añade lo que tienes o termina una compra.'}</p> : null}
-      </section>
-      {rows.length ? <p className="pantry-hint">Toca una fila para ver el detalle del producto.</p> : null}
+      {status ? <p className="pantry-sync-status" aria-live="polite">{status}</p> : null}
+      <div className={`pantry-workspace${detail ? ' pantry-workspace--detail' : ''}`}>
+        <div className="pantry-list-column">
+          <section className="pantry-list" aria-label="Inventario de despensa">
+            {urgent.length ? <div className="pantry-list__priority"><h2>Requieren atención</h2>{urgent.map((item) => <PantryRow item={item} key={item.id} onMarkLow={onMarkLow} onOpen={onOpen} selected={item.id === selectedId} />)}</div> : null}
+            {regular.length ? <div className={urgent.length ? 'pantry-list__regular' : undefined}>{regular.map((item) => <PantryRow item={item} key={item.id} onMarkLow={onMarkLow} onOpen={onOpen} selected={item.id === selectedId} />)}</div> : null}
+            {!rows.length ? <p className="pantry-empty">{query ? `No encontramos «${query}».` : 'Añade lo que tienes o termina una compra.'}</p> : null}
+          </section>
+          {rows.length ? <p className="pantry-hint">Toca una fila para ver el detalle del producto.</p> : null}
+        </div>
+        {detail}
+      </div>
     </section>
     <Navigation className="pantry-bottom-nav" />
   </main>

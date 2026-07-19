@@ -9,6 +9,10 @@ const protectedPaths = ['/onboarding', ...appPaths]
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
+  // Local UI work must not depend on OTP delivery or a seeded Supabase session.
+  // This branch is never reached by production deployments.
+  if (process.env.NODE_ENV === 'development') return response
+
   const { url, anonKey } = getPublicSupabaseEnvironment()
   const supabase = createServerClient<Database>(url, anonKey, {
     cookies: {
