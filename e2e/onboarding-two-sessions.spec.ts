@@ -12,18 +12,27 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 const mailpit = process.env.E2E_MAILPIT_URL ?? 'http://127.0.0.1:54324'
 
 function required(value: string | undefined, name: string) {
-  if (!value) throw new Error(`Missing ${name}; run against Supabase local with synthetic E2E credentials.`)
+  if (!value)
+    throw new Error(
+      `Missing ${name}; run against Supabase local with synthetic E2E credentials.`,
+    )
   return value
 }
 
 async function magicLinkFor(sentAfter: number): Promise<string> {
   for (let attempt = 0; attempt < 30; attempt += 1) {
-    const listing = await (await fetch(`${mailpit}/api/v1/messages?limit=1`)).json() as { messages?: { ID: string; Created: string }[] }
+    const listing = (await (
+      await fetch(`${mailpit}/api/v1/messages?limit=1`)
+    ).json()) as { messages?: { ID: string; Created: string }[] }
     const message = listing.messages?.[0]
     if (message && Date.parse(message.Created) >= sentAfter) {
-      const detail = await (await fetch(`${mailpit}/api/v1/message/${message.ID}`)).json() as { Text?: string; HTML?: string }
+      const detail = (await (
+        await fetch(`${mailpit}/api/v1/message/${message.ID}`)
+      ).json()) as { Text?: string; HTML?: string }
       const source = `${detail.Text ?? ''}\n${(detail.HTML ?? '').replaceAll('&amp;', '&')}`
-      const link = source.match(/https?:\/\/[^\s"'<>\])]+\/auth\/v1\/verify[^\s"'<>\])]*/)?.[0]
+      const link = source.match(
+        /https?:\/\/[^\s"'<>\])]+\/auth\/v1\/verify[^\s"'<>\])]*/,
+      )?.[0]
       if (link) return link
     }
     await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -31,7 +40,11 @@ async function magicLinkFor(sentAfter: number): Promise<string> {
   throw new Error('Magic link email did not arrive in Mailpit')
 }
 
-async function loginViaMagicLink(context: BrowserContext, baseUrl: string, email: string): Promise<Page> {
+async function loginViaMagicLink(
+  context: BrowserContext,
+  baseUrl: string,
+  email: string,
+): Promise<Page> {
   const page = await context.newPage()
   const sentAfter = Date.now() - 5000
   await page.goto(`${baseUrl}/login`)
@@ -48,11 +61,22 @@ async function loginViaMagicLink(context: BrowserContext, baseUrl: string, email
   return page
 }
 
-test('two sessions converge during onboarding (auth + RLS + Realtime)', async ({ browser }) => {
+test('two sessions converge during onboarding (auth + RLS + Realtime)', async ({
+  browser,
+}) => {
   test.setTimeout(180_000)
   const baseUrl = required(process.env.E2E_BASE_URL, 'E2E_BASE_URL')
-  const supabaseUrl = required(process.env.NEXT_PUBLIC_SUPABASE_URL, 'NEXT_PUBLIC_SUPABASE_URL')
-  const admin = createClient(supabaseUrl, required(process.env.SUPABASE_SERVICE_ROLE_KEY, 'SUPABASE_SERVICE_ROLE_KEY'))
+  const supabaseUrl = required(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    'NEXT_PUBLIC_SUPABASE_URL',
+  )
+  const admin = createClient(
+    supabaseUrl,
+    required(
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      'SUPABASE_SERVICE_ROLE_KEY',
+    ),
+  )
   const email = `onboarding-${Date.now()}@example.test`
 
   const first = await browser.newContext()
@@ -61,24 +85,38 @@ test('two sessions converge during onboarding (auth + RLS + Realtime)', async ({
     // Session A: real login, create household, add a first item.
     const pageA = await loginViaMagicLink(first, baseUrl, email)
     await pageA.getByRole('button', { name: 'Preparar mi despensa' }).click()
-    await expect(pageA.getByRole('heading', { name: 'Frigorífico' })).toBeVisible()
+    await expect(
+      pageA.getByRole('heading', { name: 'Frigorífico' }),
+    ).toBeVisible()
     await pageA.getByRole('combobox').fill('Leche')
     await pageA.getByRole('combobox').press('Enter')
-    await expect(pageA.getByRole('button', { name: 'Quitar Leche del frigorífico' })).toBeVisible()
+    await expect(
+      pageA.getByRole('button', { name: 'Quitar Leche del frigorífico' }),
+    ).toBeVisible()
 
     // Session B (same account, separate browser context): server snapshot resumes progress.
     const pageB = await loginViaMagicLink(second, baseUrl, email)
-    await expect(pageB.getByRole('heading', { name: 'Frigorífico' })).toBeVisible()
-    await expect(pageB.getByRole('button', { name: 'Quitar Leche del frigorífico' })).toBeVisible({ timeout: 15_000 })
+    await expect(
+      pageB.getByRole('heading', { name: 'Frigorífico' }),
+    ).toBeVisible()
+    await expect(
+      pageB.getByRole('button', { name: 'Quitar Leche del frigorífico' }),
+    ).toBeVisible({ timeout: 15_000 })
 
     // Realtime: a change in A must reach B without reloading.
     await pageA.getByRole('combobox').fill('Huevos')
     await pageA.getByRole('combobox').press('Enter')
-    await expect(pageB.getByRole('button', { name: 'Quitar Huevos del frigorífico' })).toBeVisible({ timeout: 20_000 })
+    await expect(
+      pageB.getByRole('button', { name: 'Quitar Huevos del frigorífico' }),
+    ).toBeVisible({ timeout: 20_000 })
 
     // Conflict-safe removal from B propagates back to A.
-    await pageB.getByRole('button', { name: 'Quitar Leche del frigorífico' }).click()
-    await expect(pageA.getByRole('button', { name: 'Quitar Leche del frigorífico' })).toBeHidden({ timeout: 20_000 })
+    await pageB
+      .getByRole('button', { name: 'Quitar Leche del frigorífico' })
+      .click()
+    await expect(
+      pageA.getByRole('button', { name: 'Quitar Leche del frigorífico' }),
+    ).toBeHidden({ timeout: 20_000 })
   } finally {
     await first.close()
     await second.close()
