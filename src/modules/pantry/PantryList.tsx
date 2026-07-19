@@ -15,6 +15,7 @@ type Props = {
   onAdjust?: (item: PresentedPantryItem, delta: number) => void
   onSetPresence?: (item: PresentedPantryItem, state: 'available' | 'low' | 'out') => void
   onUndo?: () => void
+  onAddToShopping?: (item: PresentedPantryItem) => void
   undoItemName?: string
   onOpen?: (item: PresentedPantryItem) => void
   selectedId?: string | null
@@ -122,6 +123,7 @@ export function PantryList({
   detail,
   status,
   onUndo,
+  onAddToShopping,
   undoItemName,
 }: Props) {
   const [query, setQuery] = useState('')
@@ -147,7 +149,7 @@ export function PantryList({
         </div>
         {detail}
       </div>
-      {onUndo && undoItemName ? <div className="pantry-toast" role="status"><span>{undoItemName} → Se terminó</span><span>Compra se conectará en la siguiente fase.</span><button onClick={onUndo} type="button">Deshacer</button></div> : null}
+      {onUndo && undoItemName ? <div className="pantry-toast" role="status"><span>{undoItemName} → Se terminó</span>{onAddToShopping ? <button onClick={() => { const item = initialItems.find((candidate) => candidate.name === undoItemName); if (item) onAddToShopping(item) }} type="button">Añadir a compra</button> : null}<button onClick={onUndo} type="button">Deshacer</button></div> : null}
     </section>
     <Navigation className="pantry-bottom-nav" />
   </main>

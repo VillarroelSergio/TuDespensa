@@ -31,6 +31,11 @@ Convertir el plan y las necesidades manuales en una lista única, compartida y v
 - CTA **Finalizar compra** solo aparece cuando hay al menos un producto marcado.
 - Supermercados, historial y edición avanzada se sitúan en menú contextual.
 
+### Implementación puente — `feature/shopping-inbox`
+
+- La lista activa ya es persistente por hogar y se actualiza en tiempo real; el alta manual y **Añadir a compra** desde Despensa consolidan el mismo producto en una sola fila.
+- Marcar o desmarcar conserva control optimista de versión e idempotencia. Esta entrega no muestra **Finalizar compra** porque C2 todavía no está implementado: ningún marcado modifica Despensa.
+
 ## C2 — Compra terminada
 
 - Activar **Finalizar compra** abre una revisión, no actualiza la despensa todavía.

@@ -12,6 +12,7 @@ import {
   markPantryLow,
   recordPantryEntry,
 } from './actions'
+import { addShoppingItem } from '@/modules/shopping/actions'
 import { PantryDetail } from './PantryDetail'
 import { PantryEntryForm } from './PantryEntryForm'
 import { PantryList } from './PantryList'
@@ -182,6 +183,20 @@ export function PantryWorkspace({ initialItems }: Props) {
     }
   }
 
+  async function handleAddToShopping(item: PresentedPantryItem) {
+    if (pendingId) return
+    setPendingId(item.id)
+    setStatus('')
+    try {
+      await addShoppingItem({ foodName: item.name, source: 'pantry' })
+      setStatus(`${item.name}: añadido a Compra.`)
+    } catch {
+      setStatus('No hemos podido añadirlo a Compra. Puedes reintentarlo.')
+    } finally {
+      setPendingId(null)
+    }
+  }
+
   async function handleCreate(input: {
     zone: 'pantry'
     foodName: string
@@ -212,6 +227,7 @@ export function PantryWorkspace({ initialItems }: Props) {
         onAdjust={pendingId ? undefined : handleAdjust}
         onSetPresence={pendingId ? undefined : handlePresence}
         onUndo={undo ? handleUndo : undefined}
+        onAddToShopping={pendingId ? undefined : handleAddToShopping}
         undoItemName={undo?.name}
         onAdd={() => {
           setSelectedItem(null)
