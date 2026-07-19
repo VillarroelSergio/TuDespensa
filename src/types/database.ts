@@ -10,7 +10,10 @@ type HouseholdOnboardingStatus = 'in_progress' | 'completed'
 type HouseholdRole = 'owner' | 'member'
 type HouseholdMemberStatus = 'active' | 'inactive'
 type PantryZone = 'fridge' | 'freezer' | 'pantry'
-type PantryMovementType = 'entry' | 'removal' | 'correction'
+type PantryMovementType =
+  'entry' | 'removal' | 'correction' | 'consumption' | 'adjustment'
+type PantryTrackingMode = 'approximate' | 'units' | 'measure'
+type PantryApproximateState = 'plenty' | 'some' | 'low' | 'out'
 type OnboardingGlobalState =
   | 'household_draft'
   | 'inventory_in_progress'
@@ -148,18 +151,21 @@ export interface Database {
           id: string
           household_id: string
           name: string
+          catalog_food_id: string | null
           created_at: string
         }
         Insert: {
           id?: string
           household_id: string
           name: string
+          catalog_food_id?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           household_id?: string
           name?: string
+          catalog_food_id?: string | null
           created_at?: string
         }
         Relationships: []
@@ -170,9 +176,12 @@ export interface Database {
           household_id: string
           location_id: string
           food_id: string
-          tracking_mode: 'approximate'
+          tracking_mode: PantryTrackingMode
           presence: boolean
           quantity: number | null
+          approximate_state: PantryApproximateState
+          unit_code: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
+          entered_at: string
           version: number
           confirmed_at: string | null
           confirmed_by: string | null
@@ -184,9 +193,12 @@ export interface Database {
           household_id: string
           location_id: string
           food_id: string
-          tracking_mode?: 'approximate'
+          tracking_mode?: PantryTrackingMode
           presence?: boolean
           quantity?: number | null
+          approximate_state?: PantryApproximateState
+          unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
+          entered_at?: string
           version?: number
           confirmed_at?: string | null
           confirmed_by?: string | null
@@ -198,9 +210,12 @@ export interface Database {
           household_id?: string
           location_id?: string
           food_id?: string
-          tracking_mode?: 'approximate'
+          tracking_mode?: PantryTrackingMode
           presence?: boolean
           quantity?: number | null
+          approximate_state?: PantryApproximateState
+          unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
+          entered_at?: string
           version?: number
           confirmed_at?: string | null
           confirmed_by?: string | null
@@ -216,6 +231,8 @@ export interface Database {
           item_id: string
           movement_type: PantryMovementType
           actor: string
+          quantity_delta: number | null
+          item_snapshot: Json
           created_at: string
         }
         Insert: {
@@ -224,6 +241,8 @@ export interface Database {
           item_id: string
           movement_type: PantryMovementType
           actor: string
+          quantity_delta?: number | null
+          item_snapshot?: Json
           created_at?: string
         }
         Update: {
@@ -232,6 +251,95 @@ export interface Database {
           item_id?: string
           movement_type?: PantryMovementType
           actor?: string
+          quantity_delta?: number | null
+          item_snapshot?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      catalog_foods: {
+        Row: {
+          id: string
+          canonical_name: string
+          category: string
+          consume_soon_after: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          canonical_name: string
+          category?: string
+          consume_soon_after?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          canonical_name?: string
+          category?: string
+          consume_soon_after?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      food_aliases: {
+        Row: {
+          id: string
+          catalog_food_id: string
+          alias: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          catalog_food_id: string
+          alias: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          catalog_food_id?: string
+          alias?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      units: {
+        Row: {
+          code: 'unit' | 'g' | 'kg' | 'ml' | 'l'
+          family: 'units' | 'mass' | 'volume'
+          label: string
+        }
+        Insert: {
+          code: 'unit' | 'g' | 'kg' | 'ml' | 'l'
+          family: 'units' | 'mass' | 'volume'
+          label: string
+        }
+        Update: {
+          code?: 'unit' | 'g' | 'kg' | 'ml' | 'l'
+          family?: 'units' | 'mass' | 'volume'
+          label?: string
+        }
+        Relationships: []
+      }
+      household_food_aliases: {
+        Row: {
+          id: string
+          household_id: string
+          food_id: string
+          alias: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          household_id: string
+          food_id: string
+          alias: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          household_id?: string
+          food_id?: string
+          alias?: string
           created_at?: string
         }
         Relationships: []
@@ -312,7 +420,20 @@ export interface Database {
         Relationships: []
       }
     }
-    Views: Record<never, never>
+    Views: {
+      pantry_consume_soon: {
+        Row: {
+          pantry_item_id: string
+          household_id: string
+          food_id: string
+          entered_at: string
+          household_food_name: string
+          category: string | null
+          consume_soon: boolean
+        }
+        Relationships: []
+      }
+    }
     Functions: {
       create_household_with_onboarding: {
         Args: { name: string; people: Json; idempotency_key: string }
@@ -332,6 +453,70 @@ export interface Database {
       }
       confirm_baseline: {
         Args: { idempotency_key: string }
+        Returns: Json
+      }
+      pantry_record_entry: {
+        Args: {
+          zone: PantryZone
+          food_name: string
+          tracking_mode: PantryTrackingMode
+          approximate_state: PantryApproximateState | null
+          quantity: number | null
+          unit_code: string | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      pantry_correct_item: {
+        Args: {
+          item_id: string
+          version: number
+          tracking_mode: PantryTrackingMode
+          approximate_state: PantryApproximateState | null
+          quantity: number | null
+          unit_code: string | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      pantry_adjust_item: {
+        Args: {
+          item_id: string
+          version: number
+          tracking_mode: PantryTrackingMode
+          approximate_state: PantryApproximateState | null
+          quantity: number | null
+          unit_code: string | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      pantry_consume_item: {
+        Args: {
+          item_id: string
+          version: number
+          tracking_mode: PantryTrackingMode
+          approximate_state: PantryApproximateState | null
+          quantity: number | null
+          unit_code: string | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      pantry_mark_low: {
+        Args: { item_id: string; version: number; idempotency_key: string }
+        Returns: Json
+      }
+      pantry_mark_out: {
+        Args: { item_id: string; version: number; idempotency_key: string }
+        Returns: Json
+      }
+      pantry_rename_household_food: {
+        Args: { food_id: string; name: string; idempotency_key: string }
+        Returns: Json
+      }
+      pantry_add_household_food_alias: {
+        Args: { food_id: string; alias: string; idempotency_key: string }
         Returns: Json
       }
     }
