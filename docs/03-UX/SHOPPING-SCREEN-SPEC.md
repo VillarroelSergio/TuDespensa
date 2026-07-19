@@ -10,7 +10,7 @@ status: proposed
 revision: 2
 updated: 2026-07-18
 notion_task: "https://app.notion.com/p/3a1ad407cbfd81a7a919c872fc2a4738"
-figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
+figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-4"
 related:
   - "[[CORE-MVP-FLOWS-SPEC]]"
   - "[[PANTRY-SCREEN-SPEC]]"

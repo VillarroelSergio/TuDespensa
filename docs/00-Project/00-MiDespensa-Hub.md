@@ -30,13 +30,13 @@ figma_scope: "627466188"
 
 El archivo maestro está organizado en cinco páginas. Antes de implementar una pantalla, se debe abrir la página del módulo correspondiente y obtener el contexto del nodo concreto; los nombres de página no sustituyen ese contexto.
 
-| Página de Figma | Módulo de código | Alcance visual |
-| --- | --- | --- |
-| `ONBOARDING` | `onboarding`, `household`, `pantry` | Alta del hogar, línea base e inventario inicial |
-| `DESPENSA` | `pantry`, `catalog` | Inventario habitual y sus estados |
-| `COMPRA` | `shopping` | Lista de compra, revisión y estados de ticket |
-| `RECETAS` | `recipes`, `recommendations` | Recetario, preferencias y sugerencias |
-| `PLAN SEMANAL` | `planning`, `recommendations` | Menú semanal y propuestas |
+| Página de Figma | Nodo de Figma | Módulo de código | Alcance visual |
+| --- | --- | --- | --- |
+| `ONBOARDING` | [0:1](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=0-1) | `onboarding`, `household`, `pantry` | Alta del hogar, línea base e inventario inicial |
+| `DESPENSA` | [29:4432](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-4432) | `pantry`, `catalog` | Inventario habitual y sus estados |
+| `COMPRA` | [29:4](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-4) | `shopping` | Lista de compra, revisión y estados de ticket |
+| `RECETAS` | Pendiente de enlace de nodo | `recipes`, `recommendations` | Recetario, preferencias y sugerencias |
+| `PLAN SEMANAL` | [29:2](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-2) | `planning`, `recommendations` | Menú semanal y propuestas |
 
 ## Documentación principal
 

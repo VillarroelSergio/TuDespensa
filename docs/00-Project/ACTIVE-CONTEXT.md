@@ -8,7 +8,7 @@ tags:
   - contexto-activo
 status: active
 updated: 2026-07-19
-notion_task: "https://app.notion.com/p/3a1ad407cbfd815d825cf4e1ceb998a9"
+notion_task: "https://app.notion.com/p/3a2ad407cbfd816daf15ea1798996c96"
 notion_architecture_task: "https://app.notion.com/p/3a1ad407cbfd81029a1be5ed18e31e6e"
 figma_project: "https://www.figma.com/files/project/627466188"
 figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
@@ -30,12 +30,12 @@ related:
 
 ### UX/UI
 
-[Diseñar wireframes del onboarding e inventario inicial](https://app.notion.com/p/3a1ad407cbfd815d825cf4e1ceb998a9)
+[Fase 3 — UI de Despensa](https://app.notion.com/p/3a2ad407cbfd816daf15ea1798996c96)
 
 - **Estado:** En curso
 - **Fase:** UX/UI
 - **Prioridad:** Alta
-- **Entregable:** wireframes finalizados y organizados por módulo en el archivo maestro de Figma.
+- **Entregable:** UI de `DESPENSA` implementada sobre la capa de datos de Fase 3, conforme al nodo de Figma `29:4432`.
 
 ### Arquitectura
 
@@ -98,5 +98,5 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 
 ## Bloqueos
 
-- **Figma:** la integración solo expone la página `ONBOARDING` del archivo maestro; `DESPENSA`, `COMPRA`, `RECETAS` y `PLAN SEMANAL` no son accesibles todavía, y sin ellas no se implementa UI (regla del plan maestro).
+- **Figma:** los nodos `ONBOARDING` ([0:1](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=0-1)), `DESPENSA` ([29:4432](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-4432)), `COMPRA` ([29:4](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-4)) y `PLAN SEMANAL` ([29:2](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-2)) están localizados. Falta el enlace de nodo de `RECETAS`; además, Figma exige seleccionar una capa en la app de escritorio antes de proporcionar el contexto de implementación de `DESPENSA`.
 - **Notion:** conexión verificada el 2026-07-19; la evidencia de Fase 2 y el estado de Fase 3 se han sincronizado con la tarea de Arquitectura.
