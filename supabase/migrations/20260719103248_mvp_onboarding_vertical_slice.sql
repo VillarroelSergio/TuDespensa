@@ -660,7 +660,8 @@ begin
 
     update public.onboarding_zone_progress
     set state = 'in_progress', updated_at = now()
-    where household_id = household_id_value and onboarding_zone_progress.zone = zone;
+    where household_id = household_id_value
+      and onboarding_zone_progress.zone = onboarding_add_pantry_item.zone;
 
     update public.onboarding_progress
     set global_state = 'inventory_in_progress', active_zone = zone, updated_at = now()
@@ -785,7 +786,8 @@ begin
 
   select onboarding_zone_progress.state into current_state
   from public.onboarding_zone_progress
-  where household_id = household_id_value and onboarding_zone_progress.zone = zone
+  where household_id = household_id_value
+    and onboarding_zone_progress.zone = onboarding_set_zone_state.zone
   for update;
 
   if current_state is null then
@@ -819,7 +821,8 @@ begin
 
   update public.onboarding_zone_progress
   set state = onboarding_set_zone_state.state, updated_at = now()
-  where household_id = household_id_value and onboarding_zone_progress.zone = zone;
+  where household_id = household_id_value
+    and onboarding_zone_progress.zone = onboarding_set_zone_state.zone;
 
   select count(*) into reviewed_zones
   from public.onboarding_zone_progress
