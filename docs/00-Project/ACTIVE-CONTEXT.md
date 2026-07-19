@@ -41,10 +41,10 @@ related:
 
 [Preparar la arquitectura técnica del MVP web](https://app.notion.com/p/3a1ad407cbfd81029a1be5ed18e31e6e)
 
-- **Estado:** En curso
+- **Estado:** Hecha
 - **Fase:** Arquitectura
 - **Prioridad:** Alta
-- **Entregable:** arquitectura técnica con stack, seguridad, sincronización, recuperación, alojamiento gratuito y alternativas.
+- **Entregable:** arquitectura técnica aceptada, con prueba E2E real de Auth, RLS y Realtime en dos sesiones.
 
 La tarea `Definir el modelo de dominio y datos` está cerrada en Notion y su resultado canónico es [[DOMAIN-DATA-MODEL]].
 
@@ -99,4 +99,4 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 ## Bloqueos
 
 - **Figma:** la integración solo expone la página `ONBOARDING` del archivo maestro; `DESPENSA`, `COMPRA`, `RECETAS` y `PLAN SEMANAL` no son accesibles todavía, y sin ellas no se implementa UI (regla del plan maestro).
-- **Notion:** la conexión de Codex devuelve HTTP 451 (autorización caducada); las tareas del carril Arquitectura de Fases 2–3 están pendientes de reflejar hasta reautorizar.
+- **Notion:** conexión verificada el 2026-07-19; la evidencia de Fase 2 y el estado de Fase 3 se han sincronizado con la tarea de Arquitectura.

@@ -201,7 +201,7 @@ El método concreto de correo de acceso y la ubicación operativa de las copias 
 - [x] Incluye accesibilidad, rendimiento móvil, observabilidad y recuperación.
 - [x] Compara alternativas y explica por qué no se usan.
 - [x] Las cuatro decisiones arquitectónicas han sido aprobadas y registradas como ADR.
-- [ ] Se ha ejecutado una prueba de concepto de autenticación, RLS y Realtime con dos sesiones.
+- [x] Se ha ejecutado una prueba de concepto de autenticación, RLS y Realtime con dos sesiones.
 
 ## 16. Protocolo de prueba técnica mínima
 
@@ -218,8 +218,8 @@ La prueba se ejecutará en un proyecto Supabase de desarrollo, con datos sintét
 
 La prueba se considerará superada solo con evidencia automatizada o capturas reproducibles de los seis escenarios. Después se podrá crear el proyecto de producción y aprovisionar las dos cuentas reales.
 
-## 17. Resultado de la prueba de base de datos
+## 17. Resultado de la prueba de base de datos y extremo a extremo
 
 La capa de PostgreSQL del POC ha superado los seis escenarios con identidades JWT sintéticas, RLS, concurrencia, idempotencia y publicación Realtime. La evidencia completa está en [[POC-TDD-EVIDENCE]].
 
-La prueba final de extremo a extremo sigue pendiente: deberá iniciar sesión con las dos cuentas reales y confirmar que un cambio publicado llega por WebSocket a un segundo navegador. No se marca el criterio global como terminado hasta disponer del cliente web.
+La prueba final de extremo a extremo también está superada: `e2e/onboarding-two-sessions.spec.ts` inicia dos sesiones mediante magic link en Mailpit y verifica la convergencia Realtime en ambos sentidos. La evidencia se ejecutó en la Fase 2 sobre datos sintéticos y completa el criterio global de Auth, RLS y Realtime.
