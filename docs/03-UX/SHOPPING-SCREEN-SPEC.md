@@ -8,9 +8,9 @@ tags:
   - compra
 status: proposed
 revision: 2
-updated: 2026-07-18
+updated: 2026-07-19
 notion_task: "https://app.notion.com/p/3a1ad407cbfd81a7a919c872fc2a4738"
-figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-4"
+figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-3290"
 related:
   - "[[CORE-MVP-FLOWS-SPEC]]"
   - "[[PANTRY-SCREEN-SPEC]]"

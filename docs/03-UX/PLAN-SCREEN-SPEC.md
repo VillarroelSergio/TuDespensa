@@ -9,9 +9,9 @@ tags:
   - responsive
 status: proposed
 revision: 1
-updated: 2026-07-18
+updated: 2026-07-19
 notion_task: "https://app.notion.com/p/3a1ad407cbfd81a7a919c872fc2a4738"
-figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-2"
+figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-5"
 related:
   - "[[CORE-MVP-FLOWS-SPEC]]"
   - "[[INFORMATION-ARCHITECTURE]]"

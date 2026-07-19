@@ -35,7 +35,7 @@ related:
 - **Estado:** En curso
 - **Fase:** UX/UI
 - **Prioridad:** Alta
-- **Entregable:** UI de `DESPENSA` implementada sobre la capa de datos de Fase 3, conforme al nodo de Figma `29:4432`.
+- **Entregable:** UI de `DESPENSA` implementada sobre la capa de datos de Fase 3, conforme al nodo de Figma `47:2`.
 
 ### Arquitectura
 
@@ -94,9 +94,9 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 ## Siguientes acciones
 
 - **UX/UI:** conservar los wireframes finales como fuente de verdad y resolver en Figma únicamente las correcciones detectadas durante la revisión de implementación.
-- **Arquitectura:** Fase 3 bloque 2 — UI de `DESPENSA` sobre la capa de datos ya aprobada, en cuanto Figma exponga la página; después Recetas (Fase 4) según el plan maestro.
+- **Arquitectura:** Fase 3 bloque 2 — completar UI de `DESPENSA` sobre la capa de datos ya aprobada; después Recetas (Fase 4) según el plan maestro.
 
 ## Bloqueos
 
-- **Figma:** los nodos `ONBOARDING` ([0:1](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=0-1)), `DESPENSA` ([29:4432](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-4432)), `COMPRA` ([29:4](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-4)) y `PLAN SEMANAL` ([29:2](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-2)) están localizados. Falta el enlace de nodo de `RECETAS`; además, Figma exige seleccionar una capa en la app de escritorio antes de proporcionar el contexto de implementación de `DESPENSA`.
+- **Figma:** los cinco nodos canónicos están accesibles y devuelven contexto de implementación: `ONBOARDING` ([7:1261](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=7-1261)), `DESPENSA` ([47:2](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=47-2)), `COMPRA` ([29:3290](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-3290)), `RECETAS` ([29:1906](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-1906)) y `PLAN SEMANAL` ([29:5](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-5)).
 - **Notion:** conexión verificada el 2026-07-19; la evidencia de Fase 2 y el estado de Fase 3 se han sincronizado con la tarea de Arquitectura.
