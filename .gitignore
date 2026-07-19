@@ -6,6 +6,8 @@
 /.next
 /out
 /coverage
+/test-results
+/playwright-report
 
 # local environment files
 .env*
