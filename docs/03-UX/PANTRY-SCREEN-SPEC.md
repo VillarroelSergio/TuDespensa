@@ -47,6 +47,12 @@ Mantener una imagen compartida de lo que hay en casa mediante correcciones liger
 - El patrón visual implementado reutiliza el panel D2 del nodo Figma `31:212`: panel lateral en escritorio y tablet, y vista consecutiva en móvil.
 - Pendiente: acciones D3 en la fila, confirmación/deshacer al marcar como terminado e integración opcional con la lista de compra.
 
+### Implementación D3 — fase `feature/pantry-d3`
+
+- Los productos por unidades incorporan `−1 / cantidad / +1`; los de peso o volumen usan incrementos de `250 g`, `0,25 kg`, `250 ml` o `0,5 l`; los aproximados muestran `Hay`, `Queda poco` y `Se terminó`.
+- `Queda poco` conserva la cantidad o presencia original mediante `attention_state`, en lugar de convertir un artículo medido a seguimiento aproximado.
+- Al llegar a cero o marcar un producto como terminado se ofrece **Deshacer** con control optimista de versión. La persistencia de **Añadir a compra** se realizará en la siguiente fase de Compra, cuando exista una lista activa real.
+
 ## D3 — Correcciones rápidas y cantidades
 
 - **Queda poco** actualiza el estado y lo prioriza para la próxima compra; no modifica una cantidad conocida ni lo añade automáticamente.

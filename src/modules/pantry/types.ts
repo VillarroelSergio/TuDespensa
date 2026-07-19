@@ -2,6 +2,7 @@ export type PantryZone = 'fridge' | 'freezer' | 'pantry'
 
 export type PantryTrackingMode = 'approximate' | 'units' | 'measure'
 export type PantryApproximateState = 'plenty' | 'some' | 'low' | 'out'
+export type PantryAttentionState = 'none' | 'low'
 export type PantryUnitCode = 'unit' | 'g' | 'kg' | 'ml' | 'l'
 
 export type PantryMutationInput = {

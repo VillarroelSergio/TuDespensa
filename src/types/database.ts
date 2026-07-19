@@ -180,6 +180,7 @@ export interface Database {
           presence: boolean
           quantity: number | null
           approximate_state: PantryApproximateState
+          attention_state: 'none' | 'low'
           unit_code: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
           entered_at: string
           version: number
@@ -197,6 +198,7 @@ export interface Database {
           presence?: boolean
           quantity?: number | null
           approximate_state?: PantryApproximateState
+          attention_state?: 'none' | 'low'
           unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
           entered_at?: string
           version?: number
@@ -214,6 +216,7 @@ export interface Database {
           presence?: boolean
           quantity?: number | null
           approximate_state?: PantryApproximateState
+          attention_state?: 'none' | 'low'
           unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
           entered_at?: string
           version?: number
@@ -509,6 +512,10 @@ export interface Database {
       }
       pantry_mark_out: {
         Args: { item_id: string; version: number; idempotency_key: string }
+        Returns: Json
+      }
+      pantry_set_attention: {
+        Args: { item_id: string; version: number; attention_state: 'none' | 'low'; idempotency_key: string }
         Returns: Json
       }
       pantry_rename_household_food: {

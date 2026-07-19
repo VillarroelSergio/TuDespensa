@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation'
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
-import { correctPantryItem, markPantryLow, recordPantryEntry } from './actions'
+import {
+  adjustPantryItem,
+  clearPantryAttention,
+  correctPantryItem,
+  markPantryLow,
+  recordPantryEntry,
+} from './actions'
 import { PantryDetail } from './PantryDetail'
 import { PantryEntryForm } from './PantryEntryForm'
 import { PantryList } from './PantryList'
@@ -22,6 +28,7 @@ export function PantryWorkspace({ initialItems }: Props) {
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<PresentedPantryItem | null>(null)
   const [isAdding, setIsAdding] = useState(false)
+  const [undo, setUndo] = useState<PresentedPantryItem | null>(null)
   const refresh = useCallback(() => router.refresh(), [router])
 
   useEffect(() => {
@@ -84,6 +91,97 @@ export function PantryWorkspace({ initialItems }: Props) {
     }
   }
 
+  async function handleAdjust(item: PresentedPantryItem, delta: number) {
+    if (pendingId || item.quantity === null) return
+    const quantity = Math.max(0, item.quantity + delta)
+    setPendingId(item.id)
+    setStatus('')
+    try {
+      const result = await adjustPantryItem({
+        itemId: item.id,
+        version: item.version,
+        trackingMode: item.trackingMode,
+        approximateState: null,
+        quantity,
+        unitCode: item.unitCode,
+      })
+      setStatus(`${item.name}: ${quantity === 0 ? 'se terminó.' : 'cantidad actualizada.'}`)
+      setUndo(quantity === 0 ? { ...item, version: result.version } : null)
+      refresh()
+    } catch {
+      setStatus('No hemos podido ajustar la cantidad. Hemos actualizado la lista.')
+      refresh()
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function handlePresence(item: PresentedPantryItem, state: 'available' | 'low' | 'out') {
+    if (pendingId) return
+    setPendingId(item.id)
+    setStatus('')
+    try {
+      if (state === 'low') {
+        await markPantryLow(item.id, item.version)
+        setStatus(`${item.name}: queda poco.`)
+      } else if (state === 'available' && item.trackingMode !== 'approximate') {
+        await clearPantryAttention(item.id, item.version)
+        setStatus(`${item.name}: hay.`)
+      } else if (item.trackingMode === 'approximate') {
+        const result = await correctPantryItem({
+          itemId: item.id,
+          version: item.version,
+          trackingMode: 'approximate',
+          approximateState: state === 'available' ? 'plenty' : 'out',
+          quantity: null,
+          unitCode: null,
+        })
+        setStatus(`${item.name}: ${state === 'out' ? 'se terminó.' : 'hay.'}`)
+        setUndo(state === 'out' ? { ...item, version: result.version } : null)
+      } else {
+        const result = await adjustPantryItem({
+          itemId: item.id,
+          version: item.version,
+          trackingMode: item.trackingMode,
+          approximateState: null,
+          quantity: 0,
+          unitCode: item.unitCode,
+        })
+        setStatus(`${item.name}: se terminó.`)
+        setUndo({ ...item, version: result.version })
+      }
+      refresh()
+    } catch {
+      setStatus('No hemos podido guardar el cambio. Hemos actualizado la lista.')
+      refresh()
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function handleUndo() {
+    if (!undo || pendingId) return
+    setPendingId(undo.id)
+    try {
+      await correctPantryItem({
+        itemId: undo.id,
+        version: undo.version,
+        trackingMode: undo.trackingMode,
+        approximateState: undo.approximateState,
+        quantity: undo.quantity,
+        unitCode: undo.unitCode,
+      })
+      setStatus(`${undo.name}: cambio deshecho.`)
+      setUndo(null)
+      refresh()
+    } catch {
+      setStatus('No hemos podido deshacer el cambio. Hemos actualizado la lista.')
+      refresh()
+    } finally {
+      setPendingId(null)
+    }
+  }
+
   async function handleCreate(input: {
     zone: 'pantry'
     foodName: string
@@ -111,6 +209,10 @@ export function PantryWorkspace({ initialItems }: Props) {
       <PantryList
         initialItems={initialItems}
         onMarkLow={pendingId ? undefined : handleMarkLow}
+        onAdjust={pendingId ? undefined : handleAdjust}
+        onSetPresence={pendingId ? undefined : handlePresence}
+        onUndo={undo ? handleUndo : undefined}
+        undoItemName={undo?.name}
         onAdd={() => {
           setSelectedItem(null)
           setIsAdding(true)
