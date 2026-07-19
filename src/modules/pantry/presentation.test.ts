@@ -6,7 +6,7 @@ import {
   type PantryListItem,
 } from './presentation'
 
-const item = (overrides: Partial<PantryListItem>): PantryListItem => ({
+const item = (overrides: Partial<PantryListItem> = {}): PantryListItem => ({
   id: 'item-1',
   foodId: 'food-1',
   name: 'Aceite de oliva',

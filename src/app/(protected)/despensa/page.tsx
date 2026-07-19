@@ -1,1 +1,7 @@
-export default function PantryPage() { return <main className="placeholder"><h1>Despensa</h1><p>Disponible próximamente. Aquí consultarás tu inventario.</p></main> }
+import { PantryList } from '@/modules/pantry/PantryList'
+import { getPantryListItems } from '@/modules/pantry/actions'
+
+export default async function PantryPage() {
+  const items = await getPantryListItems()
+  return <PantryList initialItems={items} />
+}

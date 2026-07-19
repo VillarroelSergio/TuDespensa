@@ -6,6 +6,7 @@ import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseFoodName, parseIdempotencyKey } from '@/lib/validation/onboarding'
 import type { PantryMutationInput, PantryZone } from './types'
+import type { PantryListItem } from './presentation'
 import { parsePantryTracking } from './validation'
 
 function failure(error: { code?: string; message: string }): never {
@@ -135,5 +136,29 @@ export async function addHouseholdFoodAlias(
     idempotency_key: parseIdempotencyKey(
       key ?? createIdempotencyKey('pantry_add_household_food_alias'),
     ),
+  })
+}
+
+export async function getPantryListItems(): Promise<PantryListItem[]> {
+  const supabase = await createSupabaseServerClient()
+  const { data: membership, error: membershipError } = await supabase.from('household_members').select('household_id').eq('status', 'active').maybeSingle()
+  if (membershipError) failure(membershipError)
+  if (!membership) return []
+  const householdId = membership.household_id
+  const [{ data: pantryItems, error: itemsError }, { data: consumeSoonRows, error: soonError }] = await Promise.all([
+    supabase.from('pantry_items').select('id,food_id,version,tracking_mode,approximate_state,quantity,unit_code').eq('household_id', householdId),
+    supabase.from('pantry_consume_soon').select('pantry_item_id,consume_soon').eq('household_id', householdId),
+  ])
+  if (itemsError) failure(itemsError)
+  if (soonError) failure(soonError)
+  const foodIds = (pantryItems ?? []).map((item) => item.food_id)
+  const { data: foods, error: foodsError } = foodIds.length ? await supabase.from('household_foods').select('id,name').in('id', foodIds) : { data: [], error: null }
+  if (foodsError) failure(foodsError)
+  const names = new Map((foods ?? []).map((food) => [food.id, food.name]))
+  const consumeSoon = new Map((consumeSoonRows ?? []).map((row) => [row.pantry_item_id, row.consume_soon]))
+  return (pantryItems ?? []).flatMap((item) => {
+    const name = names.get(item.food_id)
+    if (!name) return []
+    return [{ id: item.id, foodId: item.food_id, name, version: item.version, trackingMode: item.tracking_mode, approximateState: item.approximate_state, quantity: item.quantity, unitCode: item.unit_code, consumeSoon: consumeSoon.get(item.id) ?? false }]
   })
 }
