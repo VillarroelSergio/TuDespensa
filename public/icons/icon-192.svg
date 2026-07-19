@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="MiDespensa">
+  <rect width="192" height="192" rx="40" fill="#50664d"/>
+  <path d="M55 47h82v98H55z" fill="#fffdf8"/>
+  <path d="M67 71h58M67 96h58M67 121h58" stroke="#50664d" stroke-width="8" stroke-linecap="round"/>
+</svg>
