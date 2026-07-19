@@ -50,6 +50,12 @@ flowchart LR
 - Evitar crear notas para información temporal que pueda vivir en la tarea.
 - Mantener referencias cruzadas solo cuando aporten navegación real.
 
+## Preferencias de desarrollo
+
+- No ejecutar por iniciativa propia `test`, `test:e2e`, `lint`, `typecheck` ni `build`; la verificación manual queda a cargo de la persona responsable hasta que se solicite expresamente.
+- Mantener la futura automatización E2E como trabajo planificado, sin sustituirla por ejecuciones automáticas ad hoc durante el desarrollo.
+- La ruta raíz de desarrollo debe mostrar el flujo real de la aplicación: autenticación, onboarding o área principal según el estado de sesión; no páginas temporales.
+
 ## Al terminar
 
 - Añadir criterios cumplidos y evidencia a la tarea.
