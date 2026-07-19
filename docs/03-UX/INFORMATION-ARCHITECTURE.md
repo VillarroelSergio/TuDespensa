@@ -7,7 +7,7 @@ tags:
   - ux
   - arquitectura-informacion
 status: draft
-figma: "https://www.figma.com/design/5OqgkhvJnvApXAxTD40a0Z"
+figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
 notion_task: "https://app.notion.com/p/3a1ad407cbfd815d825cf4e1ceb998a9"
 related:
   - "[[00-MiDespensa-Hub]]"
@@ -53,8 +53,7 @@ El perfil, los miembros del hogar y los ajustes se abrirán desde un único acce
 
 ```mermaid
 flowchart LR
-    A["Crear hogar"] --> M["Integrantes"]
-    M --> I["Inventario inicial manual"]
+    A["Configurar hogar e integrantes"] --> I["Inventario inicial manual"]
     I --> X["Confirmar despensa inicial"]
     X --> P["Plan"]
     P --> R["Elegir receta"]
@@ -73,10 +72,12 @@ La navegación principal permanecerá oculta hasta completar o reanudar el infor
 
 ### Paso 1 — Hogar e integrantes
 
-- nombre del hogar;
-- número habitual de comensales;
-- integrantes actuales o invitaciones;
-- una sola acción: **Continuar**.
+- nombre del hogar precompletado y editable;
+- usuario actual incluido automáticamente;
+- otras personas definidas solo mediante nombre o apodo;
+- el número habitual de personas se deriva inicialmente de los integrantes;
+- invitaciones, acceso y permisos se resuelven después del onboarding;
+- una sola acción: **Preparar mi despensa**.
 
 ### Paso 2 — Alimentos disponibles
 
@@ -103,11 +104,12 @@ El progreso se guarda después de cada cambio. Si el usuario sale, regresará a 
 - edición directa de errores;
 - una acción principal: **Confirmar despensa**.
 
-Tras confirmar, el hogar queda inicializado y se ofrece una única pantalla transitoria con siguientes acciones:
+Tras confirmar, el hogar queda inicializado y se ofrece una única pantalla transitoria con:
 
-- añadir recetas;
-- crear el plan semanal;
-- cargar un ticket cuando esa capacidad esté disponible.
+- acción principal **Añadir mi primera receta**;
+- acción secundaria **Ir al plan**.
+
+La carga de tickets solo aparecerá cuando esa capacidad esté disponible y no formará parte de esta pantalla inicial.
 
 Esta pantalla aparece una vez y no se convierte en un dashboard permanente.
 
