@@ -7,7 +7,7 @@ tags:
   - proyecto
   - contexto-activo
 status: active
-updated: 2026-07-19
+updated: 2026-07-20
 notion_task: "https://app.notion.com/p/3a2ad407cbfd816daf15ea1798996c96"
 notion_architecture_task: "https://app.notion.com/p/3a1ad407cbfd81029a1be5ed18e31e6e"
 figma_project: "https://www.figma.com/files/project/627466188"
@@ -85,7 +85,7 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - Uso cerrado: un único hogar, un máximo de dos cuentas y sin crecimiento previsto.
 - Recetario inicial con recetas preferidas y mediterráneas, categorías, favoritos y puntuaciones individuales para alimentar sugerencias explicables.
 
-## Estado de implementación (2026-07-19)
+## Estado de implementación (2026-07-20)
 
 - **Fases 0–2 completadas y verificadas** en `feature/mvp-init` (fusionada en `develop`, commit `2b89e6f`): scaffold Next.js + Supabase, migración con RLS/RPCs idempotentes, auth privada OTP/magic link con callback PKCE, middleware por estado de onboarding, pantallas O1–O6 según Figma + spec, rehidratación desde servidor y Realtime notificar→reconsultar con resincronización al (re)suscribirse.
 - **Evidencia ejecutada:** lint, tsc, tests unitarios, build, test SQL de integración (patrón ROLLBACK) y **E2E real de dos sesiones** (`e2e/onboarding-two-sessions.spec.ts`, magic link vía Mailpit, convergencia Realtime en ambos sentidos) — criterio de salida de Fase 2 cumplido.
@@ -93,12 +93,13 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - **Fase 3, bloque 2 (UI DESPENSA) en curso** en `feature/pantry-d3`: lista priorizada, detalle, alta y correcciones rápidas D3 conforme a los nodos `31:212` y `32:165`. `attention_state` conserva las cantidades al marcar «Queda poco» y el terminado ofrece deshacer con versión optimista.
 - **Puente de Compra C1 implementado** en `feature/shopping-inbox`: lista activa persistente, alta manual o desde Despensa, marcado de compra y progreso con RPCs idempotentes y control optimista de versión. C2 (revisión y confirmación en Despensa) y C4 (ticket) siguen planificados para su fase propia.
 - **Fase 4A (fundamentos de Recetas) implementada** en `feature/recipes-foundation` (migración `20260720100000_recipes_foundation.sql`): modelo privado por hogar (`recipes`, `recipe_ingredients`, `recipe_steps`) con RLS de solo lectura y mutación por RPC, RPC idempotente `recipes_create_recipe` con captura progresiva (UX-REC-001), refresco Realtime y biblioteca R1 (búsqueda por título, alta rápida nombre + tipo de plato + tiempo, estado vacío y sin resultados, responsive). Test SQL de aislamiento/idempotencia y test unitario de presentación. **Deltas conscientes:** las `recipe_categories` se difieren a 4C (por ahora `dish_type` como columna); editor estructurado de ingredientes/pasos, detalle R3, señal de disponibilidad y búsqueda por ingrediente son Fase 4B.
+- **Fase 4B (editor y detalle de Recetas) implementada** en `feature/recipes-editor` (migración `20260720110000_recipes_editor.sql`): columnas `status ('pending'|'ready')` y `source_url` en `recipes`; RPC idempotente `recipes_save_recipe` que guarda la receta completa (metadatos + ingredientes con cantidad/unidad + pasos ordenados) con control optimista de versión (`serialization_failure`→CONFLICT) y reemplazo de colecciones; RPC `recipes_capture_link` que crea la receta como `pending` para revisión humana (sin OCR). UI: editor R2 (`RecipeEditor`, filas de ingredientes/pasos en línea sin modales, «Más detalles» para tipo/enlace, estados guardado/error/conflicto sin perder lo visible), detalle R3 (`RecipeDetailView`) y R2A en la biblioteca (crear manualmente / pegar enlace → editor). Tarjetas R1 ahora navegables con badge «Por revisar». Test SQL 4B (versión, idempotencia, conflicto, unidad inválida, captura pending, aislamiento) y test unitario de `formatIngredient`. **Deltas conscientes:** «Añadir al plan» y el ajuste de raciones se difieren a Fase 5 (integración con Plan); subir foto/OCR y la importación automática desde URL quedan fuera de 4B; el conflicto conserva lo visible e informa, sin merge fila a fila.
 - Flujo de trabajo: Fable 5 planifica/revisa/acepta; Codex Terra 5.6 (esfuerzo medio) implementa; correcciones de revisión documentadas en los mensajes de commit.
 
 ## Siguientes acciones
 
 - **UX/UI:** conservar los wireframes finales como fuente de verdad y resolver en Figma únicamente las correcciones detectadas durante la revisión de implementación.
-- **Arquitectura:** Fase 4A cerrada; sigue Fase 4B (editor y detalle de Recetas: ingredientes/pasos estructurados, R3, captura de enlace `pending`) según el plan maestro.
+- **Arquitectura:** Fases 4A y 4B cerradas; sigue Fase 4C (preferencias: favorito y puntuación 1–5 por miembro, `recipe_categories` para filtros, dataset inicial versionado con carga idempotente) según el plan maestro.
 - **Desarrollo:** no ejecutar verificaciones automáticamente; la persona responsable las realizará bajo demanda. Planificar una cobertura E2E automatizada antes de declarar los flujos completos.
 - **Desarrollo local:** `next dev` permite acceder a la interfaz sin autenticación ni redirecciones de onboarding; el bypass está limitado a `NODE_ENV=development` y no habilita datos privados sin sesión de Supabase.
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { dishTypeLabel, filterRecipes, timeLabel } from './presentation'
+import { dishTypeLabel, filterRecipes, formatIngredient, timeLabel } from './presentation'
 import type { Recipe } from './types'
 
 const recipe = (overrides: Partial<Recipe> = {}): Recipe => ({
@@ -9,6 +9,7 @@ const recipe = (overrides: Partial<Recipe> = {}): Recipe => ({
   dishType: 'main',
   totalMinutes: 30,
   servings: 4,
+  status: 'ready',
   ...overrides,
 })
 
@@ -41,5 +42,10 @@ describe('recipes presentation', () => {
     expect(timeLabel(45)).toBe('45 min')
     expect(timeLabel(null)).toBe(null)
     expect(timeLabel(0)).toBe(null)
+  })
+
+  it('formats an ingredient with and without amount', () => {
+    expect(formatIngredient({ position: 0, name: 'Harina', quantity: 200, unitCode: 'g' })).toBe('200 g · Harina')
+    expect(formatIngredient({ position: 1, name: 'Sal', quantity: null, unitCode: null })).toBe('Sal')
   })
 })

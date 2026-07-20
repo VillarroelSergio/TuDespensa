@@ -275,9 +275,9 @@ export interface Database {
         Relationships: []
       }
       recipes: {
-        Row: { id: string; household_id: string; title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; version: number; created_by: string; created_at: string; updated_at: string }
-        Insert: { id?: string; household_id: string; title: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; version?: number; created_by: string; created_at?: string; updated_at?: string }
-        Update: { id?: string; household_id?: string; title?: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; version?: number; created_by?: string; created_at?: string; updated_at?: string }
+        Row: { id: string; household_id: string; title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; status: 'pending' | 'ready'; source_url: string | null; version: number; created_by: string; created_at: string; updated_at: string }
+        Insert: { id?: string; household_id: string; title: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; status?: 'pending' | 'ready'; source_url?: string | null; version?: number; created_by: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; household_id?: string; title?: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; status?: 'pending' | 'ready'; source_url?: string | null; version?: number; created_by?: string; created_at?: string; updated_at?: string }
         Relationships: []
       }
       recipe_ingredients: {
@@ -551,6 +551,8 @@ export interface Database {
         Returns: Json
       }
       recipes_create_recipe: { Args: { title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; idempotency_key: string }; Returns: Json }
+      recipes_capture_link: { Args: { source_url: string; idempotency_key: string }; Returns: Json }
+      recipes_save_recipe: { Args: { recipe_id_value: string; title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; source_url: string | null; ingredients: Json; steps: Json; expected_version: number; idempotency_key: string }; Returns: Json }
       shopping_add_item: { Args: { food_name: string; item_source: 'manual' | 'pantry'; idempotency_key: string }; Returns: Json }
       shopping_toggle_item: { Args: { item_id: string; version: number; purchased: boolean; idempotency_key: string }; Returns: Json }
       pantry_rename_household_food: {

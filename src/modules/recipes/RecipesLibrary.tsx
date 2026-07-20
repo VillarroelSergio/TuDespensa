@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
-import { createRecipe } from './actions'
-import { RecipesList, type NewRecipe } from './RecipesList'
+import { captureLink, createRecipe } from './actions'
+import { RecipesList } from './RecipesList'
 import type { Recipe } from './types'
 
 export function RecipesLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) {
@@ -23,13 +23,19 @@ export function RecipesLibrary({ initialRecipes }: { initialRecipes: Recipe[] })
     return () => { void client.removeChannel(channel) }
   }, [refresh])
 
-  async function handleAdd(recipe: NewRecipe) {
+  // Crear/capturar lleva directo al editor R2 para seguir completando la receta.
+  async function run(action: () => Promise<{ recipe_id: string }>, failure: string) {
     if (pending) return
     setPending(true); setStatus('')
-    try { await createRecipe(recipe); setStatus(`${recipe.title}: guardada en tu biblioteca.`); refresh() }
-    catch { setStatus('No hemos podido guardar la receta. Puedes reintentarlo.') }
-    finally { setPending(false) }
+    try { const result = await action(); router.push(`/recetas/${result.recipe_id}/editar`) }
+    catch { setStatus(failure); setPending(false) }
   }
 
-  return <RecipesList initialRecipes={initialRecipes} pending={pending} status={status} onAdd={handleAdd} />
+  return <RecipesList
+    initialRecipes={initialRecipes}
+    pending={pending}
+    status={status}
+    onCreateManual={(title) => run(() => createRecipe({ title }), 'No hemos podido crear la receta. Puedes reintentarlo.')}
+    onCaptureLink={(url) => run(() => captureLink(url), 'No hemos podido guardar el enlace. Revisa que sea válido.')}
+  />
 }
