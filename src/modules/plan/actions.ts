@@ -129,7 +129,9 @@ export async function removeMealAction(formData: FormData) {
   await clearMeal(slot)
   // ponytail: el estado para deshacer viaja en la URL en vez de en un registro
   // de deshacer; la acción inversa es un `plan_set_meal` con estos mismos datos.
-  const undo = [slot.mealDate, slot.mealType, recipeId, servings ?? ''].join(':')
+  const undo = [slot.mealDate, slot.mealType, recipeId, servings ?? ''].join(
+    ':',
+  )
   backToWeek(slot.mealDate, `&deshacer=${undo}`)
 }
 
