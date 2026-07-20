@@ -15,6 +15,7 @@ figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
 related:
   - "[[00-MiDespensa-Hub]]"
   - "[[WORKFLOW]]"
+  - "[[MASTER-IMPLEMENTATION-PLAN]]"
   - "[[COMPETITIVE-BENCHMARK]]"
   - "[[INFORMATION-ARCHITECTURE]]"
   - "[[ONBOARDING-WIREFLOW]]"
