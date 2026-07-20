@@ -8,7 +8,11 @@ import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseIdempotencyKey } from '@/lib/validation/onboarding'
 
+import type { RecipeDishType } from '@/modules/recipes/types'
+
 import { addDays, weekStart } from './presentation'
+import { rankSuggestions } from './suggestions'
+import type { Suggestion } from './suggestions'
 import type { MealType, PlannedMeal } from './types'
 
 function failure(error: { code?: string; message: string }): never {
@@ -133,6 +137,138 @@ export async function removeMealAction(formData: FormData) {
     ':',
   )
   backToWeek(slot.mealDate, `&deshacer=${undo}`)
+}
+
+/**
+ * Alimentos presentes en la despensa. Prioritario = escaso, marcado por el hogar
+ * o a punto de consumirse: es lo que da el motivo «Aprovecha …».
+ */
+async function getSuggestionPantry(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+) {
+  const [itemsRes, soonRes] = await Promise.all([
+    supabase
+      .from('pantry_items')
+      .select('id,food_id,approximate_state,attention_state')
+      .eq('presence', true),
+    supabase.from('pantry_consume_soon').select('pantry_item_id,consume_soon'),
+  ])
+  const items = itemsRes.data ?? []
+  if (!items.length) return []
+  const { data: foods } = await supabase
+    .from('household_foods')
+    .select('id,name')
+    .in(
+      'id',
+      items.map((item) => item.food_id),
+    )
+  const nameById = new Map((foods ?? []).map((food) => [food.id, food.name]))
+  const soon = new Set(
+    (soonRes.data ?? [])
+      .filter((row) => row.consume_soon)
+      .map((row) => row.pantry_item_id),
+  )
+  return items.flatMap((item) => {
+    const name = nameById.get(item.food_id)
+    if (!name) return []
+    const priority =
+      item.attention_state === 'low' ||
+      item.approximate_state === 'low' ||
+      soon.has(item.id)
+    return [{ name, priority }]
+  })
+}
+
+/**
+ * Sugerencias explicables para un hueco: reúne biblioteca, despensa y semana, y
+ * delega la puntuación en `rankSuggestions`, que es puro y determinista.
+ */
+export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const startIso = weekStart(mealDate)
+  const [
+    recipesRes,
+    ingredientsRes,
+    prefsRes,
+    assignsRes,
+    catsRes,
+    plannedRes,
+    pantry,
+  ] = await Promise.all([
+    // Solo recetas listas: una captura `pending` todavía no se puede cocinar.
+    supabase
+      .from('recipes')
+      .select('id,title,dish_type,total_minutes')
+      .eq('status', 'ready'),
+    supabase.from('recipe_ingredients').select('recipe_id,name'),
+    supabase
+      .from('recipe_preferences')
+      .select('recipe_id,is_favorite,rating')
+      .eq('user_id', user.id),
+    supabase.from('recipe_category_assignments').select('recipe_id,category_id'),
+    supabase.from('recipe_categories').select('id,name'),
+    supabase
+      .from('planned_meals')
+      .select('recipe_id')
+      .gte('meal_date', startIso)
+      .lte('meal_date', addDays(startIso, 6)),
+    getSuggestionPantry(supabase),
+  ])
+  if (recipesRes.error) failure(recipesRes.error)
+  const recipes = recipesRes.data ?? []
+  if (!recipes.length) return []
+
+  const ingredientsByRecipe = new Map<string, string[]>()
+  for (const row of ingredientsRes.data ?? []) {
+    ingredientsByRecipe.set(row.recipe_id, [
+      ...(ingredientsByRecipe.get(row.recipe_id) ?? []),
+      row.name,
+    ])
+  }
+  const prefByRecipe = new Map(
+    (prefsRes.data ?? []).map((row) => [row.recipe_id, row]),
+  )
+  const categoryNameById = new Map(
+    (catsRes.data ?? []).map((row) => [row.id, row.name]),
+  )
+  const categoriesByRecipe = new Map<string, string[]>()
+  for (const row of assignsRes.data ?? []) {
+    const name = categoryNameById.get(row.category_id)
+    if (!name) continue
+    categoriesByRecipe.set(row.recipe_id, [
+      ...(categoriesByRecipe.get(row.recipe_id) ?? []),
+      name,
+    ])
+  }
+
+  const plannedRecipeIds = (plannedRes.data ?? []).map((row) => row.recipe_id)
+  const dishTypeById = new Map(
+    recipes.map((recipe) => [recipe.id, recipe.dish_type]),
+  )
+  const plannedDishTypes = plannedRecipeIds.map(
+    (id) => (dishTypeById.get(id) ?? null) as RecipeDishType | null,
+  )
+
+  return rankSuggestions({
+    candidates: recipes.map((recipe) => ({
+      id: recipe.id,
+      title: recipe.title,
+      totalMinutes: recipe.total_minutes,
+      dishType: recipe.dish_type as RecipeDishType | null,
+      isFavorite: prefByRecipe.get(recipe.id)?.is_favorite ?? false,
+      rating: prefByRecipe.get(recipe.id)?.rating ?? null,
+      categories: categoriesByRecipe.get(recipe.id) ?? [],
+      ingredients: ingredientsByRecipe.get(recipe.id) ?? [],
+    })),
+    pantry,
+    plannedRecipeIds,
+    plannedDishTypes,
+  })
 }
 
 /** Comidas planificadas de la semana que empieza en `startIso` (lunes). */

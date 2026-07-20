@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { getSuggestions } from '@/modules/plan/actions'
 import { ChooseRecipeView } from '@/modules/plan/ChooseRecipeView'
 import type { MealType } from '@/modules/plan/types'
 import { getRecipes } from '@/modules/recipes/actions'
@@ -21,12 +22,18 @@ export default async function ChooseRecipePage({
     redirect('/plan')
   }
 
+  const [recipes, suggestions] = await Promise.all([
+    getRecipes(),
+    getSuggestions(fecha),
+  ])
+
   return (
     <ChooseRecipeView
       mealDate={fecha}
       mealType={servicio as MealType}
       query={q?.trim() ?? ''}
-      recipes={await getRecipes()}
+      recipes={recipes}
+      suggestions={suggestions}
     />
   )
 }
