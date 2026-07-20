@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from 'react'
 
-import { dishTypeLabel, filterRecipes, timeLabel } from './presentation'
+import { availableCategories, dishTypeLabel, filterRecipes, timeLabel } from './presentation'
 import type { Recipe } from './types'
 
 function Navigation({ className }: { className: string }) {
@@ -15,14 +15,18 @@ type Props = {
   status: string
   onCreateManual: (title: string) => void
   onCaptureLink: (url: string) => void
+  onLoadSeed: () => void
 }
 
-export function RecipesList({ initialRecipes, pending, status, onCreateManual, onCaptureLink }: Props) {
+export function RecipesList({ initialRecipes, pending, status, onCreateManual, onCaptureLink, onLoadSeed }: Props) {
   const [term, setTerm] = useState('')
   const [adding, setAdding] = useState(false)
   const [title, setTitle] = useState('')
   const [link, setLink] = useState('')
-  const recipes = useMemo(() => filterRecipes(initialRecipes, term), [initialRecipes, term])
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
+  const [category, setCategory] = useState('')
+  const categories = useMemo(() => availableCategories(initialRecipes), [initialRecipes])
+  const recipes = useMemo(() => filterRecipes(initialRecipes, term, { favoritesOnly, category: category || undefined }), [initialRecipes, term, favoritesOnly, category])
 
   function submitManual(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -41,6 +45,16 @@ export function RecipesList({ initialRecipes, pending, status, onCreateManual, o
       <header className="shopping-header"><h1 id="recipes-title">Recetas</h1><button className="recipes-add-cta" type="button" onClick={() => setAdding((open) => !open)} aria-expanded={adding}>Añadir receta</button></header>
       <label className="sr-only" htmlFor="recipes-search">Busca una receta o ingrediente</label>
       <input className="recipes-search" id="recipes-search" value={term} onChange={(event) => setTerm(event.target.value)} maxLength={160} placeholder="Busca una receta o ingrediente" type="search" />
+      <div className="recipes-filters">
+        <button type="button" className={`recipes-filter${favoritesOnly ? ' is-active' : ''}`} aria-pressed={favoritesOnly} onClick={() => setFavoritesOnly((only) => !only)}>★ Favoritas</button>
+        {categories.length ? <>
+          <label className="sr-only" htmlFor="recipes-category">Categoría</label>
+          <select id="recipes-category" className="recipes-filter-select" value={category} onChange={(event) => setCategory(event.target.value)}>
+            <option value="">Todas las categorías</option>
+            {categories.map((name) => <option key={name} value={name}>{name}</option>)}
+          </select>
+        </> : null}
+      </div>
       {adding ? <div className="recipes-add">
         <form className="recipes-form" onSubmit={submitManual}>
           <label className="sr-only" htmlFor="recipe-title">Nombre de la receta</label>
@@ -56,12 +70,15 @@ export function RecipesList({ initialRecipes, pending, status, onCreateManual, o
       {status ? <p className="pantry-sync-status" aria-live="polite">{status}</p> : null}
       <section className="recipes-list" aria-label="Biblioteca de recetas">
         {recipes.map((recipe) => <a className="recipe-card" key={recipe.id} href={`/recetas/${recipe.id}`}>
-          <span className="recipe-card__title">{recipe.title}</span>
+          <span className="recipe-card__title">{recipe.isFavorite ? '★ ' : ''}{recipe.title}</span>
           {recipe.status === 'pending' ? <span className="recipe-card__tag">Por revisar</span> : null}
           {(recipe.dishType || recipe.totalMinutes) ? <span className="recipe-card__meta">{[dishTypeLabel(recipe.dishType), timeLabel(recipe.totalMinutes)].filter(Boolean).join(' · ')}</span> : null}
         </a>)}
       </section>
-      {!recipes.length ? <p className="recipes-empty">{term.trim() ? `No hay recetas para «${term.trim()}».` : 'Guarda recetas para decidir más rápido.'}</p> : null}
+      {!recipes.length ? <div className="recipes-empty">
+        <p>{term.trim() || favoritesOnly || category ? 'No hay recetas que coincidan con el filtro.' : 'Guarda recetas para decidir más rápido.'}</p>
+        {!initialRecipes.length ? <button type="button" className="recipes-seed" disabled={pending} onClick={onLoadSeed}>Cargar recetas base</button> : null}
+      </div> : null}
     </section>
     <Navigation className="shopping-bottom-nav" />
   </main>

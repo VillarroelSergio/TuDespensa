@@ -275,9 +275,27 @@ export interface Database {
         Relationships: []
       }
       recipes: {
-        Row: { id: string; household_id: string; title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; status: 'pending' | 'ready'; source_url: string | null; version: number; created_by: string; created_at: string; updated_at: string }
-        Insert: { id?: string; household_id: string; title: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; status?: 'pending' | 'ready'; source_url?: string | null; version?: number; created_by: string; created_at?: string; updated_at?: string }
-        Update: { id?: string; household_id?: string; title?: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; status?: 'pending' | 'ready'; source_url?: string | null; version?: number; created_by?: string; created_at?: string; updated_at?: string }
+        Row: { id: string; household_id: string; title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; status: 'pending' | 'ready'; source_url: string | null; origin: 'household' | 'seed'; seed_key: string | null; seed_version: number | null; attribution: string | null; version: number; created_by: string; created_at: string; updated_at: string }
+        Insert: { id?: string; household_id: string; title: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; status?: 'pending' | 'ready'; source_url?: string | null; origin?: 'household' | 'seed'; seed_key?: string | null; seed_version?: number | null; attribution?: string | null; version?: number; created_by: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; household_id?: string; title?: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; status?: 'pending' | 'ready'; source_url?: string | null; origin?: 'household' | 'seed'; seed_key?: string | null; seed_version?: number | null; attribution?: string | null; version?: number; created_by?: string; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      recipe_categories: {
+        Row: { id: string; household_id: string; dimension: 'dish_type' | 'main_ingredient' | 'technique' | 'time' | 'season' | 'mediterranean'; name: string; created_at: string }
+        Insert: { id?: string; household_id: string; dimension: 'dish_type' | 'main_ingredient' | 'technique' | 'time' | 'season' | 'mediterranean'; name: string; created_at?: string }
+        Update: { id?: string; household_id?: string; dimension?: 'dish_type' | 'main_ingredient' | 'technique' | 'time' | 'season' | 'mediterranean'; name?: string; created_at?: string }
+        Relationships: []
+      }
+      recipe_category_assignments: {
+        Row: { recipe_id: string; category_id: string; household_id: string; created_at: string }
+        Insert: { recipe_id: string; category_id: string; household_id: string; created_at?: string }
+        Update: { recipe_id?: string; category_id?: string; household_id?: string; created_at?: string }
+        Relationships: []
+      }
+      recipe_preferences: {
+        Row: { recipe_id: string; household_id: string; user_id: string; is_favorite: boolean; rating: number | null; updated_at: string }
+        Insert: { recipe_id: string; household_id: string; user_id: string; is_favorite?: boolean; rating?: number | null; updated_at?: string }
+        Update: { recipe_id?: string; household_id?: string; user_id?: string; is_favorite?: boolean; rating?: number | null; updated_at?: string }
         Relationships: []
       }
       recipe_ingredients: {
@@ -553,6 +571,9 @@ export interface Database {
       recipes_create_recipe: { Args: { title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; idempotency_key: string }; Returns: Json }
       recipes_capture_link: { Args: { source_url: string; idempotency_key: string }; Returns: Json }
       recipes_save_recipe: { Args: { recipe_id_value: string; title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; source_url: string | null; ingredients: Json; steps: Json; expected_version: number; idempotency_key: string }; Returns: Json }
+      recipes_set_preference: { Args: { recipe_id_value: string; is_favorite: boolean; rating: number | null; idempotency_key: string }; Returns: Json }
+      recipes_set_categories: { Args: { recipe_id_value: string; categories: Json; idempotency_key: string }; Returns: Json }
+      recipes_load_seed: { Args: { idempotency_key: string }; Returns: Json }
       shopping_add_item: { Args: { food_name: string; item_source: 'manual' | 'pantry'; idempotency_key: string }; Returns: Json }
       shopping_toggle_item: { Args: { item_id: string; version: number; purchased: boolean; idempotency_key: string }; Returns: Json }
       pantry_rename_household_food: {

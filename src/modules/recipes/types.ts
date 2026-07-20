@@ -3,6 +3,19 @@ export type RecipeDishType =
 
 export type RecipeStatus = 'pending' | 'ready'
 
+export type RecipeCategoryDimension =
+  'dish_type' | 'main_ingredient' | 'technique' | 'time' | 'season' | 'mediterranean'
+
+export type RecipeCategory = {
+  dimension: RecipeCategoryDimension
+  name: string
+}
+
+export type RecipePreference = {
+  isFavorite: boolean
+  rating: number | null
+}
+
 export type Recipe = {
   id: string
   title: string
@@ -10,6 +23,8 @@ export type Recipe = {
   totalMinutes: number | null
   servings: number | null
   status: RecipeStatus
+  isFavorite: boolean
+  categories: string[]
 }
 
 export type RecipeIngredient = {
@@ -29,4 +44,6 @@ export type RecipeDetail = Recipe & {
   sourceUrl: string | null
   ingredients: RecipeIngredient[]
   steps: RecipeStep[]
+  recipeCategories: RecipeCategory[]
+  preference: RecipePreference
 }

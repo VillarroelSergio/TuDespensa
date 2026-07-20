@@ -10,6 +10,8 @@ const recipe = (overrides: Partial<Recipe> = {}): Recipe => ({
   totalMinutes: 30,
   servings: 4,
   status: 'ready',
+  isFavorite: false,
+  categories: [],
   ...overrides,
 })
 
@@ -42,6 +44,15 @@ describe('recipes presentation', () => {
     expect(timeLabel(45)).toBe('45 min')
     expect(timeLabel(null)).toBe(null)
     expect(timeLabel(0)).toBe(null)
+  })
+
+  it('filters by favorite and by category', () => {
+    const rows = [
+      recipe({ id: 'a', title: 'Arroz', isFavorite: true, categories: ['Mediterránea'] }),
+      recipe({ id: 'b', title: 'Bizcocho', isFavorite: false, categories: ['Postre'] }),
+    ]
+    expect(filterRecipes(rows, '', { favoritesOnly: true }).map((row) => row.id)).toEqual(['a'])
+    expect(filterRecipes(rows, '', { category: 'Postre' }).map((row) => row.id)).toEqual(['b'])
   })
 
   it('formats an ingredient with and without amount', () => {

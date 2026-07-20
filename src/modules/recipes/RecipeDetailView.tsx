@@ -1,4 +1,5 @@
 import { dishTypeLabel, formatIngredient, timeLabel } from './presentation'
+import { RecipePreferences } from './RecipePreferences'
 import type { RecipeDetail } from './types'
 
 export function RecipeDetailView({ recipe }: { recipe: RecipeDetail }) {
@@ -15,7 +16,10 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeDetail }) {
       {recipe.status === 'pending' ? <p className="recipe-pending">Receta por revisar. Completa los datos antes de planificar con ella.</p> : null}
       {meta.length ? <p className="recipe-detail__meta">{meta.join(' · ')}</p> : null}
       {recipe.sourceUrl ? <p className="recipe-source">Origen: <a href={recipe.sourceUrl} rel="noreferrer" target="_blank">{recipe.sourceUrl}</a></p> : null}
+      {recipe.recipeCategories.length ? <p className="recipe-detail__categories">{recipe.recipeCategories.map((category) => <span className="recipe-chip" key={`${category.dimension}-${category.name}`}>{category.name}</span>)}</p> : null}
     </header>
+
+    <RecipePreferences recipeId={recipe.id} initial={recipe.preference} />
 
     <section aria-labelledby="detail-ingredients">
       <h2 id="detail-ingredients">Ingredientes</h2>

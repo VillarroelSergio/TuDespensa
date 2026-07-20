@@ -3,9 +3,9 @@
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { saveRecipe } from './actions'
-import { DISH_TYPE_OPTIONS, UNIT_OPTIONS } from './presentation'
-import type { RecipeDetail, RecipeDishType } from './types'
+import { saveRecipe, setCategories } from './actions'
+import { CATEGORY_DIMENSION_OPTIONS, DISH_TYPE_OPTIONS, UNIT_OPTIONS } from './presentation'
+import type { RecipeCategoryDimension, RecipeDetail, RecipeDishType } from './types'
 
 type IngredientDraft = { name: string; quantity: string; unitCode: string }
 
@@ -24,6 +24,7 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
   const [showMore, setShowMore] = useState(Boolean(recipe.dishType || recipe.sourceUrl))
   const [ingredients, setIngredients] = useState<IngredientDraft[]>(() => toDraftIngredients(recipe))
   const [steps, setSteps] = useState<string[]>(recipe.steps.length ? recipe.steps.map((step) => step.instruction) : [''])
+  const [categories, setCategoriesState] = useState(recipe.recipeCategories.map((category) => ({ dimension: category.dimension, name: category.name })))
   const [version, setVersion] = useState(recipe.version)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -52,8 +53,12 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
         .map((row) => ({ name: row.name.trim(), quantity: row.quantity.trim() ? Number(row.quantity) : null, unitCode: row.unitCode || null })),
       steps,
     }).catch(() => ({ ok: false, reason: 'error' as const }))
+    if (result.ok) {
+      // ponytail: categorías son metadato secundario; si su guardado falla no bloquea la receta ya guardada.
+      await setCategories({ recipeId: recipe.id, categories: categories.filter((category) => category.name.trim()) }).catch(() => {})
+      setVersion(result.version); router.push(`/recetas/${recipe.id}`); return
+    }
     setSaving(false)
-    if (result.ok) { setVersion(result.version); router.push(`/recetas/${recipe.id}`); return }
     // ponytail: en conflicto conservamos lo visible e informamos; un merge fila a fila es 4C si hace falta.
     if (result.reason === 'conflict') { setConflict(true); setMessage('Esta receta cambió en otra sesión. Abre la versión actual para no pisar cambios.') }
     else if (result.reason === 'invalid') setMessage('Revisa los campos marcados antes de guardar.')
@@ -116,6 +121,17 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
         </select>
         <label htmlFor="editor-source">Enlace de origen</label>
         <input id="editor-source" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} maxLength={2048} placeholder="https://…" type="url" />
+        <span className="recipe-editor__label">Categorías</span>
+        {categories.map((category, index) => <div className="recipe-category-row" key={index}>
+          <label className="sr-only" htmlFor={`cat-dim-${index}`}>Dimensión</label>
+          <select id={`cat-dim-${index}`} value={category.dimension} onChange={(event) => setCategoriesState((rows) => rows.map((row, position) => (position === index ? { ...row, dimension: event.target.value as RecipeCategoryDimension } : row)))}>
+            {CATEGORY_DIMENSION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+          <label className="sr-only" htmlFor={`cat-name-${index}`}>Nombre</label>
+          <input id={`cat-name-${index}`} value={category.name} onChange={(event) => setCategoriesState((rows) => rows.map((row, position) => (position === index ? { ...row, name: event.target.value } : row)))} maxLength={60} placeholder="Nombre" />
+          <button type="button" className="recipe-row-remove" onClick={() => setCategoriesState((rows) => rows.filter((_, position) => position !== index))} aria-label="Quitar categoría">×</button>
+        </div>)}
+        <button type="button" className="recipe-row-add" onClick={() => setCategoriesState((rows) => [...rows, { dimension: 'dish_type', name: '' }])}>Añadir categoría</button>
       </div> : null}
 
       {message ? <p className="recipe-editor__status" aria-live="polite">{message}{conflict ? <> {' '}<a href={`/recetas/${recipe.id}`}>Ver versión actual</a></> : null}</p> : null}
