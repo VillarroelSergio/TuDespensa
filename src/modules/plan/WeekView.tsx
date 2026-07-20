@@ -1,14 +1,16 @@
 import { timeLabel } from '@/modules/recipes/presentation'
 
+import { assignMealAction, moveMealAction, removeMealAction } from './actions'
 import {
   addWeeks,
   buildWeek,
   dayLabel,
   mealLabel,
   plannedCount,
+  slotLabel,
   weekRangeLabel,
 } from './presentation'
-import type { PlanSlot, PlannedMeal } from './types'
+import type { MealType, PlanSlot, PlannedMeal } from './types'
 
 function Navigation({ className }: { className: string }) {
   return (
@@ -23,12 +25,91 @@ function Navigation({ className }: { className: string }) {
   )
 }
 
+function chooseHref(mealDate: string, mealType: MealType) {
+  return `/plan/elegir?fecha=${mealDate}&servicio=${mealType}`
+}
+
+/**
+ * Menú contextual de un hueco planificado. `details` da el abrir/cerrar sin
+ * JavaScript de cliente, y cada acción es un formulario independiente.
+ */
+function SlotMenu({ meal }: { meal: PlannedMeal }) {
+  const slotId = `${meal.mealDate}-${meal.mealType}`
+  const hidden = (
+    <>
+      <input type="hidden" name="fecha" value={meal.mealDate} />
+      <input type="hidden" name="servicio" value={meal.mealType} />
+      <input type="hidden" name="receta" value={meal.recipeId} />
+    </>
+  )
+
+  return (
+    <details className="plan-menu">
+      <summary aria-label={`Opciones de ${slotLabel(meal.mealDate, meal.mealType)}`}>
+        Opciones
+      </summary>
+      <div className="plan-menu__body">
+        <a href={chooseHref(meal.mealDate, meal.mealType)}>Cambiar receta</a>
+
+        <form className="plan-menu__form" action={assignMealAction}>
+          {hidden}
+          <label htmlFor={`raciones-${slotId}`}>Ajustar raciones</label>
+          <input
+            id={`raciones-${slotId}`}
+            name="raciones"
+            type="number"
+            min={1}
+            max={99}
+            step={1}
+            defaultValue={meal.servings ?? ''}
+          />
+          <button type="submit">Guardar</button>
+        </form>
+
+        <form className="plan-menu__form" action={moveMealAction}>
+          <input type="hidden" name="origen-fecha" value={meal.mealDate} />
+          <input type="hidden" name="origen-servicio" value={meal.mealType} />
+          <input type="hidden" name="receta" value={meal.recipeId} />
+          <input type="hidden" name="raciones" value={meal.servings ?? ''} />
+          <label htmlFor={`mover-${slotId}`}>Mover a</label>
+          <input
+            id={`mover-${slotId}`}
+            name="fecha"
+            type="date"
+            defaultValue={meal.mealDate}
+          />
+          <select
+            name="servicio"
+            defaultValue={meal.mealType}
+            aria-label="Servicio de destino"
+          >
+            <option value="lunch">Comida</option>
+            <option value="dinner">Cena</option>
+          </select>
+          <button type="submit">Mover</button>
+        </form>
+
+        {/* Eliminar pide confirmación: el segundo `details` es el paso extra. */}
+        <details className="plan-menu__danger">
+          <summary>Eliminar</summary>
+          <form action={removeMealAction}>
+            {hidden}
+            <input type="hidden" name="raciones" value={meal.servings ?? ''} />
+            <p>Se quitará «{meal.title}» de este hueco.</p>
+            <button type="submit">Sí, eliminar</button>
+          </form>
+        </details>
+      </div>
+    </details>
+  )
+}
+
 function Slot({ slot }: { slot: PlanSlot }) {
   return (
     <div className="plan-slot">
       <span className="plan-slot__label">{mealLabel(slot.mealType)}</span>
       {slot.meal ? (
-        <span className="plan-slot__recipe">
+        <div className="plan-slot__recipe">
           <a href={`/recetas/${slot.meal.recipeId}`}>{slot.meal.title}</a>
           <span className="plan-slot__meta">
             {[
@@ -38,15 +119,35 @@ function Slot({ slot }: { slot: PlanSlot }) {
               .filter(Boolean)
               .join(' · ')}
           </span>
-        </span>
+          <SlotMenu meal={slot.meal} />
+        </div>
       ) : (
-        // ponytail: P2 (elegir receta) es Fase 5B; el hueco vacío ya muestra su
-        // única acción, todavía sin destino.
-        <button className="plan-slot__add" type="button" disabled>
+        <a
+          className="plan-slot__add"
+          href={chooseHref(slot.mealDate, slot.mealType)}
+        >
           Añadir
-        </button>
+        </a>
       )}
     </div>
+  )
+}
+
+/** Rehace la asignación que un borrado acaba de deshacer. */
+function UndoBanner({
+  undo,
+}: {
+  undo: { mealDate: string; mealType: MealType; recipeId: string; servings: string }
+}) {
+  return (
+    <form className="plan-undo" action={assignMealAction} role="status">
+      <input type="hidden" name="fecha" value={undo.mealDate} />
+      <input type="hidden" name="servicio" value={undo.mealType} />
+      <input type="hidden" name="receta" value={undo.recipeId} />
+      <input type="hidden" name="raciones" value={undo.servings} />
+      <span>Hemos quitado {slotLabel(undo.mealDate, undo.mealType)}.</span>
+      <button type="submit">Deshacer</button>
+    </form>
   )
 }
 
@@ -54,10 +155,17 @@ export function WeekView({
   startIso,
   currentWeekIso,
   meals,
+  undo,
 }: {
   startIso: string
   currentWeekIso: string
   meals: PlannedMeal[]
+  undo?: {
+    mealDate: string
+    mealType: MealType
+    recipeId: string
+    servings: string
+  } | null
 }) {
   const days = buildWeek(startIso, meals)
   const planned = plannedCount(days)
@@ -99,6 +207,8 @@ export function WeekView({
             </a>
           </div>
         </header>
+
+        {undo ? <UndoBanner undo={undo} /> : null}
 
         <p className="plan-summary" aria-live="polite">
           {isCurrentWeek ? 'Esta semana' : 'Semana seleccionada'} · {planned} de

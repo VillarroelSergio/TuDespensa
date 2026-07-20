@@ -7,9 +7,9 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 export default async function PlanPage({
   searchParams,
 }: {
-  searchParams: Promise<{ semana?: string }>
+  searchParams: Promise<{ semana?: string; deshacer?: string }>
 }) {
-  const { semana } = await searchParams
+  const { semana, deshacer } = await searchParams
   // ponytail: «hoy» en UTC. Solo diverge del día local en la franja nocturna que
   // cruza medianoche; leer la zona del navegador exigiría render en cliente.
   const currentWeekIso = weekStart(new Date().toISOString().slice(0, 10))
@@ -24,6 +24,7 @@ export default async function PlanPage({
       startIso={startIso}
       currentWeekIso={currentWeekIso}
       meals={meals}
+      undo={parseUndo(deshacer)}
     />
   )
 }

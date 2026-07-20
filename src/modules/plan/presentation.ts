@@ -73,6 +73,11 @@ export function dayLabel(iso: string) {
   return `${DAY_NAMES[date.getUTCDay()]} ${date.getUTCDate()}`
 }
 
+/** «martes, comida»: identifica el hueco al abrir P2 o el menú contextual. */
+export function slotLabel(iso: string, mealType: MealType) {
+  return `${DAY_NAMES[toDate(iso).getUTCDay()]}, ${MEAL_LABELS[mealType].toLowerCase()}`
+}
+
 /** «20 – 26 de julio» o «29 de junio – 5 de julio» si cruza de mes. */
 export function weekRangeLabel(startIso: string) {
   const start = toDate(startIso)
@@ -81,6 +86,23 @@ export function weekRangeLabel(startIso: string) {
   return start.getUTCMonth() === end.getUTCMonth()
     ? `${start.getUTCDate()} – ${endLabel}`
     : `${start.getUTCDate()} de ${MONTH_NAMES[start.getUTCMonth()]} – ${endLabel}`
+}
+
+/**
+ * Lee el parámetro `deshacer` que deja un borrado: `fecha:servicio:receta:raciones`.
+ * Devuelve `null` si no es utilizable, para no ofrecer un deshacer que fallaría.
+ */
+export function parseUndo(raw: string | undefined) {
+  const [mealDate, mealType, recipeId, servings] = (raw ?? '').split(':')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(mealDate ?? '')) return null
+  if (mealType !== 'lunch' && mealType !== 'dinner') return null
+  if (!recipeId) return null
+  return {
+    mealDate,
+    mealType: mealType as MealType,
+    recipeId,
+    servings: servings ?? '',
+  }
 }
 
 /** Los 7 días con sus dos huecos, en orden temporal y siempre completos. */

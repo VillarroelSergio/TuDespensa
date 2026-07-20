@@ -4,7 +4,9 @@ import {
   addWeeks,
   buildWeek,
   dayLabel,
+  parseUndo,
   plannedCount,
+  slotLabel,
   weekDates,
   weekRangeLabel,
   weekStart,
@@ -83,5 +85,38 @@ describe('buildWeek', () => {
       meal({ mealDate: '2026-07-24' }),
     ])
     expect(plannedCount(days)).toBe(3)
+  })
+})
+
+describe('slotLabel', () => {
+  it('nombra el hueco con día y servicio en minúscula', () => {
+    expect(slotLabel('2026-07-21', 'lunch')).toBe('martes, comida')
+    expect(slotLabel('2026-07-26', 'dinner')).toBe('domingo, cena')
+  })
+})
+
+describe('parseUndo', () => {
+  const recipeId = '11111111-1111-4111-8111-111111111111'
+
+  it('lee el hueco a restaurar', () => {
+    expect(parseUndo(`2026-07-21:lunch:${recipeId}:2`)).toEqual({
+      mealDate: '2026-07-21',
+      mealType: 'lunch',
+      recipeId,
+      servings: '2',
+    })
+  })
+
+  it('acepta un hueco sin raciones', () => {
+    expect(parseUndo(`2026-07-21:dinner:${recipeId}:`)?.servings).toBe('')
+    expect(parseUndo(`2026-07-21:dinner:${recipeId}`)?.servings).toBe('')
+  })
+
+  it('descarta parámetros inutilizables', () => {
+    expect(parseUndo(undefined)).toBeNull()
+    expect(parseUndo('')).toBeNull()
+    expect(parseUndo(`21-07-2026:lunch:${recipeId}:2`)).toBeNull()
+    expect(parseUndo(`2026-07-21:brunch:${recipeId}:2`)).toBeNull()
+    expect(parseUndo('2026-07-21:lunch::2')).toBeNull()
   })
 })
