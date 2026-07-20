@@ -442,6 +442,69 @@ export interface Database {
         }
         Relationships: []
       }
+      meal_plans: {
+        Row: {
+          id: string
+          household_id: string
+          week_start_date: string
+          created_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          household_id: string
+          week_start_date: string
+          created_by: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          household_id?: string
+          week_start_date?: string
+          created_by?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      planned_meals: {
+        Row: {
+          id: string
+          meal_plan_id: string
+          household_id: string
+          meal_date: string
+          meal_type: 'lunch' | 'dinner'
+          recipe_id: string
+          servings: number | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          meal_plan_id: string
+          household_id: string
+          meal_date: string
+          meal_type: 'lunch' | 'dinner'
+          recipe_id: string
+          servings?: number | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          meal_plan_id?: string
+          household_id?: string
+          meal_date?: string
+          meal_type?: 'lunch' | 'dinner'
+          recipe_id?: string
+          servings?: number | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       recipe_preferences: {
         Row: {
           recipe_id: string
@@ -839,6 +902,24 @@ export interface Database {
         Returns: Json
       }
       recipes_load_seed: { Args: { idempotency_key: string }; Returns: Json }
+      plan_set_meal: {
+        Args: {
+          meal_date_value: string
+          meal_type_value: 'lunch' | 'dinner'
+          recipe_id_value: string
+          servings_value: number | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      plan_clear_meal: {
+        Args: {
+          meal_date_value: string
+          meal_type_value: 'lunch' | 'dinner'
+          idempotency_key: string
+        }
+        Returns: Json
+      }
       shopping_add_item: {
         Args: {
           food_name: string
