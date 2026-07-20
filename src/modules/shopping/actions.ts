@@ -41,6 +41,10 @@ export async function toggleShoppingItem(itemId: string, version: number, purcha
 
 export async function getShoppingItems(): Promise<ShoppingItem[]> {
   const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user && process.env.NODE_ENV === 'development') return []
   const { data: membership, error: membershipError } = await supabase.from('household_members').select('household_id').eq('status', 'active').maybeSingle()
   if (membershipError) failure(membershipError)
   if (!membership) return []

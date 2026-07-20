@@ -212,8 +212,11 @@ async function categoryNamesByRecipe(
 
 export async function getRecipes(): Promise<Recipe[]> {
   const supabase = await createSupabaseServerClient()
-  const { data: userData } = await supabase.auth.getUser()
-  const userId = userData.user?.id ?? ''
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user && process.env.NODE_ENV === 'development') return []
+  const userId = user?.id ?? ''
   // RLS limita la selección al hogar activo; no hace falta filtrar por hogar aquí.
   const [recipesRes, prefsRes, categories] = await Promise.all([
     supabase
@@ -246,8 +249,11 @@ export async function getRecipes(): Promise<Recipe[]> {
 
 export async function getRecipe(id: string): Promise<RecipeDetail | null> {
   const supabase = await createSupabaseServerClient()
-  const { data: userData } = await supabase.auth.getUser()
-  const userId = userData.user?.id ?? ''
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user && process.env.NODE_ENV === 'development') return null
+  const userId = user?.id ?? ''
   const [recipe, ingredients, steps, prefRes, assignRes, catsRes] =
     await Promise.all([
       supabase
