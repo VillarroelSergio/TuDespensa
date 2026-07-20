@@ -92,12 +92,13 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - **Fase 3, bloque 1 (capa de datos) completado** en `feature/pantry-catalog` (commit `8d3a668`): catálogo canónico + alias, modos `approximate|units|measure` con integridad en BD, movimientos inmutables, vista «consumir pronto», RPCs idempotentes con versión optimista, test SQL en verde.
 - **Fase 3, bloque 2 (UI DESPENSA) en curso** en `feature/pantry-d3`: lista priorizada, detalle, alta y correcciones rápidas D3 conforme a los nodos `31:212` y `32:165`. `attention_state` conserva las cantidades al marcar «Queda poco» y el terminado ofrece deshacer con versión optimista.
 - **Puente de Compra C1 implementado** en `feature/shopping-inbox`: lista activa persistente, alta manual o desde Despensa, marcado de compra y progreso con RPCs idempotentes y control optimista de versión. C2 (revisión y confirmación en Despensa) y C4 (ticket) siguen planificados para su fase propia.
+- **Fase 4A (fundamentos de Recetas) implementada** en `feature/recipes-foundation` (migración `20260720100000_recipes_foundation.sql`): modelo privado por hogar (`recipes`, `recipe_ingredients`, `recipe_steps`) con RLS de solo lectura y mutación por RPC, RPC idempotente `recipes_create_recipe` con captura progresiva (UX-REC-001), refresco Realtime y biblioteca R1 (búsqueda por título, alta rápida nombre + tipo de plato + tiempo, estado vacío y sin resultados, responsive). Test SQL de aislamiento/idempotencia y test unitario de presentación. **Deltas conscientes:** las `recipe_categories` se difieren a 4C (por ahora `dish_type` como columna); editor estructurado de ingredientes/pasos, detalle R3, señal de disponibilidad y búsqueda por ingrediente son Fase 4B.
 - Flujo de trabajo: Fable 5 planifica/revisa/acepta; Codex Terra 5.6 (esfuerzo medio) implementa; correcciones de revisión documentadas en los mensajes de commit.
 
 ## Siguientes acciones
 
 - **UX/UI:** conservar los wireframes finales como fuente de verdad y resolver en Figma únicamente las correcciones detectadas durante la revisión de implementación.
-- **Arquitectura:** Fase 3 bloque 2 — completar UI de `DESPENSA` sobre la capa de datos ya aprobada; después Recetas (Fase 4) según el plan maestro.
+- **Arquitectura:** Fase 4A cerrada; sigue Fase 4B (editor y detalle de Recetas: ingredientes/pasos estructurados, R3, captura de enlace `pending`) según el plan maestro.
 - **Desarrollo:** no ejecutar verificaciones automáticamente; la persona responsable las realizará bajo demanda. Planificar una cobertura E2E automatizada antes de declarar los flujos completos.
 - **Desarrollo local:** `next dev` permite acceder a la interfaz sin autenticación ni redirecciones de onboarding; el bypass está limitado a `NODE_ENV=development` y no habilita datos privados sin sesión de Supabase.
 

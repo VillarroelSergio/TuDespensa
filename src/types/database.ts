@@ -14,6 +14,8 @@ type PantryMovementType =
   'entry' | 'removal' | 'correction' | 'consumption' | 'adjustment'
 type PantryTrackingMode = 'approximate' | 'units' | 'measure'
 type PantryApproximateState = 'plenty' | 'some' | 'low' | 'out'
+type RecipeDishType =
+  'breakfast' | 'starter' | 'main' | 'side' | 'dessert' | 'drink' | 'other'
 type OnboardingGlobalState =
   | 'household_draft'
   | 'inventory_in_progress'
@@ -270,6 +272,24 @@ export interface Database {
         Row: { id: string; household_id: string; shopping_list_id: string; food_id: string; source: 'manual' | 'pantry'; is_purchased: boolean; version: number; created_at: string; updated_at: string }
         Insert: { id?: string; household_id: string; shopping_list_id: string; food_id: string; source?: 'manual' | 'pantry'; is_purchased?: boolean; version?: number; created_at?: string; updated_at?: string }
         Update: { id?: string; household_id?: string; shopping_list_id?: string; food_id?: string; source?: 'manual' | 'pantry'; is_purchased?: boolean; version?: number; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      recipes: {
+        Row: { id: string; household_id: string; title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; version: number; created_by: string; created_at: string; updated_at: string }
+        Insert: { id?: string; household_id: string; title: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; version?: number; created_by: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; household_id?: string; title?: string; dish_type?: RecipeDishType | null; total_minutes?: number | null; servings?: number | null; version?: number; created_by?: string; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      recipe_ingredients: {
+        Row: { id: string; recipe_id: string; household_id: string; position: number; name: string; quantity: number | null; unit_code: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null; created_at: string }
+        Insert: { id?: string; recipe_id: string; household_id: string; position: number; name: string; quantity?: number | null; unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null; created_at?: string }
+        Update: { id?: string; recipe_id?: string; household_id?: string; position?: number; name?: string; quantity?: number | null; unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null; created_at?: string }
+        Relationships: []
+      }
+      recipe_steps: {
+        Row: { id: string; recipe_id: string; household_id: string; position: number; instruction: string; created_at: string }
+        Insert: { id?: string; recipe_id: string; household_id: string; position: number; instruction: string; created_at?: string }
+        Update: { id?: string; recipe_id?: string; household_id?: string; position?: number; instruction?: string; created_at?: string }
         Relationships: []
       }
       catalog_foods: {
@@ -530,6 +550,7 @@ export interface Database {
         Args: { item_id: string; version: number; attention_state: 'none' | 'low'; idempotency_key: string }
         Returns: Json
       }
+      recipes_create_recipe: { Args: { title: string; dish_type: RecipeDishType | null; total_minutes: number | null; servings: number | null; idempotency_key: string }; Returns: Json }
       shopping_add_item: { Args: { food_name: string; item_source: 'manual' | 'pantry'; idempotency_key: string }; Returns: Json }
       shopping_toggle_item: { Args: { item_id: string; version: number; purchased: boolean; idempotency_key: string }; Returns: Json }
       pantry_rename_household_food: {
