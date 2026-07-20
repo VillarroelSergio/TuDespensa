@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { dishTypeLabel, filterRecipes, formatIngredient, timeLabel } from './presentation'
+import {
+  dishTypeLabel,
+  filterRecipes,
+  formatIngredient,
+  timeLabel,
+} from './presentation'
 import type { Recipe } from './types'
 
 const recipe = (overrides: Partial<Recipe> = {}): Recipe => ({
@@ -48,15 +53,43 @@ describe('recipes presentation', () => {
 
   it('filters by favorite and by category', () => {
     const rows = [
-      recipe({ id: 'a', title: 'Arroz', isFavorite: true, categories: ['Mediterránea'] }),
-      recipe({ id: 'b', title: 'Bizcocho', isFavorite: false, categories: ['Postre'] }),
+      recipe({
+        id: 'a',
+        title: 'Arroz',
+        isFavorite: true,
+        categories: ['Mediterránea'],
+      }),
+      recipe({
+        id: 'b',
+        title: 'Bizcocho',
+        isFavorite: false,
+        categories: ['Postre'],
+      }),
     ]
-    expect(filterRecipes(rows, '', { favoritesOnly: true }).map((row) => row.id)).toEqual(['a'])
-    expect(filterRecipes(rows, '', { category: 'Postre' }).map((row) => row.id)).toEqual(['b'])
+    expect(
+      filterRecipes(rows, '', { favoritesOnly: true }).map((row) => row.id),
+    ).toEqual(['a'])
+    expect(
+      filterRecipes(rows, '', { category: 'Postre' }).map((row) => row.id),
+    ).toEqual(['b'])
   })
 
   it('formats an ingredient with and without amount', () => {
-    expect(formatIngredient({ position: 0, name: 'Harina', quantity: 200, unitCode: 'g' })).toBe('200 g · Harina')
-    expect(formatIngredient({ position: 1, name: 'Sal', quantity: null, unitCode: null })).toBe('Sal')
+    expect(
+      formatIngredient({
+        position: 0,
+        name: 'Harina',
+        quantity: 200,
+        unitCode: 'g',
+      }),
+    ).toBe('200 g · Harina')
+    expect(
+      formatIngredient({
+        position: 1,
+        name: 'Sal',
+        quantity: null,
+        unitCode: null,
+      }),
+    ).toBe('Sal')
   })
 })

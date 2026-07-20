@@ -4,7 +4,12 @@ export type RecipeDishType =
 export type RecipeStatus = 'pending' | 'ready'
 
 export type RecipeCategoryDimension =
-  'dish_type' | 'main_ingredient' | 'technique' | 'time' | 'season' | 'mediterranean'
+  | 'dish_type'
+  | 'main_ingredient'
+  | 'technique'
+  | 'time'
+  | 'season'
+  | 'mediterranean'
 
 export type RecipeCategory = {
   dimension: RecipeCategoryDimension
