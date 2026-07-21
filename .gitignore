@@ -1,0 +1,19 @@
+# dependencies and package-manager cache
+/node_modules
+/.npm-cache
+
+# Next.js and test output
+/.next
+/out
+/coverage
+/test-results
+/playwright-report
+
+# local environment files
+.env*
+!.env.example
+
+# editor and OS files
+.DS_Store
+Thumbs.db
+*.tsbuildinfo

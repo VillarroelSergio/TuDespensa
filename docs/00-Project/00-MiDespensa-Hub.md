@@ -9,21 +9,34 @@ tags:
 status: active
 notion: "https://app.notion.com/p/3a1ad407cbfd81979530f32cc6669b0a"
 notion_tasks: "https://app.notion.com/p/0136d6873c8e48d39e7af7a5d4a66c64"
-figma_project: "https://www.figma.com/files/team/908864607492859633/project/627408443"
-figma_file: "https://www.figma.com/design/5OqgkhvJnvApXAxTD40a0Z"
+figma_project: "https://www.figma.com/files/project/627466188"
+figma_file: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
+figma_scope: "627466188"
 ---
 
 # MiDespensa — Centro del proyecto
 
 > [!abstract] Propósito
-> Punto de entrada para la documentación de MiDespensa y contexto principal para personas y modelos de IA.
+> Punto de entrada para la documentación de MiDespensa y contexto principal para las personas y asistentes que trabajen en el proyecto.
 
 ## Enlaces externos
 
 - [Proyecto y tareas en Notion](https://app.notion.com/p/3a1ad407cbfd81979530f32cc6669b0a)
 - [Tablero de tareas — MiDespensa](https://app.notion.com/p/0136d6873c8e48d39e7af7a5d4a66c64)
-- [Archivo maestro de wireframes y UI](https://www.figma.com/design/5OqgkhvJnvApXAxTD40a0Z)
-- [Carpeta del proyecto en Figma](https://www.figma.com/files/team/908864607492859633/project/627408443)
+- [Archivo maestro de wireframes y UI](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih)
+- [Carpeta del proyecto en Figma](https://www.figma.com/files/project/627466188)
+
+### Organización del archivo de Figma
+
+El archivo maestro está organizado en cinco páginas. Antes de implementar una pantalla, se debe abrir la página del módulo correspondiente y obtener el contexto del nodo concreto; los nombres de página no sustituyen ese contexto.
+
+| Página de Figma | Nodo de Figma | Módulo de código | Alcance visual |
+| --- | --- | --- | --- |
+| `ONBOARDING` | [7:1261](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=7-1261) | `onboarding`, `household`, `pantry` | Alta del hogar, línea base e inventario inicial |
+| `DESPENSA` | [47:2](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=47-2) | `pantry`, `catalog` | Inventario habitual y sus estados |
+| `COMPRA` | [29:3290](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-3290) | `shopping` | Lista de compra, revisión y estados de ticket |
+| `RECETAS` | [29:1906](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-1906) | `recipes`, `recommendations` | Recetario, preferencias y sugerencias |
+| `PLAN SEMANAL` | [29:5](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-5) | `planning`, `recommendations` | Menú semanal y propuestas |
 
 ## Documentación principal
 
@@ -32,7 +45,17 @@ figma_file: "https://www.figma.com/design/5OqgkhvJnvApXAxTD40a0Z"
 - [[PRODUCT-BRIEF|Visión y definición de producto]]
 - [[MVP-FUNCTIONAL-BRIEF|Contrato funcional del MVP]]
 - [[INFORMATION-ARCHITECTURE|Arquitectura de información minimalista]]
+- [[ONBOARDING-WIREFLOW|Wireflow de onboarding e inventario inicial]]
+- [[ONBOARDING-SCREEN-SPEC|Especificación detallada de pantallas del onboarding]]
+- [[CORE-MVP-FLOWS-SPEC|Flujos principales del MVP]]
+- [[PLAN-SCREEN-SPEC|Especificación de pantallas del plan semanal]]
+- [[RECIPES-SCREEN-SPEC|Especificación de pantallas de recetas]]
+- [[SHOPPING-SCREEN-SPEC|Especificación de pantallas de compra]]
+- [[PANTRY-SCREEN-SPEC|Especificación de pantallas de despensa]]
 - [[COMPETITIVE-BENCHMARK|Benchmark competitivo]]
+- [[DOMAIN-DATA-MODEL|Modelo de dominio y datos]]
+- [[TECHNICAL-ARCHITECTURE|Arquitectura técnica del MVP web]]
+- [[adr/README|Registro de decisiones arquitectónicas]]
 
 ## Estructura del vault
 
@@ -43,6 +66,7 @@ figma_file: "https://www.figma.com/design/5OqgkhvJnvApXAxTD40a0Z"
 | `02-Requirements` | Requisitos y criterios de aceptación |
 | `03-UX` | Flujos, arquitectura de información y decisiones UX |
 | `04-Research` | Investigación de mercado, competencia y evidencias externas |
+| `05-Architecture` | Arquitectura técnica, dominio, datos y decisiones de infraestructura |
 
 Se crearán nuevas carpetas únicamente cuando exista contenido canónico que lo justifique.
 
@@ -86,7 +110,9 @@ flowchart LR
 - [x] Configurar gestión de tareas en Notion.
 - [x] Crear archivo de wireframes en el proyecto de Figma.
 - [x] Abrir esta carpeta como vault de Obsidian.
-- [ ] Diseñar wireframes de baja fidelidad.
+- [x] Definir el modelo de dominio y datos.
+- [x] Aprobar la arquitectura técnica del MVP web.
+- [x] Finalizar y organizar los wireframes por módulo en el archivo maestro de Figma.
 
 ## Convenciones documentales
 

@@ -5,7 +5,7 @@ Estas reglas son obligatorias para cualquier modelo o agente que trabaje en este
 ## Inicio de cada tarea
 
 1. Leer `docs/00-Project/ACTIVE-CONTEXT.md` y `docs/00-Project/WORKFLOW.md`.
-2. Confirmar en Notion cuál es la única tarea activa.
+2. Confirmar en Notion cuál es la tarea activa de cada carril habilitado. Puede existir como máximo una tarea **En curso** por carril; actualmente los carriles son UX/UI y Arquitectura.
 3. Leer únicamente la documentación de Obsidian enlazada desde esa tarea.
 4. Consultar Figma cuando el trabajo afecte a flujos, wireframes, UI o UX.
 
@@ -13,7 +13,7 @@ Estas reglas son obligatorias para cualquier modelo o agente que trabaje en este
 
 Notion → Obsidian → Figma cuando aplique → repositorio → verificación → actualización de Notion.
 
-- Notion es la fuente de verdad para roadmap, tarea activa, estado, prioridad y responsable.
+- Notion es la fuente de verdad para roadmap, tareas activas por carril, estado, prioridad y responsable.
 - Obsidian es la fuente de verdad para producto, requisitos, arquitectura, decisiones e investigación.
 - Figma es la fuente de verdad para wireframes, prototipos y diseño UI/UX.
 - El repositorio es la fuente de verdad para código, pruebas y artefactos ejecutables.
@@ -35,4 +35,3 @@ Notion → Obsidian → Figma cuando aplique → repositorio → verificación �
 - Mover contenido obsoleto a archivo únicamente cuando sea necesario; no conservar basura “por si acaso”.
 - No guardar secretos, credenciales ni datos personales innecesarios.
 - No inventar fechas, responsables o decisiones de negocio.
-
