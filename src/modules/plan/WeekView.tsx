@@ -49,6 +49,14 @@ function SlotMenu({ meal }: { meal: PlannedMeal }) {
         Opciones
       </summary>
       <div className="plan-menu__body">
+        {meal.cookedAt ? null : (
+          <a
+            className="plan-menu__cook"
+            href={`/plan/cocinar?fecha=${meal.mealDate}&servicio=${meal.mealType}`}
+          >
+            Marcar como cocinada
+          </a>
+        )}
         <a href={chooseHref(meal.mealDate, meal.mealType)}>Cambiar receta</a>
 
         <form className="plan-menu__form" action={assignMealAction}>
@@ -119,6 +127,9 @@ function Slot({ slot }: { slot: PlanSlot }) {
               .filter(Boolean)
               .join(' · ')}
           </span>
+          {slot.meal.cookedAt ? (
+            <span className="plan-slot__cooked">✓ Cocinada</span>
+          ) : null}
           <SlotMenu meal={slot.meal} />
         </div>
       ) : (
@@ -157,11 +168,13 @@ export function WeekView({
   meals,
   undo,
   notice,
+  cookedNotice,
 }: {
   startIso: string
   currentWeekIso: string
   meals: PlannedMeal[]
   notice?: string | null
+  cookedNotice?: string | null
   undo?: {
     mealDate: string
     mealType: MealType
@@ -216,6 +229,11 @@ export function WeekView({
         {notice ? (
           <p className="plan-notice" role="status">
             {notice} · <a href="/compra">Ver Compra</a>
+          </p>
+        ) : null}
+        {cookedNotice ? (
+          <p className="plan-notice" role="status">
+            {cookedNotice} · <a href="/despensa">Ver Despensa</a>
           </p>
         ) : null}
 

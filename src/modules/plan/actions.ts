@@ -12,6 +12,8 @@ import type { RecipeDishType } from '@/modules/recipes/types'
 
 import { addPlanItems } from '@/modules/shopping/actions'
 
+import { buildCookLines } from './cooking'
+import type { Consumption, CookLine, CookPantryItem } from './cooking'
 import { addDays, weekStart } from './presentation'
 import { missingIngredients, rankSuggestions } from './suggestions'
 import type { Suggestion } from './suggestions'
@@ -323,7 +325,7 @@ export async function getWeekMeals(startIso: string): Promise<PlannedMeal[]> {
   // RLS limita la selección al hogar activo; no hace falta filtrar por hogar aquí.
   const { data, error } = await supabase
     .from('planned_meals')
-    .select('meal_date,meal_type,recipe_id,servings')
+    .select('meal_date,meal_type,recipe_id,servings,cooked_at')
     .gte('meal_date', startIso)
     .lte('meal_date', addDays(startIso, 6))
   if (error) failure(error)
@@ -356,7 +358,118 @@ export async function getWeekMeals(startIso: string): Promise<PlannedMeal[]> {
         title: recipe.title,
         totalMinutes: recipe.total_minutes,
         servings: meal.servings,
+        cookedAt: meal.cooked_at,
       },
     ]
   })
+}
+
+/** Revisión de cocinado: título del hueco y descuentos propuestos por producto. */
+export type CookPreview = {
+  title: string
+  mealDate: string
+  mealType: MealType
+  alreadyCooked: boolean
+  lines: CookLine[]
+}
+
+/**
+ * Prepara la revisión de «marcar como cocinada»: empareja los ingredientes de la
+ * receta planificada con la despensa y propone un descuento por producto. Devuelve
+ * `null` si el hueco no existe (nada que cocinar).
+ */
+export async function getCookPreview(
+  mealDate: string,
+  mealType: MealType,
+): Promise<CookPreview | null> {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: meal, error: mealError } = await supabase
+    .from('planned_meals')
+    .select('recipe_id,cooked_at')
+    .eq('meal_date', mealDate)
+    .eq('meal_type', mealType)
+    .maybeSingle()
+  if (mealError) failure(mealError)
+  if (!meal) return null
+
+  const [recipeRes, ingredientsRes, pantry] = await Promise.all([
+    supabase.from('recipes').select('title').eq('id', meal.recipe_id).maybeSingle(),
+    supabase
+      .from('recipe_ingredients')
+      .select('name,quantity,unit_code')
+      .eq('recipe_id', meal.recipe_id),
+    getCookPantry(supabase),
+  ])
+  if (recipeRes.error) failure(recipeRes.error)
+
+  return {
+    title: recipeRes.data?.title ?? 'Receta',
+    mealDate,
+    mealType,
+    alreadyCooked: meal.cooked_at !== null,
+    lines: buildCookLines(ingredientsRes.data ?? [], pantry),
+  }
+}
+
+/** Productos presentes en la despensa, con lo necesario para descontar y versionar. */
+async function getCookPantry(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+): Promise<CookPantryItem[]> {
+  const { data: items } = await supabase
+    .from('pantry_items')
+    .select('id,food_id,version,tracking_mode,approximate_state,quantity,unit_code')
+    .eq('presence', true)
+  if (!items?.length) return []
+  const { data: foods } = await supabase
+    .from('household_foods')
+    .select('id,name')
+    .in(
+      'id',
+      items.map((item) => item.food_id),
+    )
+  const nameById = new Map((foods ?? []).map((food) => [food.id, food.name]))
+  return items.flatMap((item) => {
+    const name = nameById.get(item.food_id)
+    if (!name) return []
+    return [
+      {
+        itemId: item.id,
+        name,
+        version: item.version,
+        trackingMode: item.tracking_mode,
+        approximateState: item.approximate_state,
+        quantity: item.quantity,
+        unitCode: item.unit_code,
+      },
+    ]
+  })
+}
+
+/**
+ * Marca una comida como cocinada y aplica los descuentos confirmados en la
+ * despensa. Idempotente; un CONFLICT significa que otro integrante ya la cocinó o
+ * cambió un producto, y la revisión debe recargarse.
+ */
+export async function cookMeal(
+  mealDate: string,
+  mealType: MealType,
+  consumptions: Consumption[],
+  key?: string,
+) {
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase.rpc('plan_cook_meal', {
+    meal_date_value: mealDate,
+    meal_type_value: mealType,
+    consumptions: consumptions as never,
+    idempotency_key: parseIdempotencyKey(key ?? createIdempotencyKey('plan_cook_meal')),
+  })
+  if (error) failure(error)
+  revalidatePath('/plan')
+  revalidatePath('/despensa')
+  return data as { cooked: boolean; consumed: number }
 }

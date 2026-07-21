@@ -7,6 +7,8 @@ export type PlannedMeal = {
   title: string
   totalMinutes: number | null
   servings: number | null
+  /** Fecha de cocinado (Fase 8); null si aún no se ha cocinado. */
+  cookedAt: string | null
 }
 
 export type PlanSlot = {

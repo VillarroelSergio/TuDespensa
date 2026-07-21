@@ -86,7 +86,8 @@ function normalize(value: string): string {
 
 // ponytail: emparejamiento por inclusión de subcadena. Cubre «tomate» ↔ «tomates
 // pera»; un catálogo canónico de alimentos con alias es la mejora si falla.
-function matches(ingredient: string, food: string): boolean {
+// Exportado para que Fase 8 empareje ingrediente↔despensa con la misma regla.
+export function matches(ingredient: string, food: string): boolean {
   const left = normalize(ingredient)
   const right = normalize(food)
   if (!left || !right) return false
