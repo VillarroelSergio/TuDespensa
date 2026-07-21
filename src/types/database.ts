@@ -10,7 +10,12 @@ type HouseholdOnboardingStatus = 'in_progress' | 'completed'
 type HouseholdRole = 'owner' | 'member'
 type HouseholdMemberStatus = 'active' | 'inactive'
 type PantryZone = 'fridge' | 'freezer' | 'pantry'
-type PantryMovementType = 'entry' | 'removal' | 'correction'
+type PantryMovementType =
+  'entry' | 'removal' | 'correction' | 'consumption' | 'adjustment'
+type PantryTrackingMode = 'approximate' | 'units' | 'measure'
+type PantryApproximateState = 'plenty' | 'some' | 'low' | 'out'
+type RecipeDishType =
+  'breakfast' | 'starter' | 'main' | 'side' | 'dessert' | 'drink' | 'other'
 type OnboardingGlobalState =
   | 'household_draft'
   | 'inventory_in_progress'
@@ -148,18 +153,21 @@ export interface Database {
           id: string
           household_id: string
           name: string
+          catalog_food_id: string | null
           created_at: string
         }
         Insert: {
           id?: string
           household_id: string
           name: string
+          catalog_food_id?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           household_id?: string
           name?: string
+          catalog_food_id?: string | null
           created_at?: string
         }
         Relationships: []
@@ -170,9 +178,13 @@ export interface Database {
           household_id: string
           location_id: string
           food_id: string
-          tracking_mode: 'approximate'
+          tracking_mode: PantryTrackingMode
           presence: boolean
           quantity: number | null
+          approximate_state: PantryApproximateState
+          attention_state: 'none' | 'low'
+          unit_code: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
+          entered_at: string
           version: number
           confirmed_at: string | null
           confirmed_by: string | null
@@ -184,9 +196,13 @@ export interface Database {
           household_id: string
           location_id: string
           food_id: string
-          tracking_mode?: 'approximate'
+          tracking_mode?: PantryTrackingMode
           presence?: boolean
           quantity?: number | null
+          approximate_state?: PantryApproximateState
+          attention_state?: 'none' | 'low'
+          unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
+          entered_at?: string
           version?: number
           confirmed_at?: string | null
           confirmed_by?: string | null
@@ -198,9 +214,13 @@ export interface Database {
           household_id?: string
           location_id?: string
           food_id?: string
-          tracking_mode?: 'approximate'
+          tracking_mode?: PantryTrackingMode
           presence?: boolean
           quantity?: number | null
+          approximate_state?: PantryApproximateState
+          attention_state?: 'none' | 'low'
+          unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
+          entered_at?: string
           version?: number
           confirmed_at?: string | null
           confirmed_by?: string | null
@@ -216,6 +236,8 @@ export interface Database {
           item_id: string
           movement_type: PantryMovementType
           actor: string
+          quantity_delta: number | null
+          item_snapshot: Json
           created_at: string
         }
         Insert: {
@@ -224,6 +246,8 @@ export interface Database {
           item_id: string
           movement_type: PantryMovementType
           actor: string
+          quantity_delta?: number | null
+          item_snapshot?: Json
           created_at?: string
         }
         Update: {
@@ -232,6 +256,425 @@ export interface Database {
           item_id?: string
           movement_type?: PantryMovementType
           actor?: string
+          quantity_delta?: number | null
+          item_snapshot?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      shopping_lists: {
+        Row: {
+          id: string
+          household_id: string
+          status: 'active'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          household_id: string
+          status?: 'active'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          household_id?: string
+          status?: 'active'
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shopping_items: {
+        Row: {
+          id: string
+          household_id: string
+          shopping_list_id: string
+          food_id: string
+          source: 'manual' | 'pantry'
+          is_purchased: boolean
+          version: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          household_id: string
+          shopping_list_id: string
+          food_id: string
+          source?: 'manual' | 'pantry'
+          is_purchased?: boolean
+          version?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          household_id?: string
+          shopping_list_id?: string
+          food_id?: string
+          source?: 'manual' | 'pantry'
+          is_purchased?: boolean
+          version?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recipes: {
+        Row: {
+          id: string
+          household_id: string
+          title: string
+          dish_type: RecipeDishType | null
+          total_minutes: number | null
+          servings: number | null
+          status: 'pending' | 'ready'
+          source_url: string | null
+          origin: 'household' | 'seed'
+          seed_key: string | null
+          seed_version: number | null
+          attribution: string | null
+          version: number
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          household_id: string
+          title: string
+          dish_type?: RecipeDishType | null
+          total_minutes?: number | null
+          servings?: number | null
+          status?: 'pending' | 'ready'
+          source_url?: string | null
+          origin?: 'household' | 'seed'
+          seed_key?: string | null
+          seed_version?: number | null
+          attribution?: string | null
+          version?: number
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          household_id?: string
+          title?: string
+          dish_type?: RecipeDishType | null
+          total_minutes?: number | null
+          servings?: number | null
+          status?: 'pending' | 'ready'
+          source_url?: string | null
+          origin?: 'household' | 'seed'
+          seed_key?: string | null
+          seed_version?: number | null
+          attribution?: string | null
+          version?: number
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recipe_categories: {
+        Row: {
+          id: string
+          household_id: string
+          dimension:
+            | 'dish_type'
+            | 'main_ingredient'
+            | 'technique'
+            | 'time'
+            | 'season'
+            | 'mediterranean'
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          household_id: string
+          dimension:
+            | 'dish_type'
+            | 'main_ingredient'
+            | 'technique'
+            | 'time'
+            | 'season'
+            | 'mediterranean'
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          household_id?: string
+          dimension?:
+            | 'dish_type'
+            | 'main_ingredient'
+            | 'technique'
+            | 'time'
+            | 'season'
+            | 'mediterranean'
+          name?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      recipe_category_assignments: {
+        Row: {
+          recipe_id: string
+          category_id: string
+          household_id: string
+          created_at: string
+        }
+        Insert: {
+          recipe_id: string
+          category_id: string
+          household_id: string
+          created_at?: string
+        }
+        Update: {
+          recipe_id?: string
+          category_id?: string
+          household_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      meal_plans: {
+        Row: {
+          id: string
+          household_id: string
+          week_start_date: string
+          created_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          household_id: string
+          week_start_date: string
+          created_by: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          household_id?: string
+          week_start_date?: string
+          created_by?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      planned_meals: {
+        Row: {
+          id: string
+          meal_plan_id: string
+          household_id: string
+          meal_date: string
+          meal_type: 'lunch' | 'dinner'
+          recipe_id: string
+          servings: number | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          meal_plan_id: string
+          household_id: string
+          meal_date: string
+          meal_type: 'lunch' | 'dinner'
+          recipe_id: string
+          servings?: number | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          meal_plan_id?: string
+          household_id?: string
+          meal_date?: string
+          meal_type?: 'lunch' | 'dinner'
+          recipe_id?: string
+          servings?: number | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recipe_preferences: {
+        Row: {
+          recipe_id: string
+          household_id: string
+          user_id: string
+          is_favorite: boolean
+          rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          recipe_id: string
+          household_id: string
+          user_id: string
+          is_favorite?: boolean
+          rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          recipe_id?: string
+          household_id?: string
+          user_id?: string
+          is_favorite?: boolean
+          rating?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recipe_ingredients: {
+        Row: {
+          id: string
+          recipe_id: string
+          household_id: string
+          position: number
+          name: string
+          quantity: number | null
+          unit_code: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          recipe_id: string
+          household_id: string
+          position: number
+          name: string
+          quantity?: number | null
+          unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          recipe_id?: string
+          household_id?: string
+          position?: number
+          name?: string
+          quantity?: number | null
+          unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      recipe_steps: {
+        Row: {
+          id: string
+          recipe_id: string
+          household_id: string
+          position: number
+          instruction: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          recipe_id: string
+          household_id: string
+          position: number
+          instruction: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          recipe_id?: string
+          household_id?: string
+          position?: number
+          instruction?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      catalog_foods: {
+        Row: {
+          id: string
+          canonical_name: string
+          category: string
+          consume_soon_after: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          canonical_name: string
+          category?: string
+          consume_soon_after?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          canonical_name?: string
+          category?: string
+          consume_soon_after?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      food_aliases: {
+        Row: {
+          id: string
+          catalog_food_id: string
+          alias: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          catalog_food_id: string
+          alias: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          catalog_food_id?: string
+          alias?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      units: {
+        Row: {
+          code: 'unit' | 'g' | 'kg' | 'ml' | 'l'
+          family: 'units' | 'mass' | 'volume'
+          label: string
+        }
+        Insert: {
+          code: 'unit' | 'g' | 'kg' | 'ml' | 'l'
+          family: 'units' | 'mass' | 'volume'
+          label: string
+        }
+        Update: {
+          code?: 'unit' | 'g' | 'kg' | 'ml' | 'l'
+          family?: 'units' | 'mass' | 'volume'
+          label?: string
+        }
+        Relationships: []
+      }
+      household_food_aliases: {
+        Row: {
+          id: string
+          household_id: string
+          food_id: string
+          alias: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          household_id: string
+          food_id: string
+          alias: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          household_id?: string
+          food_id?: string
+          alias?: string
           created_at?: string
         }
         Relationships: []
@@ -312,7 +755,20 @@ export interface Database {
         Relationships: []
       }
     }
-    Views: Record<never, never>
+    Views: {
+      pantry_consume_soon: {
+        Row: {
+          pantry_item_id: string
+          household_id: string
+          food_id: string
+          entered_at: string
+          household_food_name: string
+          category: string | null
+          consume_soon: boolean
+        }
+        Relationships: []
+      }
+    }
     Functions: {
       create_household_with_onboarding: {
         Args: { name: string; people: Json; idempotency_key: string }
@@ -332,6 +788,161 @@ export interface Database {
       }
       confirm_baseline: {
         Args: { idempotency_key: string }
+        Returns: Json
+      }
+      pantry_record_entry: {
+        Args: {
+          zone: PantryZone
+          food_name: string
+          tracking_mode: PantryTrackingMode
+          approximate_state: PantryApproximateState | null
+          quantity: number | null
+          unit_code: string | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      pantry_correct_item: {
+        Args: {
+          item_id: string
+          version: number
+          tracking_mode: PantryTrackingMode
+          approximate_state: PantryApproximateState | null
+          quantity: number | null
+          unit_code: string | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      pantry_adjust_item: {
+        Args: {
+          item_id: string
+          version: number
+          tracking_mode: PantryTrackingMode
+          approximate_state: PantryApproximateState | null
+          quantity: number | null
+          unit_code: string | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      pantry_consume_item: {
+        Args: {
+          item_id: string
+          version: number
+          tracking_mode: PantryTrackingMode
+          approximate_state: PantryApproximateState | null
+          quantity: number | null
+          unit_code: string | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      pantry_mark_low: {
+        Args: { item_id: string; version: number; idempotency_key: string }
+        Returns: Json
+      }
+      pantry_mark_out: {
+        Args: { item_id: string; version: number; idempotency_key: string }
+        Returns: Json
+      }
+      pantry_set_attention: {
+        Args: {
+          item_id: string
+          version: number
+          attention_state: 'none' | 'low'
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      recipes_create_recipe: {
+        Args: {
+          title: string
+          dish_type: RecipeDishType | null
+          total_minutes: number | null
+          servings: number | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      recipes_capture_link: {
+        Args: { source_url: string; idempotency_key: string }
+        Returns: Json
+      }
+      recipes_save_recipe: {
+        Args: {
+          recipe_id_value: string
+          title: string
+          dish_type: RecipeDishType | null
+          total_minutes: number | null
+          servings: number | null
+          source_url: string | null
+          ingredients: Json
+          steps: Json
+          expected_version: number
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      recipes_set_preference: {
+        Args: {
+          recipe_id_value: string
+          is_favorite: boolean
+          rating: number | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      recipes_set_categories: {
+        Args: {
+          recipe_id_value: string
+          categories: Json
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      recipes_load_seed: { Args: { idempotency_key: string }; Returns: Json }
+      plan_set_meal: {
+        Args: {
+          meal_date_value: string
+          meal_type_value: 'lunch' | 'dinner'
+          recipe_id_value: string
+          servings_value: number | null
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      plan_clear_meal: {
+        Args: {
+          meal_date_value: string
+          meal_type_value: 'lunch' | 'dinner'
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      shopping_add_item: {
+        Args: {
+          food_name: string
+          item_source: 'manual' | 'pantry'
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      shopping_toggle_item: {
+        Args: {
+          item_id: string
+          version: number
+          purchased: boolean
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      pantry_rename_household_food: {
+        Args: { food_id: string; name: string; idempotency_key: string }
+        Returns: Json
+      }
+      pantry_add_household_food_alias: {
+        Args: { food_id: string; alias: string; idempotency_key: string }
         Returns: Json
       }
     }

@@ -1,6 +1,7 @@
 const HOUSEHOLD_NAME_MAX_LENGTH = 80
 const PERSON_NAME_MAX_LENGTH = 80
 const FOOD_NAME_MAX_LENGTH = 120
+const RECIPE_TITLE_MAX_LENGTH = 160
 const PEOPLE_MAX_COUNT = 10
 const IDEMPOTENCY_KEY_MIN_LENGTH = 8
 const IDEMPOTENCY_KEY_MAX_LENGTH = 120
@@ -50,6 +51,10 @@ export function parsePeople(values: readonly string[]): string[] {
 
 export function parseFoodName(value: string): string {
   return parseBoundedText(value, 'food name', FOOD_NAME_MAX_LENGTH)
+}
+
+export function parseRecipeTitle(value: string): string {
+  return parseBoundedText(value, 'recipe title', RECIPE_TITLE_MAX_LENGTH)
 }
 
 export function parseIdempotencyKey(value: string): string {

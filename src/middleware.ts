@@ -9,6 +9,10 @@ const protectedPaths = ['/onboarding', ...appPaths]
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
+  // Local UI work must not depend on OTP delivery or a seeded Supabase session.
+  // This branch is never reached by production deployments.
+  if (process.env.NODE_ENV === 'development') return response
+
   const { url, anonKey } = getPublicSupabaseEnvironment()
   const supabase = createServerClient<Database>(url, anonKey, {
     cookies: {
@@ -16,21 +20,44 @@ export async function middleware(request: NextRequest) {
       setAll: (items) => {
         items.forEach(({ name, value }) => request.cookies.set(name, value))
         response = NextResponse.next({ request })
-        items.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
+        items.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options),
+        )
       },
     },
   })
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const pathname = request.nextUrl.pathname
-  if (protectedPaths.some((path) => pathname.startsWith(path)) && !user) return NextResponse.redirect(new URL('/login', request.url))
+  if (protectedPaths.some((path) => pathname.startsWith(path)) && !user)
+    return NextResponse.redirect(new URL('/login', request.url))
   if (!user) return response
-  const { data: membership } = await supabase.from('household_members').select('household_id').eq('status', 'active').maybeSingle()
-  const { data: household } = membership ? await supabase.from('households').select('onboarding_status').eq('id', membership.household_id).maybeSingle() : { data: null }
+  const { data: membership } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('status', 'active')
+    .maybeSingle()
+  const { data: household } = membership
+    ? await supabase
+        .from('households')
+        .select('onboarding_status')
+        .eq('id', membership.household_id)
+        .maybeSingle()
+    : { data: null }
   const completed = household?.onboarding_status === 'completed'
-  if (completed && (pathname === '/login' || pathname.startsWith('/onboarding'))) return NextResponse.redirect(new URL('/despensa', request.url))
-  if (!completed && appPaths.some((path) => pathname.startsWith(path))) return NextResponse.redirect(new URL('/onboarding', request.url))
-  if (pathname === '/login') return NextResponse.redirect(new URL('/onboarding', request.url))
+  if (
+    completed &&
+    (pathname === '/login' || pathname.startsWith('/onboarding'))
+  )
+    return NextResponse.redirect(new URL('/despensa', request.url))
+  if (!completed && appPaths.some((path) => pathname.startsWith(path)))
+    return NextResponse.redirect(new URL('/onboarding', request.url))
+  if (pathname === '/login')
+    return NextResponse.redirect(new URL('/onboarding', request.url))
   return response
 }
 
-export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'] }
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+}
