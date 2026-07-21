@@ -93,6 +93,19 @@ function matches(ingredient: string, food: string): boolean {
   return left.includes(right) || right.includes(left)
 }
 
+/**
+ * Ingredientes que no están en la despensa. Es lo que explica la disponibilidad
+ * de una sugerencia y, en Fase 6, lo que se consolida en Compra.
+ */
+export function missingIngredients(
+  ingredients: string[],
+  pantry: SuggestionPantryItem[],
+): string[] {
+  return ingredients.filter(
+    (ingredient) => !pantry.some((item) => matches(ingredient, item.name)),
+  )
+}
+
 function timeReason(totalMinutes: number | null): string | null {
   return totalMinutes && totalMinutes <= QUICK_MINUTES
     ? `Lista en ${totalMinutes} min`
@@ -104,14 +117,16 @@ function scoreCandidate(
   input: SuggestionInput,
 ): Suggestion {
   const factors: SuggestionFactor[] = []
-  const missing: string[] = []
-  const priorityUsed: string[] = []
-
-  for (const ingredient of candidate.ingredients) {
-    const found = input.pantry.find((item) => matches(ingredient, item.name))
-    if (!found) missing.push(ingredient)
-    else if (found.priority) priorityUsed.push(found.name)
-  }
+  const missing = missingIngredients(candidate.ingredients, input.pantry)
+  const priorityUsed = input.pantry
+    .filter(
+      (item) =>
+        item.priority &&
+        candidate.ingredients.some((ingredient) =>
+          matches(ingredient, item.name),
+        ),
+    )
+    .map((item) => item.name)
 
   // Sin ingredientes registrados no podemos afirmar disponibilidad: puntúa 0 en
   // vez de 100 %, para no premiar a las recetas incompletas.

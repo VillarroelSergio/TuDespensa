@@ -30,6 +30,28 @@ export async function addShoppingItem(input: { foodName: string; source?: 'manua
   })
 }
 
+/**
+ * Consolida en Compra los ingredientes que faltan para una receta planificada.
+ * Devuelve cuántos productos son nuevos: los que ya estaban no se duplican ni se
+ * desmarcan, y un producto manual conserva su origen.
+ */
+export async function addPlanItems(
+  items: { name: string; quantity: number | null; unitCode: string | null }[],
+  key?: string,
+) {
+  if (!items.length) return { added: 0 }
+  return rpc<{ added: number }>('shopping_add_plan_items', {
+    items: items.map((item) => ({
+      name: item.name.trim(),
+      quantity: item.quantity,
+      unit_code: item.unitCode,
+    })),
+    idempotency_key: parseIdempotencyKey(
+      key ?? createIdempotencyKey('shopping_add_plan_items'),
+    ),
+  })
+}
+
 export async function toggleShoppingItem(itemId: string, version: number, purchased: boolean, key?: string) {
   return rpc<{ item_id: string; version: number; is_purchased: boolean }>('shopping_toggle_item', {
     item_id: itemId,
@@ -52,7 +74,7 @@ export async function getShoppingItems(): Promise<ShoppingItem[]> {
   if (listsError) failure(listsError)
   const listId = lists?.[0]?.id
   if (!listId) return []
-  const { data: items, error: itemsError } = await supabase.from('shopping_items').select('id,food_id,source,is_purchased,version,created_at').eq('shopping_list_id', listId).order('is_purchased').order('created_at')
+  const { data: items, error: itemsError } = await supabase.from('shopping_items').select('id,food_id,source,is_purchased,version,quantity,unit_code,created_at').eq('shopping_list_id', listId).order('is_purchased').order('created_at')
   if (itemsError) failure(itemsError)
   const foodIds = (items ?? []).map((item) => item.food_id)
   const { data: foods, error: foodsError } = foodIds.length ? await supabase.from('household_foods').select('id,name').in('id', foodIds) : { data: [], error: null }
@@ -60,6 +82,6 @@ export async function getShoppingItems(): Promise<ShoppingItem[]> {
   const names = new Map((foods ?? []).map((food) => [food.id, food.name]))
   return (items ?? []).flatMap((item) => {
     const name = names.get(item.food_id)
-    return name ? [{ id: item.id, name, source: item.source as ShoppingItem['source'], isPurchased: item.is_purchased, version: item.version }] : []
+    return name ? [{ id: item.id, name, source: item.source as ShoppingItem['source'], isPurchased: item.is_purchased, version: item.version, quantity: item.quantity, unitCode: item.unit_code }] : []
   })
 }

@@ -6,6 +6,7 @@ import {
   dayLabel,
   parseUndo,
   plannedCount,
+  shoppingNotice,
   slotLabel,
   weekDates,
   weekRangeLabel,
@@ -92,6 +93,25 @@ describe('slotLabel', () => {
   it('nombra el hueco con día y servicio en minúscula', () => {
     expect(slotLabel('2026-07-21', 'lunch')).toBe('martes, comida')
     expect(slotLabel('2026-07-26', 'dinner')).toBe('domingo, cena')
+  })
+})
+
+describe('shoppingNotice', () => {
+  it('resume cuántos productos se han añadido a Compra', () => {
+    expect(shoppingNotice('1')).toBe('Hemos añadido 1 producto a Compra')
+    expect(shoppingNotice('3')).toBe('Hemos añadido 3 productos a Compra')
+  })
+
+  it('no dice nada si no se añadió nada o el valor no sirve', () => {
+    expect(shoppingNotice('0')).toBeNull()
+    expect(shoppingNotice(undefined)).toBeNull()
+    expect(shoppingNotice('abc')).toBeNull()
+  })
+
+  it('avisa cuando el plan se guardó pero Compra falló', () => {
+    expect(shoppingNotice('-1')).toBe(
+      'Hemos planificado la comida, pero no hemos podido actualizar Compra.',
+    )
   })
 })
 

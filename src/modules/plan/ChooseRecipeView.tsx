@@ -30,6 +30,9 @@ function ChooseForm({
       <input type="hidden" name="fecha" value={mealDate} />
       <input type="hidden" name="servicio" value={mealType} />
       <input type="hidden" name="receta" value={recipeId} />
+      {/* Elegir desde P2 es lo único que consolida faltantes en Compra; ajustar
+          raciones o deshacer un borrado no deben tocar la lista. */}
+      <input type="hidden" name="consolidar" value="1" />
       <button className={className} type="submit">
         {children}
       </button>

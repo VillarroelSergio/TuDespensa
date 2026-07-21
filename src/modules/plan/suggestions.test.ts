@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   availabilityLabel,
+  missingIngredients,
   rankSuggestions,
   type SuggestionCandidate,
   type SuggestionInput,
@@ -137,5 +138,23 @@ describe('availabilityLabel', () => {
     expect(availabilityLabel(['jamón', 'pan'])).toBe(
       'Necesitas comprar: jamón, pan',
     )
+  })
+})
+
+describe('missingIngredients', () => {
+  it('deja fuera lo que la despensa cubre, ignorando tildes y mayúsculas', () => {
+    expect(
+      missingIngredients(
+        ['Tomate', 'Jamón', 'Pan'],
+        [
+          { name: 'tomates pera', priority: false },
+          { name: 'jamon serrano', priority: true },
+        ],
+      ),
+    ).toEqual(['Pan'])
+  })
+
+  it('sin despensa, todo falta', () => {
+    expect(missingIngredients(['Sal', 'Agua'], [])).toEqual(['Sal', 'Agua'])
   })
 })

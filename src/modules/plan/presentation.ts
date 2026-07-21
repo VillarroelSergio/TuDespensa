@@ -89,6 +89,22 @@ export function weekRangeLabel(startIso: string) {
 }
 
 /**
+ * Confirmación breve de la consolidación en Compra (`?compra=`). Un valor
+ * negativo significa que la comida se planificó pero la lista no se pudo tocar.
+ */
+export function shoppingNotice(raw: string | undefined): string | null {
+  const added = Number(raw)
+  if (!raw || !Number.isInteger(added)) return null
+  if (added < 0) {
+    return 'Hemos planificado la comida, pero no hemos podido actualizar Compra.'
+  }
+  if (added === 0) return null
+  return added === 1
+    ? 'Hemos añadido 1 producto a Compra'
+    : `Hemos añadido ${added} productos a Compra`
+}
+
+/**
  * Lee el parámetro `deshacer` que deja un borrado: `fecha:servicio:receta:raciones`.
  * Devuelve `null` si no es utilizable, para no ofrecer un deshacer que fallaría.
  */

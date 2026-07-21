@@ -10,8 +10,10 @@ import { parseIdempotencyKey } from '@/lib/validation/onboarding'
 
 import type { RecipeDishType } from '@/modules/recipes/types'
 
+import { addPlanItems } from '@/modules/shopping/actions'
+
 import { addDays, weekStart } from './presentation'
-import { rankSuggestions } from './suggestions'
+import { missingIngredients, rankSuggestions } from './suggestions'
 import type { Suggestion } from './suggestions'
 import type { MealType, PlannedMeal } from './types'
 
@@ -96,18 +98,58 @@ function backToWeek(mealDate: string, query = ''): never {
   redirect(`/plan?semana=${weekStart(mealDate)}${query}`)
 }
 
+/** No se ha podido actualizar Compra; el hueco sí quedó planificado. */
+const SHOPPING_FAILED = -1
+
+/**
+ * Lleva a Compra los ingredientes de la receta que no están en la despensa.
+ * Devuelve cuántos productos son nuevos allí.
+ */
+async function consolidateShopping(recipeId: string): Promise<number> {
+  const supabase = await createSupabaseServerClient()
+  const [ingredientsRes, pantry] = await Promise.all([
+    supabase
+      .from('recipe_ingredients')
+      .select('name,quantity,unit_code')
+      .eq('recipe_id', recipeId),
+    getSuggestionPantry(supabase),
+  ])
+  const rows = ingredientsRes.data ?? []
+  const missing = new Set(
+    missingIngredients(
+      rows.map((row) => row.name),
+      pantry,
+    ),
+  )
+  const items = rows
+    .filter((row) => missing.has(row.name))
+    .map((row) => ({
+      name: row.name,
+      quantity: row.quantity,
+      unitCode: row.unit_code,
+    }))
+  if (!items.length) return 0
+  try {
+    return (await addPlanItems(items)).added
+  } catch {
+    // Planificar no debe fallar porque Compra falle: el hueco ya está asignado,
+    // así que lo decimos en vez de romper la acción entera.
+    return SHOPPING_FAILED
+  }
+}
+
 /**
  * Asigna una receta a un hueco. Cubre elegir desde P2, ajustar raciones y
  * deshacer un borrado: los tres son la misma escritura sobre el mismo hueco.
+ * Solo al elegir desde P2 se consolidan los faltantes en Compra.
  */
 export async function assignMealAction(formData: FormData) {
   const slot = parseSlot(formData)
-  await setMeal({
-    ...slot,
-    recipeId: parseRecipeId(formData),
-    servings: parseServings(formData),
-  })
-  backToWeek(slot.mealDate)
+  const recipeId = parseRecipeId(formData)
+  await setMeal({ ...slot, recipeId, servings: parseServings(formData) })
+  if (formData.get('consolidar') !== '1') backToWeek(slot.mealDate)
+  const added = await consolidateShopping(recipeId)
+  backToWeek(slot.mealDate, added ? `&compra=${added}` : '')
 }
 
 /** Mueve una comida a otro hueco; si el destino está ocupado, lo sustituye. */

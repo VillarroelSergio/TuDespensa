@@ -156,10 +156,12 @@ export function WeekView({
   currentWeekIso,
   meals,
   undo,
+  notice,
 }: {
   startIso: string
   currentWeekIso: string
   meals: PlannedMeal[]
+  notice?: string | null
   undo?: {
     mealDate: string
     mealType: MealType
@@ -209,6 +211,13 @@ export function WeekView({
         </header>
 
         {undo ? <UndoBanner undo={undo} /> : null}
+        {/* Confirmación discreta de la consolidación en Compra: informa sin
+            interrumpir ni exigir una respuesta. */}
+        {notice ? (
+          <p className="plan-notice" role="status">
+            {notice} · <a href="/compra">Ver Compra</a>
+          </p>
+        ) : null}
 
         <p className="plan-summary" aria-live="polite">
           {isCurrentWeek ? 'Esta semana' : 'Semana seleccionada'} · {planned} de
