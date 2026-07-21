@@ -6,9 +6,9 @@ tags:
   - midespensa
   - ux
   - despensa
-status: proposed
-revision: 2
-updated: 2026-07-19
+status: active
+revision: 3
+updated: 2026-07-21
 notion_task: "https://app.notion.com/p/3a1ad407cbfd81a7a919c872fc2a4738"
 figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=47-2"
 related:
@@ -45,7 +45,7 @@ Mantener una imagen compartida de lo que hay en casa mediante correcciones liger
 
 - La UI actual permite abrir el panel de detalle o el formulario de alta desde **Añadir producto**. El alta usa `pantry_record_entry` con zona `pantry`, y admite unidades exactas, peso/volumen o presencia aproximada.
 - El patrón visual implementado reutiliza el panel D2 del nodo Figma `31:212`: panel lateral en escritorio y tablet, y vista consecutiva en móvil.
-- Pendiente: confirmación completa de compra y su incorporación explícita a Despensa (C2 de Compra).
+- La confirmación completa de compra ya está disponible mediante C2 de Compra: los productos marcados se revisan antes de entrar en Despensa y la confirmación es idempotente. Las altas nuevas se incorporan a la zona `pantry`.
 
 ### Implementación D3 — fase `feature/pantry-d3`
 
