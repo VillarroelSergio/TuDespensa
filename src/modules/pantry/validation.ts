@@ -12,14 +12,14 @@ const approximateStates = new Set<PantryApproximateState>([
 ])
 const unitCodes = new Set<PantryUnitCode>(['unit', 'g', 'kg', 'ml', 'l'])
 
-export function parsePantryQuantity(value: unknown): number {
+export function parsePantryQuantity(value: unknown, allowZero = false): number {
   const quantity = typeof value === 'string' ? Number(value) : value
   if (
     typeof quantity !== 'number' ||
     !Number.isFinite(quantity) ||
-    quantity <= 0
+    quantity < 0 || (!allowZero && quantity === 0)
   ) {
-    throw new Error('quantity must be a positive number')
+    throw new Error(allowZero ? 'quantity must be a non-negative number' : 'quantity must be a positive number')
   }
   return quantity
 }
@@ -39,6 +39,7 @@ export function parsePantryTracking(
   approximateState: unknown,
   quantity: unknown,
   unitCode: unknown,
+  allowZero = false,
 ) {
   if (trackingMode === 'approximate') {
     if (quantity !== null || unitCode !== null)
@@ -51,7 +52,7 @@ export function parsePantryTracking(
     }
   }
 
-  const parsedQuantity = parsePantryQuantity(quantity)
+  const parsedQuantity = parsePantryQuantity(quantity, allowZero)
   if (
     approximateState !== null ||
     typeof unitCode !== 'string' ||

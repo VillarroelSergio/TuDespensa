@@ -1,5 +1,6 @@
 import type {
   PantryApproximateState,
+  PantryAttentionState,
   PantryTrackingMode,
   PantryUnitCode,
 } from './types'
@@ -13,6 +14,7 @@ export type PantryListItem = {
   version: number
   trackingMode: PantryTrackingMode
   approximateState: PantryApproximateState | null
+  attentionState: PantryAttentionState
   quantity: number | null
   unitCode: PantryUnitCode | null
   consumeSoon?: boolean
@@ -33,7 +35,7 @@ export function pantryStatus(item: PantryListItem): PantryStatus {
   }
 
   if (
-    item.approximateState === 'low' || item.consumeSoon === true
+    item.approximateState === 'low' || item.attentionState === 'low' || item.consumeSoon === true
   ) {
     return 'low'
   }

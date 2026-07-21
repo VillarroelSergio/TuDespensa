@@ -180,6 +180,7 @@ export interface Database {
           presence: boolean
           quantity: number | null
           approximate_state: PantryApproximateState
+          attention_state: 'none' | 'low'
           unit_code: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
           entered_at: string
           version: number
@@ -197,6 +198,7 @@ export interface Database {
           presence?: boolean
           quantity?: number | null
           approximate_state?: PantryApproximateState
+          attention_state?: 'none' | 'low'
           unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
           entered_at?: string
           version?: number
@@ -214,6 +216,7 @@ export interface Database {
           presence?: boolean
           quantity?: number | null
           approximate_state?: PantryApproximateState
+          attention_state?: 'none' | 'low'
           unit_code?: 'unit' | 'g' | 'kg' | 'ml' | 'l' | null
           entered_at?: string
           version?: number
@@ -255,6 +258,18 @@ export interface Database {
           item_snapshot?: Json
           created_at?: string
         }
+        Relationships: []
+      }
+      shopping_lists: {
+        Row: { id: string; household_id: string; status: 'active'; created_at: string; updated_at: string }
+        Insert: { id?: string; household_id: string; status?: 'active'; created_at?: string; updated_at?: string }
+        Update: { id?: string; household_id?: string; status?: 'active'; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      shopping_items: {
+        Row: { id: string; household_id: string; shopping_list_id: string; food_id: string; source: 'manual' | 'pantry'; is_purchased: boolean; version: number; created_at: string; updated_at: string }
+        Insert: { id?: string; household_id: string; shopping_list_id: string; food_id: string; source?: 'manual' | 'pantry'; is_purchased?: boolean; version?: number; created_at?: string; updated_at?: string }
+        Update: { id?: string; household_id?: string; shopping_list_id?: string; food_id?: string; source?: 'manual' | 'pantry'; is_purchased?: boolean; version?: number; created_at?: string; updated_at?: string }
         Relationships: []
       }
       catalog_foods: {
@@ -511,6 +526,12 @@ export interface Database {
         Args: { item_id: string; version: number; idempotency_key: string }
         Returns: Json
       }
+      pantry_set_attention: {
+        Args: { item_id: string; version: number; attention_state: 'none' | 'low'; idempotency_key: string }
+        Returns: Json
+      }
+      shopping_add_item: { Args: { food_name: string; item_source: 'manual' | 'pantry'; idempotency_key: string }; Returns: Json }
+      shopping_toggle_item: { Args: { item_id: string; version: number; purchased: boolean; idempotency_key: string }; Returns: Json }
       pantry_rename_household_food: {
         Args: { food_id: string; name: string; idempotency_key: string }
         Returns: Json
