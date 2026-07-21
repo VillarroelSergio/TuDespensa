@@ -163,6 +163,16 @@ export async function addHouseholdFoodAlias(
 
 export async function getPantryListItems(): Promise<PantryListItem[]> {
   const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  // El middleware permite abrir la interfaz durante `next dev` sin OTP. En ese
+  // caso no existe una sesión que RLS pueda autorizar, así que mostramos el
+  // estado vacío en lugar de intentar leer datos privados del hogar.
+  if (!user && process.env.NODE_ENV === 'development') return []
+  if (userError) failure(userError)
+  if (!user) return []
   const { data: membership, error: membershipError } = await supabase.from('household_members').select('household_id').eq('status', 'active').maybeSingle()
   if (membershipError) failure(membershipError)
   if (!membership) return []

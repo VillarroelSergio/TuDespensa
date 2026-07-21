@@ -1,3 +1,4 @@
+-- Compra C1: lista activa persistente por hogar.
 create table public.shopping_lists (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households(id) on delete cascade,
