@@ -7,7 +7,7 @@ import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseFoodName, parseIdempotencyKey } from '@/lib/validation/onboarding'
 
-import type { ShoppingItem } from './types'
+import type { CheckoutLine, ShoppingItem } from './types'
 
 function failure(error: { code?: string; message: string }): never {
   const code = error.code === '42501' ? 'FORBIDDEN' : error.code === '40001' ? 'CONFLICT' : error.code === '22023' || error.code === '23514' ? 'INVALID_INPUT' : 'UNEXPECTED'
@@ -84,4 +84,41 @@ export async function getShoppingItems(): Promise<ShoppingItem[]> {
     const name = names.get(item.food_id)
     return name ? [{ id: item.id, name, source: item.source as ShoppingItem['source'], isPurchased: item.is_purchased, version: item.version, quantity: item.quantity, unitCode: item.unit_code }] : []
   })
+}
+
+type CheckoutRow = { item_id: string; version: number; name: string; action: 'add' | 'update'; from_quantity: number | null; from_unit: string | null; to_quantity: number | null; to_unit: string | null }
+
+// Revisión C2: qué le pasará a la despensa a cada producto comprado.
+export async function getCheckoutPreview(): Promise<CheckoutLine[]> {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user && process.env.NODE_ENV === 'development') return []
+  const { data, error } = await supabase.rpc('shopping_checkout_preview' as never)
+  if (error) failure(error)
+  return ((data ?? []) as CheckoutRow[]).map((row) => ({
+    itemId: row.item_id,
+    version: row.version,
+    name: row.name,
+    action: row.action,
+    fromQuantity: row.from_quantity,
+    fromUnit: row.from_unit,
+    toQuantity: row.to_quantity,
+    toUnit: row.to_unit,
+  }))
+}
+
+// Confirma la compra en la despensa. Idempotente; un CONFLICT significa que otro
+// integrante cambió la lista y la revisión debe recargarse.
+export async function confirmPurchase(lines: { itemId: string; version: number }[], key?: string) {
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase.rpc('shopping_confirm_purchase' as never, {
+    item_versions: lines.map((line) => ({ item_id: line.itemId, version: line.version })),
+    idempotency_key: parseIdempotencyKey(key ?? createIdempotencyKey('shopping_confirm_purchase')),
+  } as never)
+  if (error) failure(error)
+  revalidatePath('/compra')
+  revalidatePath('/despensa')
+  return data as { confirmed: number }
 }

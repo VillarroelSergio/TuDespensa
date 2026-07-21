@@ -9,7 +9,7 @@ import { addShoppingItem, toggleShoppingItem } from './actions'
 import { ShoppingList } from './ShoppingList'
 import type { ShoppingItem } from './types'
 
-export function ShoppingWorkspace({ initialItems }: { initialItems: ShoppingItem[] }) {
+export function ShoppingWorkspace({ initialItems, notice }: { initialItems: ShoppingItem[]; notice?: string | null }) {
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pending, setPending] = useState(false)
@@ -39,5 +39,5 @@ export function ShoppingWorkspace({ initialItems }: { initialItems: ShoppingItem
     finally { setPending(false) }
   }
 
-  return <ShoppingList initialItems={initialItems} pending={pending} status={status} onAdd={handleAdd} onToggle={handleToggle} />
+  return <ShoppingList initialItems={initialItems} pending={pending} status={status} notice={notice} onAdd={handleAdd} onToggle={handleToggle} />
 }
