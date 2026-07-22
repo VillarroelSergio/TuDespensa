@@ -42,6 +42,7 @@ El archivo maestro está organizado en cinco páginas. Antes de implementar una 
 
 - [[WORKFLOW|Flujo de trabajo obligatorio]]
 - [[ACTIVE-CONTEXT|Contexto y tarea activa]]
+- [[MASTER-IMPLEMENTATION-PLAN|Plan y trazabilidad de implementación]]
 - [[PRODUCT-BRIEF|Visión y definición de producto]]
 - [[MVP-FUNCTIONAL-BRIEF|Contrato funcional del MVP]]
 - [[INFORMATION-ARCHITECTURE|Arquitectura de información minimalista]]
@@ -113,6 +114,7 @@ flowchart LR
 - [x] Definir el modelo de dominio y datos.
 - [x] Aprobar la arquitectura técnica del MVP web.
 - [x] Finalizar y organizar los wireframes por módulo en el archivo maestro de Figma.
+- [x] Implementar el recorrido base Recetas → Plan → Compra → Despensa → Cocina (pendiente de aceptación integral en Fase 9).
 
 ## Convenciones documentales
 

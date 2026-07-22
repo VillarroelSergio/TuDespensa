@@ -105,6 +105,19 @@ export function shoppingNotice(raw: string | undefined): string | null {
 }
 
 /**
+ * Confirmación breve de cocinar (`?cocinada=`). El valor es cuántos productos se
+ * descontaron; cero es válido (cocinada sin nada que descontar).
+ */
+export function cookNotice(raw: string | undefined): string | null {
+  const consumed = Number(raw)
+  if (raw === undefined || !Number.isInteger(consumed) || consumed < 0) return null
+  if (consumed === 0) return 'Hemos marcado la comida como cocinada.'
+  return consumed === 1
+    ? 'Cocinada · hemos descontado 1 producto de tu despensa.'
+    : `Cocinada · hemos descontado ${consumed} productos de tu despensa.`
+}
+
+/**
  * Lee el parámetro `deshacer` que deja un borrado: `fecha:servicio:receta:raciones`.
  * Devuelve `null` si no es utilizable, para no ofrecer un deshacer que fallaría.
  */

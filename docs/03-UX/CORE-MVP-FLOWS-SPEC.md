@@ -7,9 +7,9 @@ tags:
   - ux
   - flujos
   - responsive
-status: proposed
-revision: 1
-updated: 2026-07-18
+status: active
+revision: 2
+updated: 2026-07-21
 notion_task: "https://app.notion.com/p/3a1ad407cbfd81a7a919c872fc2a4738"
 figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
 related:
@@ -27,6 +27,10 @@ related:
 ## Propósito
 
 Definir el uso habitual posterior al onboarding para decidir qué comer, encontrar recetas, comprar y corregir existencias sin saltar entre módulos inconexos.
+
+## Estado de implementación
+
+Los flujos F1–F4 están implementados en el repositorio hasta la revisión de cocina y consumo asistido. Esta nota describe el comportamiento objetivo y vigente; su aceptación integral y la validación responsive siguen pendientes de la Fase 9. La captura de tickets (C4) queda explícitamente fuera de los flujos implementados.
 
 ## Regla de navegación
 

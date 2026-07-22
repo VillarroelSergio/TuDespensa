@@ -7,9 +7,9 @@ tags:
   - ux
   - planificacion
   - responsive
-status: proposed
-revision: 1
-updated: 2026-07-19
+status: active
+revision: 2
+updated: 2026-07-21
 notion_task: "https://app.notion.com/p/3a1ad407cbfd81a7a919c872fc2a4738"
 figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-5"
 related:
@@ -23,6 +23,13 @@ related:
 ## Propósito
 
 Ayudar al hogar a decidir comidas y cenas de la semana sin exigir una planificación completa de una vez. Plan es el destino inicial tras el onboarding y no compite con un dashboard.
+
+## Estado de implementación
+
+- P1, P2 y P3 están implementados: semana por lunes ISO, huecos de comida/cena, selección directa, búsqueda, cambio, raciones, mover, eliminar y Deshacer.
+- P2 muestra hasta tres sugerencias deterministas cuando no hay búsqueda. Al elegir desde P2, los faltantes se consolidan en Compra y se informa el resultado sin bloquear el plan.
+- **Marcar como cocinada** abre una revisión independiente (`/plan/cocinar`) desde el menú del hueco planificado. Cada descuento propuesto se confirma o corrige antes de modificar Despensa.
+- **Delta pendiente de decisión:** la implementación devuelve como máximo tres sugerencias; [[MVP-FUNCTIONAL-BRIEF]] todavía exige exactamente tres. La Fase 9 debe decidir si se completa el número cuando existan menos candidatas o si el requisito pasa a «hasta tres».
 
 ## Flujo
 
@@ -50,7 +57,7 @@ flowchart LR
 - La semana actual se abre por defecto; volver de una receta mantiene fecha y desplazamiento.
 - No hay vista mensual, métricas nutricionales ni recomendaciones persistentes.
 - Una receta planificada se abre al pulsar el hueco; el menú contextual agrupa mover, cambiar raciones, sustituir y eliminar.
-- **Marcar como cocinada** aparece dentro de la receta planificada, no en cada tarjeta de la semana.
+- **Marcar como cocinada** aparece en el menú contextual del hueco planificado y abre la revisión de consumos; no descuenta existencias desde la tarjeta.
 - Cuando la semana tiene muchos huecos vacíos, el texto guía se muestra una vez: `Empieza por una comida que quieras resolver.`
 
 ## P2 — Elegir receta para un hueco
@@ -59,7 +66,7 @@ flowchart LR
 
 - Cabecera de retorno: `Añadir a · martes, comida`.
 - H1: **¿Qué quieres comer?**
-- Exactamente tres sugerencias iniciales, cada una con una explicación breve: `Aprovecha {producto}`, `Lista en {tiempo}` o `Para variar esta semana`.
+- Hasta tres sugerencias iniciales, cada una con una explicación breve: `Aprovecha {producto}`, `Lista en {tiempo}` o `Para variar esta semana`.
 - Cada sugerencia indica su disponibilidad: `Puedes prepararla con lo que tienes` o `Necesitas comprar: {producto}, {producto}`.
 - Acción secundaria: **Buscar una receta**.
 
@@ -67,7 +74,7 @@ flowchart LR
 
 | Estado | Contenido | Acción |
 | --- | --- | --- |
-| Sugerencias | Exactamente 3 recetas con motivo, tiempo y disponibilidad | Elegir receta |
+| Sugerencias | Hasta 3 recetas con motivo, tiempo y disponibilidad | Elegir receta |
 | Búsqueda | Campo y resultados | Elegir receta |
 | Sin resultados | Explicación breve | Ver todas las recetas |
 | Sin recetas guardadas | Explicación y enlace a Recetas | Añadir receta |
@@ -119,7 +126,7 @@ Desde un hueco vacío, activar **Añadir** abre P2 indicando día y servicio. Al
 
 ### UX-PLAN-002 — Sugerencias no obligatorias
 
-P2 muestra exactamente tres sugerencias y permite buscar sin seleccionar ninguna. Cada una identifica si usa existencias conocidas o qué productos faltan. Verificación: prueba manual de ambos caminos.
+P2 muestra hasta tres sugerencias y permite buscar sin seleccionar ninguna. Cada una identifica si usa existencias conocidas o qué productos faltan. Verificación: prueba manual de ambos caminos.
 
 ### UX-PLAN-005 — Faltantes consolidados
 

@@ -7,9 +7,9 @@ tags:
   - ux
   - recetas
   - responsive
-status: proposed
-revision: 2
-updated: 2026-07-19
+status: active
+revision: 3
+updated: 2026-07-21
 notion_task: "https://app.notion.com/p/3a1ad407cbfd81a7a919c872fc2a4738"
 figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-1906"
 related:
@@ -23,6 +23,12 @@ related:
 ## Propósito
 
 Ofrecer una biblioteca propia, fácil de recuperar y suficientemente estructurada para planificar y cocinar. La captura debe permitir empezar con poca información y mejorar la receta después.
+
+## Estado de implementación
+
+- R1, R2, R2A manual/enlace y R3 están implementados. La captura de enlace crea una receta `pending` para revisión humana; el editor permite completar ingredientes y pasos antes de dejarla `ready`.
+- Favoritos, puntuaciones por persona, categorías y el dataset inicial versionado también están implementados.
+- Subir una foto, OCR y la importación automática de una URL siguen siendo alcance futuro. Las opciones descritas en R2A se mantienen como objetivo de producto, no como capacidad disponible.
 
 ## Flujo
 
