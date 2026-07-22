@@ -1,26 +1,23 @@
-import { loadEnvConfig } from '@next/env'
 import { defineConfig } from '@playwright/test'
 
-// Playwright also needs the public Supabase variables to exercise the browser
-// flow. Next.js loads `.env.local` for the dev server, but the test runner does
-// not unless we load it here as well. The file remains untracked.
-loadEnvConfig(process.cwd())
+const authE2E = process.env.E2E_AUTH_ENABLED === 'true'
+const e2ePort = Number(process.env.E2E_PORT ?? 3001)
+const localE2EUrl = `http://127.0.0.1:${e2ePort}`
 
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: false,
-  reporter: [['list'], ['html', { open: 'never' }]],
-  use: {
-    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:3000',
-    screenshot: 'only-on-failure',
-    trace: 'retain-on-failure',
-    video: 'retain-on-failure',
-  },
+  use: { baseURL: process.env.E2E_BASE_URL ?? localE2EUrl },
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: 'npm run dev',
-        url: 'http://localhost:3000',
-        reuseExistingServer: true,
+        // Invoke Next directly: killing an npm shell on Windows can leave its
+        // child server listening on the E2E port after a failed test run.
+        command: `"${process.execPath}" node_modules/next/dist/bin/next dev --port ${e2ePort}`,
+        url: localE2EUrl,
+        reuseExistingServer: !authE2E,
+        env: {
+          ...process.env,
+          NEXT_PUBLIC_E2E_AUTH_ENABLED: authE2E ? 'true' : 'false',
+        },
       },
 })

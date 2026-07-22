@@ -8,7 +8,7 @@ tags:
   - roadmap
   - implementación
 status: active
-updated: 2026-07-21
+updated: 2026-07-22
 related:
   - "[[00-MiDespensa-Hub]]"
   - "[[ACTIVE-CONTEXT]]"
@@ -24,25 +24,6 @@ related:
 Cada entrega se implementa en una rama nueva `feature/<nombre>`, con una única tarea **En curso** por carril en Notion. El agente debe seguir Notion → Obsidian → Figma cuando aplique → repositorio, y cerrar cada entrega actualizando esta documentación, la especificación afectada, `ACTIVE-CONTEXT.md` y Notion.
 
 No ejecutar `test`, `test:e2e`, `lint`, `typecheck` ni `build` durante las fases funcionales. La validación manual y automatizada se concentra en la Fase 9, salvo que la persona responsable solicite una excepción explícita.
-
-## Estado trazable al 2026-07-21
-
-El estado **implementado** significa que existe una entrega local identificable. No equivale a aceptación funcional ni a cierre de la tarea en Notion: esa evidencia sigue pendiente hasta que se ejecute la Fase 9 o se solicite una verificación concreta.
-
-| Entrega | Estado en repositorio | Evidencia principal |
-| --- | --- | --- |
-| Fases 0–2 | Implementadas y verificadas | `2b89e6f` en `develop` |
-| Fase 3 · datos | Implementada | `8d3a668` / `feature/pantry-catalog` |
-| Fase 3 · UI DESPENSA | En curso en Notion | `feature/pantry-d3`; faltan criterios de aceptación de la tarea UX/UI |
-| Fases 4A–4C | Implementadas | `d84a573`, `42949c8`, `a618613` |
-| Fases 5A–5C | Implementadas | `ebb7715`, `dccf025`, `b7b5af4` |
-| Fase 6 | Implementada | `87d9dda` |
-| Fase 7 | Implementada | `81e74a8` / merge `035edbc` |
-| Fase 8 | Implementada | `45a0034` |
-| C4 · ticket | Pendiente; fuera de las fases numeradas de este plan | [[SHOPPING-SCREEN-SPEC#C4 — Registrar una compra desde un ticket]] |
-| Fase 9 | Pendiente | Cierre de calidad y aceptación |
-
-Antes de abrir otra fase funcional, Notion debe reflejar estas entregas o agruparlas explícitamente en una tarea de Desarrollo. No se debe inferir que están aceptadas solo por existir el código.
 
 ## Fase 0 — Historial de esquema
 
@@ -134,7 +115,7 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 
 ### Alcance
 
-- Ranking determinista de hasta tres recetas elegibles.
+- Ranking determinista de exactamente tres recetas elegibles.
 - Factores visibles: disponibilidad, productos prioritarios, preferencias, variedad, repetición, tiempo y orientación mediterránea.
 - Pesos versionados; el sistema nunca crea recetas ni rellena huecos sin acción del usuario.
 
@@ -175,7 +156,7 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 
 ## Fase 9 — Cierre de calidad y aceptación
 
-**Rama:** `feature/final-qa-e2e`
+**Ramas:** `feature/fase9-verification-gate` y `feature/e2e-quality-gate`
 
 ### Alcance
 
@@ -184,16 +165,38 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 - E2E de dos sesiones: aislamiento RLS, Realtime, reintentos idempotentes y ciclo planificar → comprar → cocinar.
 - Cierre de las tareas de Notion y actualización final de documentación y evidencias.
 
+### Estado al 2026-07-22
+
+- Puerta estática en verde: lint, tipos, 82 pruebas unitarias, build y comprobación de espacios.
+- E2E de onboarding de dos sesiones en verde con Auth, callback PKCE, RLS y Realtime reales.
+- Fase aceptada por la persona responsable. El E2E del recorrido `planificar → comprar → cocinar` y la revisión manual a 390/768/1440 px se conservan como deuda conocida no bloqueante.
+- Evidencia canónica: [[FASE9-VERIFICATION-EVIDENCE]].
+
+## Fase 10 — Captura asistida de ticket de compra
+
+**Estado:** planificada; no iniciar hasta cerrar Fase 9.
+**Figma:** `COMPRA`, nodos `29:3999` y `29:4136`.
+
+### Objetivo
+
+Reducir la carga de registrar una compra a partir de un ticket, manteniendo siempre una revisión humana antes de modificar la Despensa.
+
+### Preparación requerida
+
+- Decidir el tratamiento de privacidad, retención y borrado de las imágenes del ticket antes de integrar OCR o un proveedor externo.
+- Diseñar una entrega incremental: captura/importación no destructiva → revisión humana → confirmación mediante el cierre de compra existente.
+- Añadir pruebas de aislamiento, reintento idempotente y errores de lectura.
+
+### Fuera de alcance inicial
+
+- Automatizar la confirmación en Despensa sin revisión humana.
+- Inferir precios, presupuestos o analítica de gasto.
+
 ## Orden funcional
 
 ```text
 Recetas → Plan semanal → faltantes en Compra → confirmar compra → cocinar/consumir → QA final
 ```
-
-## Trabajo pendiente fuera de la secuencia cerrada
-
-- **C4 · captura de ticket:** OCR/importación de líneas con revisión humana; se mantiene como alcance futuro en [[SHOPPING-SCREEN-SPEC]]. Requiere una tarea de Notion propia antes de implementarse.
-- **Fase 9:** validación bajo demanda del ciclo completo y actualización de la trazabilidad en Notion y Obsidian.
 
 ## Instrucción operativa para Claude Code Opus 4.8
 

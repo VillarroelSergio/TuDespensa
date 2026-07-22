@@ -56,15 +56,15 @@ describe('rankSuggestions', () => {
         pantry: [{ name: 'melon', priority: false }],
       }),
     )
-    expect(suggestion.missing).toEqual(['jamón'])
+    expect(suggestion!.missing).toEqual(['jamón'])
   })
 
   it('no falta nada cuando la despensa cubre los ingredientes', () => {
     const [suggestion] = rankSuggestions(
       input({ pantry: [{ name: 'Tomates pera', priority: false }] }),
     )
-    expect(suggestion.missing).toEqual([])
-    expect(availabilityLabel(suggestion.missing)).toBe(
+    expect(suggestion!.missing).toEqual([])
+    expect(availabilityLabel(suggestion!.missing)).toBe(
       'Puedes prepararla con lo que tienes',
     )
   })
@@ -76,7 +76,7 @@ describe('rankSuggestions', () => {
         pantry: [{ name: 'Tomate', priority: true }],
       }),
     )
-    expect(priority[0].reason).toBe('Aprovecha Tomate')
+    expect(priority[0]!.reason).toBe('Aprovecha Tomate')
 
     const quick = rankSuggestions(
       input({
@@ -84,12 +84,12 @@ describe('rankSuggestions', () => {
         pantry: [{ name: 'Tomate', priority: false }],
       }),
     )
-    expect(quick[0].reason).toBe('Lista en 10 min')
+    expect(quick[0]!.reason).toBe('Lista en 10 min')
 
     const variety = rankSuggestions(
       input({ candidates: [candidate({ totalMinutes: 90 })] }),
     )
-    expect(variety[0].reason).toBe('Para variar esta semana')
+    expect(variety[0]!.reason).toBe('Para variar esta semana')
   })
 
   it('hunde una receta ya planificada esta semana', () => {
@@ -102,8 +102,8 @@ describe('rankSuggestions', () => {
         plannedDishTypes: ['main'],
       }),
     )
-    expect(ranked[0].recipeId).toBe('nueva')
-    expect(ranked[1].score).toBeLessThan(ranked[0].score)
+    expect(ranked[0]!.recipeId).toBe('nueva')
+    expect(ranked[1]!.score).toBeLessThan(ranked[0]!.score)
   })
 
   it('no premia la disponibilidad de una receta sin ingredientes', () => {
@@ -111,7 +111,7 @@ describe('rankSuggestions', () => {
       input({ candidates: [candidate({ ingredients: [] })] }),
     )
     expect(
-      suggestion.factors.some((factor) => factor.label === 'Disponibilidad'),
+      suggestion!.factors.some((factor) => factor.label === 'Disponibilidad'),
     ).toBe(false)
   })
 
@@ -127,7 +127,7 @@ describe('rankSuggestions', () => {
         ],
       }),
     )
-    expect(suggestion.factors.map((factor) => factor.label)).toEqual(
+    expect(suggestion!.factors.map((factor) => factor.label)).toEqual(
       expect.arrayContaining(['Favorita', 'Puntuada 5', 'Mediterránea']),
     )
   })

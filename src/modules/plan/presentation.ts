@@ -39,7 +39,7 @@ export function mealLabel(mealType: MealType) {
 // ponytail: fechas en UTC a partir de 'YYYY-MM-DD'. El plan es una fecha local
 // sin hora; construir con Date local desplazaría el día según la zona horaria.
 function toDate(iso: string) {
-  const [year, month, day] = iso.split('-').map(Number)
+  const [year = 0, month = 1, day = 1] = iso.split('-').map(Number)
   return new Date(Date.UTC(year, month - 1, day))
 }
 
@@ -123,7 +123,7 @@ export function cookNotice(raw: string | undefined): string | null {
  */
 export function parseUndo(raw: string | undefined) {
   const [mealDate, mealType, recipeId, servings] = (raw ?? '').split(':')
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(mealDate ?? '')) return null
+  if (!mealDate || !/^\d{4}-\d{2}-\d{2}$/.test(mealDate)) return null
   if (mealType !== 'lunch' && mealType !== 'dinner') return null
   if (!recipeId) return null
   return {

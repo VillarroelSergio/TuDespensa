@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
 
 import {
@@ -13,12 +14,12 @@ import type { Recipe } from './types'
 function Navigation({ className }: { className: string }) {
   return (
     <nav className={className} aria-label="Navegación principal">
-      <a href="/plan">Plan</a>
-      <a aria-current="page" href="/recetas">
+      <Link href="/plan">Plan</Link>
+      <Link aria-current="page" href="/recetas">
         Recetas
-      </a>
-      <a href="/compra">Compra</a>
-      <a href="/despensa">Despensa</a>
+      </Link>
+      <Link href="/compra">Compra</Link>
+      <Link href="/despensa">Despensa</Link>
     </nav>
   )
 }

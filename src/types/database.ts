@@ -292,9 +292,11 @@ export interface Database {
           household_id: string
           shopping_list_id: string
           food_id: string
-          source: 'manual' | 'pantry'
+          source: 'manual' | 'pantry' | 'plan'
           is_purchased: boolean
           version: number
+          quantity: number | null
+          unit_code: string | null
           created_at: string
           updated_at: string
         }
@@ -303,9 +305,11 @@ export interface Database {
           household_id: string
           shopping_list_id: string
           food_id: string
-          source?: 'manual' | 'pantry'
+          source?: 'manual' | 'pantry' | 'plan'
           is_purchased?: boolean
           version?: number
+          quantity?: number | null
+          unit_code?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -314,9 +318,11 @@ export interface Database {
           household_id?: string
           shopping_list_id?: string
           food_id?: string
-          source?: 'manual' | 'pantry'
+          source?: 'manual' | 'pantry' | 'plan'
           is_purchased?: boolean
           version?: number
+          quantity?: number | null
+          unit_code?: string | null
           created_at?: string
           updated_at?: string
         }

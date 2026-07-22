@@ -233,7 +233,7 @@ export default function OnboardingPage() {
     return (
       <main className="onboarding">
         <section className="onboarding-card">
-          <header className="brand">□ MiDespensa</header>
+          <header className="brand">MiDespensa</header>
           <h1 ref={h1} tabIndex={-1}>
             Organiza la comida de casa
           </h1>

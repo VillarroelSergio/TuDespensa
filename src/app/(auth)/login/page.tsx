@@ -4,16 +4,20 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { isDevelopmentAuthBypassEnabled } from '@/lib/auth/development-mode'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
-  const isDevelopment = process.env.NODE_ENV === 'development'
+  const isDevelopmentBypassEnabled = isDevelopmentAuthBypassEnabled(
+    process.env.NODE_ENV,
+    process.env.NEXT_PUBLIC_E2E_AUTH_ENABLED,
+  )
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
-    if (isDevelopment) {
+    if (isDevelopmentBypassEnabled) {
       router.replace('/despensa')
       return
     }
@@ -33,25 +37,33 @@ export default function LoginPage() {
     <main className="auth-main">
       <section className="onboarding-card">
         <p className="eyebrow">MiDespensa</p>
-        <h1>{isDevelopment ? 'Acceso de desarrollo' : 'Acceso privado'}</h1>
+        <h1>
+          {isDevelopmentBypassEnabled
+            ? 'Acceso de desarrollo'
+            : 'Acceso privado'}
+        </h1>
         <p>
-          {isDevelopment
+          {isDevelopmentBypassEnabled
             ? 'Escribe cualquier valor para abrir la interfaz local. La autenticación real sigue activa en producción.'
             : 'Esta aplicación es solo para las cuentas autorizadas del hogar.'}
         </p>
         <form onSubmit={submit}>
           <label htmlFor="email">
-            {isDevelopment ? 'Identificador de prueba' : 'Correo autorizado'}
+            {isDevelopmentBypassEnabled
+              ? 'Identificador de prueba'
+              : 'Correo autorizado'}
           </label>
           <input
             id="email"
-            type={isDevelopment ? 'text' : 'email'}
+            type={isDevelopmentBypassEnabled ? 'text' : 'email'}
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
           <button className="primary-button">
-            {isDevelopment ? 'Entrar en desarrollo' : 'Enviar enlace de acceso'}
+            {isDevelopmentBypassEnabled
+              ? 'Entrar en desarrollo'
+              : 'Enviar enlace de acceso'}
           </button>
         </form>
         <p aria-live="polite">{message}</p>
