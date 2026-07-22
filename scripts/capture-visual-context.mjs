@@ -20,6 +20,7 @@ const views = [
   { name: 'despensa-anadir', path: '/despensa', button: '+ Añadir producto' },
   { name: 'compra', path: '/compra' },
   { name: 'compra-revisar', path: '/compra/revisar' },
+  { name: 'compra-ticket', path: '/compra/ticket' },
   { name: 'recetas', path: '/recetas' },
   { name: 'recetas-anadir', path: '/recetas', button: 'Añadir receta' },
   { name: 'plan', path: '/plan' },

@@ -20,6 +20,8 @@ related:
 
 Las imágenes y los archivos `.snapshot.txt` de `visual-context/` muestran el estado actual de la interfaz ejecutada localmente. Sirven para que una persona o un modelo comprenda qué se ve realmente antes de cambiar una pantalla.
 
+Claude y Codex definen y realizan los diseños UI/UX directamente en el repositorio a partir de las especificaciones de Obsidian. Esta nota es la fuente de evidencia visual de ese trabajo; Figma no se usa para cambios futuros.
+
 - La imagen `.png` muestra el aspecto visual.
 - El archivo `.snapshot.txt` enumera los elementos que un agente puede usar: títulos, botones, campos y enlaces.
 - Las imágenes anotadas numeran los controles; el mismo número aparece como referencia en el archivo de texto correspondiente.
@@ -36,7 +38,7 @@ El comando usa el mismo navegador fiable de las pruebas automáticas, abre la ap
 
 - Acceso de desarrollo y onboarding.
 - Despensa: lista y formulario «Añadir producto».
-- Compra: lista y revisión antes de confirmar la compra.
+- Compra: lista, revisión antes de confirmar la compra e importación de ticket (`/compra/ticket`).
 - Recetas: biblioteca y formulario «Añadir receta».
 - Plan semanal y selector de receta para un hueco.
 
@@ -44,4 +46,4 @@ Antes de una revisión visual o de pedir cambios de interfaz, ejecutar el comand
 
 ## Archivos generados
 
-Esto genera 30 pantallas visuales y 30 mapas de controles. Los archivos se guardan en `docs/00-Project/visual-context/`. Se actualizan a propósito: forman parte de la evidencia visual del proyecto y no contienen credenciales ni datos privados.
+Esto genera 33 pantallas visuales y 33 mapas de controles. Los archivos se guardan en `docs/00-Project/visual-context/`. Se actualizan a propósito: forman parte de la evidencia visual del proyecto y no contienen credenciales ni datos privados.

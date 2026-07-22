@@ -27,3 +27,13 @@ export function confirmNotice(value: string | undefined): string | null {
   if (!Number.isInteger(n) || n < 1) return null
   return `Hemos actualizado tu despensa con ${n} ${n === 1 ? 'producto' : 'productos'}.`
 }
+
+// Aviso tras importar un ticket: ?ticket=n → «Hemos añadido n… del ticket».
+// Un valor no numérico o < 1 no muestra aviso (0 productos nuevos no es error:
+// el ticket pudo repetir lo que ya estaba en la lista).
+export function ticketNotice(value: string | undefined): string | null {
+  if (!value) return null
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 1) return null
+  return `Hemos añadido ${n} ${n === 1 ? 'producto' : 'productos'} del ticket a Compra, ya marcados como comprados.`
+}

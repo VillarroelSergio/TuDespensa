@@ -21,7 +21,7 @@ related:
 
 ## Regla de ejecución
 
-Cada entrega se implementa en una rama nueva `feature/<nombre>`, con una única tarea **En curso** por carril en Notion. El agente debe seguir Notion → Obsidian → Figma cuando aplique → repositorio, y cerrar cada entrega actualizando esta documentación, la especificación afectada, `ACTIVE-CONTEXT.md` y Notion.
+Cada entrega se implementa en una rama nueva `feature/<nombre>`, con una única tarea **En curso** por carril en Notion. El agente debe seguir Notion → Obsidian → diseño de Claude/Codex en el repositorio → verificación → actualización documental y de Notion.
 
 No ejecutar `test`, `test:e2e`, `lint`, `typecheck` ni `build` durante las fases funcionales. La validación manual y automatizada se concentra en la Fase 9, salvo que la persona responsable solicite una excepción explícita.
 
@@ -50,7 +50,6 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 ## Fase 4A — Fundamentos de Recetas
 
 **Rama:** `feature/recipes-foundation`  
-**Figma:** `RECETAS`, nodo `29:1906`
 
 ### Alcance
 
@@ -65,7 +64,6 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 ## Fase 4B — Editor y detalle de Recetas
 
 **Rama:** `feature/recipes-editor`  
-**Figma:** `RECETAS`, flujos R2, R2A y R3
 
 ### Alcance
 
@@ -91,7 +89,6 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 ## Fase 5A — Plan semanal base
 
 **Rama:** `feature/weekly-plan-core`  
-**Figma:** `PLAN SEMANAL`, nodo `29:5`
 
 ### Alcance
 
@@ -132,7 +129,6 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 ## Fase 7 — Cierre de Compra
 
 **Rama:** `feature/shopping-checkout`  
-**Figma:** `COMPRA`, nodo `29:3290`
 
 ### Alcance
 
@@ -174,8 +170,9 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 
 ## Fase 10 — Captura asistida de ticket de compra
 
-**Estado:** planificada; no iniciar hasta cerrar Fase 9.
-**Figma:** `COMPRA`, nodos `29:3999` y `29:4136`.
+**Rama:** `feature/fase10-ticket-capture`
+**Estado:** en curso; primera rebanada (importación por texto, sin OCR) implementada.
+**Diseño:** Claude y Codex lo definen en código con evidencia en [[VISUAL-CONTEXT]].
 
 ### Objetivo
 
@@ -183,9 +180,17 @@ Reducir la carga de registrar una compra a partir de un ticket, manteniendo siem
 
 ### Preparación requerida
 
+- Definir en código el flujo de permiso, carga, revisión de líneas detectadas, corrección y confirmación; actualizar [[VISUAL-CONTEXT]].
 - Decidir el tratamiento de privacidad, retención y borrado de las imágenes del ticket antes de integrar OCR o un proveedor externo.
 - Diseñar una entrega incremental: captura/importación no destructiva → revisión humana → confirmación mediante el cierre de compra existente.
 - Añadir pruebas de aislamiento, reintento idempotente y errores de lectura.
+
+### Rebanada 1 (implementada) — importación por texto, sin OCR
+
+- Ruta `/compra/ticket`: la persona pega el texto del ticket (una línea por producto), revisa y corrige las líneas detectadas (nombre, cantidad, unidad) y confirma. Nada toca la lista hasta confirmar.
+- Un ticket registra lo **ya comprado**: las líneas entran en la lista activa con `source='ticket'` y **ya marcadas como compradas**, de modo que el cierre de compra existente (C2 → `shopping_confirm_purchase`) las lleva a la Despensa sin flujo nuevo.
+- RPC idempotente `shopping_add_ticket_items(items, idempotency_key)`: no duplica productos ya presentes (los marca comprados conservando su origen), acumula cantidad solo entre unidades compatibles y devuelve `{ added }`. Parser puro `src/modules/shopping/ticket.ts` (heurística simple; la persona corrige). Test SQL de aislamiento/idempotencia/marcado y test unitario del parser.
+- **Deferido a la rebanada 2:** carga de **imagen** y **OCR**, que requieren primero la decisión de privacidad/retención/borrado; y los errores de lectura del proveedor.
 
 ### Fuera de alcance inicial
 
@@ -200,4 +205,4 @@ Recetas → Plan semanal → faltantes en Compra → confirmar compra → cocina
 
 ## Instrucción operativa para Claude Code Opus 4.8
 
-> Implementa exclusivamente la siguiente feature del Plan maestro de MiDespensa. Sigue `AGENTS.md`, `docs/00-Project/ACTIVE-CONTEXT.md` y `docs/00-Project/WORKFLOW.md`. Usa Notion → Obsidian → Figma → repositorio. Crea una rama `feature/<nombre>`, actualiza la documentación canónica y Notion, y crea un commit local. No ejecutes tests, lint, typecheck, build ni E2E: la validación será la Fase 9. No avances a la siguiente feature sin documentar y cerrar la actual.
+> Implementa exclusivamente la siguiente feature del Plan maestro de MiDespensa. Sigue `AGENTS.md`, `docs/00-Project/ACTIVE-CONTEXT.md` y `docs/00-Project/WORKFLOW.md`. Usa Notion → Obsidian → diseño de Claude/Codex en el repositorio. Crea una rama `feature/<nombre>`, actualiza la documentación canónica y Notion, y crea un commit local. No avances a la siguiente feature sin documentar y cerrar la actual.
