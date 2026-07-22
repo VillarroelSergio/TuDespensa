@@ -52,6 +52,31 @@ export async function addPlanItems(
   })
 }
 
+/**
+ * Fase 10: añade a Compra las líneas revisadas de un ticket, ya marcadas como
+ * compradas (el ticket registra lo que ya está en casa). El cierre de compra
+ * existente las lleva a la Despensa. Devuelve cuántos productos son nuevos.
+ */
+export async function importTicketItems(
+  items: { name: string; quantity: number | null; unitCode: string | null }[],
+  key?: string,
+) {
+  const clean = items
+    .map((item) => ({ ...item, name: item.name.trim() }))
+    .filter((item) => item.name.length > 0 && item.name.length <= 120)
+  if (!clean.length) return { added: 0 }
+  return rpc<{ added: number }>('shopping_add_ticket_items', {
+    items: clean.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unit_code: item.unitCode,
+    })),
+    idempotency_key: parseIdempotencyKey(
+      key ?? createIdempotencyKey('shopping_add_ticket_items'),
+    ),
+  })
+}
+
 export async function toggleShoppingItem(itemId: string, version: number, purchased: boolean, key?: string) {
   return rpc<{ item_id: string; version: number; is_purchased: boolean }>('shopping_toggle_item', {
     item_id: itemId,

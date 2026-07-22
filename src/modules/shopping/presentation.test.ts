@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkoutActionLabel, confirmNotice, formatQuantity } from './presentation'
+import { checkoutActionLabel, confirmNotice, formatQuantity, ticketNotice } from './presentation'
 import type { CheckoutLine } from './types'
 
 const line = (overrides: Partial<CheckoutLine> = {}): CheckoutLine => ({
@@ -60,5 +60,17 @@ describe('confirmNotice', () => {
     expect(confirmNotice('0')).toBeNull()
     expect(confirmNotice('-1')).toBeNull()
     expect(confirmNotice('dos')).toBeNull()
+  })
+})
+
+describe('ticketNotice', () => {
+  it('singular y plural', () => {
+    expect(ticketNotice('1')).toBe('Hemos añadido 1 producto del ticket a Compra, ya marcados como comprados.')
+    expect(ticketNotice('4')).toBe('Hemos añadido 4 productos del ticket a Compra, ya marcados como comprados.')
+  })
+  it('valores ausentes o inválidos no muestran aviso', () => {
+    expect(ticketNotice(undefined)).toBeNull()
+    expect(ticketNotice('0')).toBeNull()
+    expect(ticketNotice('dos')).toBeNull()
   })
 })

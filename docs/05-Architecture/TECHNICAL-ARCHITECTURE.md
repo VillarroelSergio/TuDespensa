@@ -75,11 +75,11 @@ El navegador nunca recibe la clave de servicio. Las operaciones críticas atravi
 
 Los módulos del monolito son: identidad y hogar, catálogo, recetas, planificación, compra, despensa, onboarding y recomendaciones. Se relacionan mediante casos de uso explícitos y una única base de datos; no se llaman entre sí por HTTP.
 
-### Contrato de implementación con Figma
+### Contrato de implementación visual
 
-El archivo maestro de Figma es la fuente de verdad visual y está separado en cinco páginas: `ONBOARDING`, `DESPENSA`, `COMPRA`, `RECETAS` y `PLAN SEMANAL`. Cada página corresponde al módulo de código homónimo —con `ONBOARDING` compartiendo dependencias con hogar y despensa— y contiene sus variantes móvil, tablet y escritorio cuando aplican.
+Claude y Codex definen y realizan el diseño UI/UX directamente en el repositorio a partir de los requisitos de Obsidian y de los componentes y tokens existentes. La evidencia visual se conserva en [[VISUAL-CONTEXT]] a 390, 768 y 1440 px cuando aplique.
 
-Antes de implementar cualquier pantalla, el agente debe localizar el nodo concreto en la página correspondiente y obtener su contexto de diseño. El resultado se adapta a los componentes y tokens del proyecto: no se copia código generado por Figma ni se recrean iconos o activos sin usar sus exportaciones autorizadas. Figma define la UI; Obsidian y la arquitectura definen comportamiento, seguridad y límites de alcance.
+Antes de implementar una pantalla, el agente debe leer la especificación de Obsidian y el contexto visual ejecutado disponible. Obsidian y la arquitectura definen comportamiento, seguridad y límites de alcance; el repositorio implementa la UI y `VISUAL-CONTEXT` documenta su resultado.
 
 ## 5. Acceso y seguridad
 

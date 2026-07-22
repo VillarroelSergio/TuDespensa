@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { BrandLockup } from '@/components/ui/BrandLockup'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { isDevelopmentAuthBypassEnabled } from '@/lib/auth/development-mode'
 
@@ -36,7 +37,7 @@ export default function LoginPage() {
   return (
     <main className="auth-main">
       <section className="onboarding-card">
-        <p className="eyebrow">MiDespensa</p>
+        <BrandLockup className="brand brand--welcome" href="/" />
         <h1>
           {isDevelopmentBypassEnabled
             ? 'Acceso de desarrollo'

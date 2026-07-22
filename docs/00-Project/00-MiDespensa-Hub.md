@@ -9,9 +9,6 @@ tags:
 status: active
 notion: "https://app.notion.com/p/3a1ad407cbfd81979530f32cc6669b0a"
 notion_tasks: "https://app.notion.com/p/0136d6873c8e48d39e7af7a5d4a66c64"
-figma_project: "https://www.figma.com/files/project/627466188"
-figma_file: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
-figma_scope: "627466188"
 ---
 
 # MiDespensa — Centro del proyecto
@@ -23,20 +20,11 @@ figma_scope: "627466188"
 
 - [Proyecto y tareas en Notion](https://app.notion.com/p/3a1ad407cbfd81979530f32cc6669b0a)
 - [Tablero de tareas — MiDespensa](https://app.notion.com/p/0136d6873c8e48d39e7af7a5d4a66c64)
-- [Archivo maestro de wireframes y UI](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih)
-- [Carpeta del proyecto en Figma](https://www.figma.com/files/project/627466188)
+La evidencia visual ejecutada se conserva en [[VISUAL-CONTEXT]].
 
-### Organización del archivo de Figma
+### Diseño UI/UX
 
-El archivo maestro está organizado en cinco páginas. Antes de implementar una pantalla, se debe abrir la página del módulo correspondiente y obtener el contexto del nodo concreto; los nombres de página no sustituyen ese contexto.
-
-| Página de Figma | Nodo de Figma | Módulo de código | Alcance visual |
-| --- | --- | --- | --- |
-| `ONBOARDING` | [7:1261](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=7-1261) | `onboarding`, `household`, `pantry` | Alta del hogar, línea base e inventario inicial |
-| `DESPENSA` | [47:2](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=47-2) | `pantry`, `catalog` | Inventario habitual y sus estados |
-| `COMPRA` | [29:3290](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-3290) | `shopping` | Lista de compra, revisión y estados de ticket |
-| `RECETAS` | [29:1906](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-1906) | `recipes`, `recommendations` | Recetario, preferencias y sugerencias |
-| `PLAN SEMANAL` | [29:5](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-5) | `planning`, `recommendations` | Menú semanal y propuestas |
+No se usa Figma para trabajo futuro. Claude y Codex diseñan directamente en el repositorio a partir de las especificaciones de Obsidian, implementan la propuesta y actualizan las capturas de [[VISUAL-CONTEXT]] para su revisión.
 
 ## Documentación principal
 
@@ -77,7 +65,7 @@ Se crearán nuevas carpetas únicamente cuando exista contenido canónico que lo
 | Información | Fuente principal | Contenido |
 | --- | --- | --- |
 | Trabajo | Notion | Tareas, estado, prioridad, responsable y dependencias |
-| Diseño | Figma | Wireframes, flujos visuales, prototipos y componentes |
+| Diseño | Claude y Codex + `VISUAL-CONTEXT` | Propuesta UI/UX en código y capturas de la interfaz ejecutada |
 | Conocimiento | Obsidian | Producto, requisitos, arquitectura, decisiones e investigación |
 | Implementación | Repositorio | Código, pruebas, configuración y entregables ejecutables |
 
@@ -86,7 +74,7 @@ Se crearán nuevas carpetas únicamente cuando exista contenido canónico que lo
 Cada tarea de implementación en Notion debería enlazar:
 
 1. la especificación o decisión correspondiente en Obsidian;
-2. el archivo o nodo de Figma cuando tenga impacto visual;
+2. la evidencia visual de `VISUAL-CONTEXT` cuando tenga impacto UI/UX;
 3. el entregable del repositorio cuando se implemente.
 
 Una decisión importante tomada durante el diseño o desarrollo debe documentarse en Obsidian antes de considerar terminada la tarea de Notion.
@@ -96,8 +84,8 @@ Una decisión importante tomada durante el diseño o desarrollo debe documentars
 ```mermaid
 flowchart LR
     N["Notion: tarea"] --> O["Obsidian: requisitos y decisiones"]
-    O --> F["Figma: wireframe o diseño"]
-    F --> C["Repositorio: implementación"]
+    O --> D["Claude/Codex: diseño en código"]
+    D --> C["Repositorio: implementación"]
     C --> V["Verificación"]
     V --> N
 ```
@@ -110,17 +98,16 @@ flowchart LR
 - [x] Onboarding con inventario manual inicial confirmado.
 - [x] Benchmark inicial de productos comparables.
 - [x] Configurar gestión de tareas en Notion.
-- [x] Crear archivo de wireframes en el proyecto de Figma.
 - [x] Abrir esta carpeta como vault de Obsidian.
 - [x] Definir el modelo de dominio y datos.
 - [x] Aprobar la arquitectura técnica del MVP web.
-- [x] Finalizar y organizar los wireframes por módulo en el archivo maestro de Figma.
+- [x] Establecer diseño UI/UX en código por Claude y Codex con evidencia en [[VISUAL-CONTEXT]].
 
 ## Convenciones documentales
 
 - Una nota por decisión o tema estable.
 - Wikilinks para relaciones internas.
-- Enlaces web para Notion, Figma y fuentes externas.
+- Enlaces web para Notion y fuentes externas; `VISUAL-CONTEXT` para evidencia de UI.
 - Las hipótesis deben identificarse como pendientes de validar.
 - Las decisiones confirmadas deben indicar su origen y fecha.
 - No almacenar secretos, credenciales ni datos personales en las notas.

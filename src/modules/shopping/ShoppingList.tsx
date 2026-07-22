@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
 
+import { BrandLockup } from '@/components/ui/BrandLockup'
+
 import { formatQuantity } from './presentation'
 import type { ShoppingItem } from './types'
 
@@ -86,9 +88,7 @@ export function ShoppingList({
   return (
     <main className="shopping-page">
       <aside className="shopping-sidebar">
-        <a className="pantry-brand" href="/plan">
-          <span aria-hidden="true" /> MiDespensa
-        </a>
+        <BrandLockup className="pantry-brand" />
         <Navigation className="shopping-sidebar__nav" />
       </aside>
       <section className="shopping-content" aria-labelledby="shopping-title">
@@ -114,6 +114,9 @@ export function ShoppingList({
             Añadir
           </button>
         </form>
+        <a className="shopping-back shopping-ticket-link" href="/compra/ticket">
+          Importar de un ticket
+        </a>
         {status ? (
           <p className="pantry-sync-status" aria-live="polite">
             {status}

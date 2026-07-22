@@ -8,10 +8,10 @@ tags:
   - contexto-activo
 status: active
 updated: 2026-07-22
-notion_task: "https://app.notion.com/p/3a5ad407cbfd8190800ae0b89d966a7a"
+notion_task: "https://app.notion.com/p/3a5ad407cbfd8178801ade68a6cfdbb2"
+notion_validation_task: "https://app.notion.com/p/3a5ad407cbfd8190800ae0b89d966a7a"
+notion_identity_task: "https://app.notion.com/p/3a5ad407cbfd816db75cf6cd3dffe3d3"
 notion_architecture_task: "https://app.notion.com/p/3a1ad407cbfd81029a1be5ed18e31e6e"
-figma_project: "https://www.figma.com/files/project/627466188"
-figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
 related:
   - "[[00-MiDespensa-Hub]]"
   - "[[WORKFLOW]]"
@@ -31,7 +31,15 @@ related:
 
 ### UX/UI
 
-No hay tarea UX/UI activa. La UI de `DESPENSA` de Fase 3 está implementada; la revisión responsive pendiente se gestiona dentro de la validación transversal de Fase 9.
+[Rediseñar la experiencia UI/UX completa del MVP](https://app.notion.com/p/3a5ad407cbfd8178801ade68a6cfdbb2)
+
+- **Estado:** En curso
+- **Fase:** UX/UI
+- **Prioridad:** Alta
+- **Dirección:** mediterránea contemporánea, móvil primero y fotografías opcionales.
+- **Primer entregable:** fixtures sintéticos reproducibles y capturas realistas de estados vacíos, poblados y de atención.
+
+La identidad y el logotipo definitivos se realizan en paralelo y quedan como [tarea pendiente](https://app.notion.com/p/3a5ad407cbfd816db75cf6cd3dffe3d3); no bloquean el sistema visual ni los componentes.
 
 ### Validación
 
@@ -77,10 +85,10 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - Presencia obligatoria; cantidad opcional; sin caducidades.
 - Guardado automático y reanudación.
 - Línea base útil, no inventario exhaustivo.
-- Figma AI crea los wireframes; el equipo define el flujo y revisa el resultado.
-- El archivo maestro de Figma está organizado en cinco páginas: `ONBOARDING`, `DESPENSA`, `COMPRA`, `RECETAS` y `PLAN SEMANAL`. Cada una es la fuente visual de su módulo durante la implementación.
+- Claude y Codex definen y realizan el diseño UI/UX directamente en el repositorio; [[VISUAL-CONTEXT]] conserva las capturas de revisión.
 - Objetivo de cinco minutos pendiente de validar con prototipo.
-- No crear todavía diseño visual de alta fidelidad.
+- El rediseño visual de alta fidelidad está autorizado desde el 2026-07-22 y sustituye la restricción anterior de mantener baja fidelidad.
+- Los datos usados para evidencia visual deben ser sintéticos, deterministas, sin PII y estar aislados de producción.
 - Uso cerrado: un único hogar, un máximo de dos cuentas y sin crecimiento previsto.
 - Recetario inicial con recetas preferidas y mediterráneas, categorías, favoritos y puntuaciones individuales para alimentar sugerencias explicables.
 
@@ -101,12 +109,16 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - **Fase 7 (cierre de compra) implementada** en `feature/shopping-checkout` (migración `20260721100000_shopping_checkout.sql`): RPC de lectura `shopping_checkout_preview` que, por cada producto **comprado** de la lista activa, calcula la acción sobre la despensa (alta o actualización) buscando el alimento en cualquier zona y proyectando la cantidad resultante solo cuando las unidades miden lo mismo (reutiliza los helpers `private.unit_dimension/unit_to_base/unit_from_base` de Fase 6); y RPC idempotente `shopping_confirm_purchase(item_versions, idempotency_key)` que, por cada comprado, crea la entrada en la zona `pantry` (con cantidad si la compra la trae, si no presencia aproximada `some`) o actualiza el ítem existente (suma la cantidad si ambas miden lo mismo, si no solo refresca la presencia), registra un movimiento `entry` trazable (`item_snapshot.source = 'shopping_checkout'`) y saca el producto de la lista. Verifica la `version` de cada ítem revisado: si otro integrante lo cambió o desmarcó, aborta entero (`serialization_failure`→CONFLICT) para recargar sin aplicar a medias; el patrón `pantry_claim`/`pantry_store_result` garantiza idempotencia (un replay no duplica movimientos ni suma dos veces). UI: en C1 (`ShoppingList`) el placeholder pasa a CTA real **Confirmar compra · {n}** (deshabilitado sin comprados) → `/compra/revisar`; nueva vista C2 (`CheckoutReview`, `/compra/revisar`) con panel «Revisa tu compra», una línea por producto con su acción (`Añadir a despensa` / `Actualizar: 0.5 l → 1.5 l` / `Actualizar en despensa`), CTA **Confirmar en despensa** y **← Volver a la lista** (conserva las marcas); el refresco Realtime de `shopping_items` mantiene viva la revisión y el aviso `?confirmado={n}` → `confirmNotice` → «Hemos actualizado tu despensa con {n} producto(s)». Módulo puro `src/modules/shopping/presentation.ts` (`formatQuantity`, `checkoutActionLabel`, `confirmNotice`) reutilizado por C1 y C2. Test SQL 7 (preview alta+suma, confirmación crea/actualiza despensa con movimiento trazable, comprados salen de la lista, idempotencia sin doble aplicación, conflicto por versión, aislamiento entre hogares) y tests unitarios de `presentation`. **Deltas conscientes:** las altas nuevas van siempre a la zona `pantry` (armario) porque C2 no ofrece selector de zona; las cantidades no se escalan por raciones; un ítem de despensa `approximate` no se convierte a `measure` aunque la compra traiga cantidad (solo se marca presente); C4 (captura de ticket) sigue fuera de esta fase.
 - **Fase 8 (cocinar y consumo asistido) implementada** en `feature/cook-and-consume` (migración `20260721110000_cook_and_consume.sql`): `planned_meals` gana `cooked_at`/`cooked_by`; RPC idempotente `plan_cook_meal(meal_date, meal_type, consumptions, idempotency_key)` que, desde una comida planificada, marca la comida como cocinada y descuenta de la despensa el **estado objetivo confirmado por la persona** para cada producto (no una cantidad inventada): bloquea la comida (`for update`; si ya está cocinada, `serialization_failure`) y cada ítem por versión (conflicto→`serialization_failure` aborta entero), solo consume (nunca añade), registra un movimiento `consumption` trazable (`item_snapshot.source='meal_cooked'` + `recipe_id`) y el patrón `pantry_claim`/`pantry_store_result` evita doble descuento en reintentos. Módulo puro `src/modules/plan/cooking.ts` propone descuentos (reutiliza `matches` de `suggestions.ts` y helpers de unidades) que la persona confirma o corrige en `CookReview` (`/plan/cocinar`) antes de tocar la despensa; en P1 cada comida ofrece «Marcar como cocinada» y muestra «✓ Cocinada». Test SQL de cocina (consumed=2, descuentos aplicados, idempotencia, ya-cocinada y versión obsoleta abortan, aislamiento) y tests unitarios de `cooking.ts`. **Deltas conscientes:** RPC directa por lote en vez de reutilizar `pantry_mutate` (su claim por llamada chocaría con el claim del lote); el delta del movimiento se registra en negativo; el emparejamiento ingrediente↔despensa sigue siendo por subcadena normalizada.
 - **Fase 9 (cierre de calidad) aceptada** el 2026-07-22. Puerta de calidad en verde tras sanear la deuda de verificación diferida (**33 errores de tipos + 7 de estilo**, sin cambiar comportamiento; incluida una desincronización real de los tipos de `shopping_items`): `lint` 0, `tsc` 0, `vitest` 82/82, `build` 13 rutas y **E2E de dos sesiones** de onboarding (Auth+RLS+Realtime) 2/2. Evidencia en [[FASE9-VERIFICATION-EVIDENCE]]. El E2E completo y la revisión responsive pendientes se tratan como deuda conocida no bloqueante, por aceptación explícita de la persona responsable.
+- **Fase 10, rebanada 1 (captura asistida de ticket, sin OCR) implementada** en `feature/fase10-ticket-capture` (migración `20260722100000_shopping_ticket_capture.sql`): amplía `shopping_items.source` a `('manual','pantry','plan','ticket')` y añade la RPC idempotente `shopping_add_ticket_items(items jsonb, idempotency_key text)` que inserta las líneas revisadas del ticket en la lista activa **ya marcadas como compradas** (un ticket registra lo que ya está en casa) con `source='ticket'`; un producto ya presente no se duplica, conserva su origen y también se marca comprado, y la cantidad solo se acumula entre unidades compatibles. Ruta `/compra/ticket` (`TicketImport`): la persona pega el texto (una línea por producto), revisa/corrige cada línea (nombre, cantidad, unidad, quitar) y confirma; nada toca la lista hasta confirmar. Al confirmar, los productos aparecen en Compra ya marcados y el cierre de compra existente (C2 → `shopping_confirm_purchase`) los lleva a la Despensa sin flujo nuevo. Parser puro `src/modules/shopping/ticket.ts` (heurística de una línea por producto con extracción opcional de cantidad+unidad; la persona corrige). Aviso `?ticket={n}` → `ticketNotice`. Test SQL 10 (added=2, marcado comprado, origen manual preservado, idempotencia, suma compatible, aislamiento) y test unitario del parser. **Deltas conscientes:** sin carga de imagen ni OCR (rebanada 2, tras decidir privacidad/retención/borrado); el emparejamiento sigue siendo por nombre normalizado; las cantidades no se escalan.
 - Flujo de trabajo: Fable 5 planifica/revisa/acepta; Codex Terra 5.6 (esfuerzo medio) implementa; correcciones de revisión documentadas en los mensajes de commit.
 
 ## Siguientes acciones
 
+- **UX/UI:** completar la Fase 1 de la iniciativa activa: fixtures sintéticos, matriz de estados y capturas pobladas en 390, 768 y 1440 px.
+- **Diseño:** aplicar después el sistema visual mediterráneo contemporáneo y rediseñar primero el bucle `Plan → Compra → Cocina → Despensa`.
+- **Identidad:** integrar nombre y logotipo cuando finalice el trabajo paralelo, sin bloquear las fases anteriores.
 - **Integración:** finalizar la fusión de las PR de Fase 9 y conservar el historial de la versión estable en `develop`.
-- **Siguiente incremento:** Fase 10, captura asistida de ticket. Se activará después de integrar las PR; antes de integrar OCR hay que decidir privacidad/retención y cerrar en Figma el flujo de revisión humana (nodos `COMPRA` 29:3999/29:4136).
+- **Fase 10 (captura asistida de ticket) implementada** en `feature/fase10-ticket-capture`. Rebanada 1: importación por **texto** (pegar → revisar → cierre de compra existente). Rebanada 2: **foto + OCR en el dispositivo** (`tesseract.js`, `src/modules/shopping/ocr.ts`); **la imagen no se sube ni se guarda** (decisión 2026-07-22), se lee en el móvil y se descarta, y su texto pasa por la misma revisión humana. **Verificación bajo demanda:** `build` con `tesseract.js` en Next 16 puede pedir un ajuste de bundler; OCR se calibra con fotos reales.
 - **Desarrollo:** no ejecutar verificaciones automáticamente; la persona responsable las realizará bajo demanda. Planificar una cobertura E2E automatizada antes de declarar los flujos completos.
 - **Desarrollo local:** `next dev` permite acceder a la interfaz sin autenticación ni redirecciones de onboarding; el bypass está limitado a `NODE_ENV=development` y no habilita datos privados sin sesión de Supabase.
 
@@ -114,5 +126,6 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 
 ## Bloqueos
 
-- **Figma:** los cinco nodos canónicos están accesibles y devuelven contexto de implementación: `ONBOARDING` ([7:1261](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=7-1261)), `DESPENSA` ([47:2](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=47-2)), `COMPRA` ([29:3290](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-3290)), `RECETAS` ([29:1906](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-1906)) y `PLAN SEMANAL` ([29:5](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-5)).
+- **Identidad definitiva:** pendiente del trabajo paralelo; el rediseño continúa con tokens de marca intercambiables.
+- **Verificación de código:** las reglas actuales reservan la ejecución de pruebas a la persona responsable bajo demanda.
 - **Notion:** conexión verificada el 2026-07-19; la evidencia de Fase 2 y el estado de Fase 3 se han sincronizado con la tarea de Arquitectura.

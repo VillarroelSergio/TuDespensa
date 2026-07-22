@@ -12,7 +12,6 @@ status: proposed
 revision: 1
 updated: 2026-07-19
 notion_task: "https://app.notion.com/p/3a1ad407cbfd815d825cf4e1ceb998a9"
-figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=7-1261"
 related:
   - "[[ONBOARDING-WIREFLOW]]"
   - "[[INFORMATION-ARCHITECTURE]]"

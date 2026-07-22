@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useMemo, useState, type ReactNode } from 'react'
 
+import { BrandLockup } from '@/components/ui/BrandLockup'
+
 import {
   prioritizePantryItems,
   type PantryListItem,
@@ -205,9 +207,7 @@ export function PantryList({
   return (
     <main className="pantry-page">
       <aside className="pantry-sidebar">
-        <a className="pantry-brand" href="/plan">
-          <span aria-hidden="true" /> MiDespensa
-        </a>
+        <BrandLockup className="pantry-brand" />
         <Navigation className="pantry-sidebar__nav" />
       </aside>
       <section className="pantry-content" aria-labelledby="pantry-title">
