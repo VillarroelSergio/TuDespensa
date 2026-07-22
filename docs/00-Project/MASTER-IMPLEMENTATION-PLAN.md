@@ -190,7 +190,11 @@ Reducir la carga de registrar una compra a partir de un ticket, manteniendo siem
 - Ruta `/compra/ticket`: la persona pega el texto del ticket (una línea por producto), revisa y corrige las líneas detectadas (nombre, cantidad, unidad) y confirma. Nada toca la lista hasta confirmar.
 - Un ticket registra lo **ya comprado**: las líneas entran en la lista activa con `source='ticket'` y **ya marcadas como compradas**, de modo que el cierre de compra existente (C2 → `shopping_confirm_purchase`) las lleva a la Despensa sin flujo nuevo.
 - RPC idempotente `shopping_add_ticket_items(items, idempotency_key)`: no duplica productos ya presentes (los marca comprados conservando su origen), acumula cantidad solo entre unidades compatibles y devuelve `{ added }`. Parser puro `src/modules/shopping/ticket.ts` (heurística simple; la persona corrige). Test SQL de aislamiento/idempotencia/marcado y test unitario del parser.
-- **Rebanada 2 (siguiente):** carga de **imagen** y **OCR**. La imagen **no se guarda** (decisión arriba): se lee en memoria y se descarta; el resultado del OCR alimenta la misma revisión humana de la rebanada 1. Pendiente: elegir OCR en el dispositivo o proveedor externo sin retención, y manejar errores de lectura.
+### Rebanada 2 (implementada) — foto + OCR en el dispositivo
+
+- En `/compra/ticket`, botón **Hacer una foto del ticket** (`<input type="file" accept="image/*" capture>`). La foto se lee **en el propio dispositivo** con `tesseract.js` (WASM, español); la imagen **no se sube ni se guarda** (`src/modules/shopping/ocr.ts`: entra como `File`, sale como texto y se descarta). El texto pasa por el mismo `parseTicketLines` y la misma revisión humana de la rebanada 1 antes de tocar la lista.
+- Estado de lectura con progreso; si falla la lectura, se sugiere pegar el texto a mano (la vía de la rebanada 1 sigue disponible).
+- **Verificación pendiente (bajo demanda):** `build` con `tesseract.js` en Next 16 puede requerir un ajuste menor de bundler; la precisión del OCR se calibra con fotos reales.
 
 ### Fuera de alcance inicial
 

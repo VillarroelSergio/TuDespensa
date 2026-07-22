@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { BrandLockup } from '@/components/ui/BrandLockup'
 
 import { importTicketItems } from './actions'
+import { readTicketImage } from './ocr'
 import { Navigation } from './ShoppingList'
 import { parseTicketLines, type TicketLine } from './ticket'
 
@@ -35,6 +36,25 @@ export function TicketImport() {
     // Aunque no detecte nada, dejamos una fila vacía para escribir a mano.
     setLines(detected.length ? detected : [EMPTY_LINE])
     setStatus('')
+  }
+
+  // Rebanada 2: leer una foto en el propio dispositivo. La imagen no se sube ni se
+  // guarda; se convierte en texto y se descarta. El texto pasa por el mismo repaso.
+  async function handlePhoto(file: File) {
+    if (pending) return
+    setPending(true)
+    setStatus('Leyendo la foto en tu dispositivo…')
+    try {
+      const detected = parseTicketLines(await readTicketImage(file, (ratio) =>
+        setStatus(`Leyendo la foto en tu dispositivo… ${Math.round(ratio * 100)}%`),
+      ))
+      setLines(detected.length ? detected : [EMPTY_LINE])
+      setStatus('')
+    } catch {
+      setStatus('No hemos podido leer la foto. Prueba con más luz o pega el texto a mano.')
+    } finally {
+      setPending(false)
+    }
   }
 
   function update(index: number, patch: Partial<TicketLine>) {
@@ -80,8 +100,27 @@ export function TicketImport() {
         {lines === null ? (
           <>
             <p className="shopping-review-lead">
-              Copia las líneas del ticket, una por producto. Podrás revisarlas y corregirlas antes de añadirlas.
+              Haz una foto del ticket o copia sus líneas, una por producto. Podrás revisarlas y corregirlas antes de añadirlas. La foto se lee en tu móvil y no se guarda.
             </p>
+            <label className="shopping-back ticket-photo">
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                disabled={pending}
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (file) void handlePhoto(file)
+                  event.target.value = '' // permite reintentar la misma foto
+                }}
+              />
+              Hacer una foto del ticket
+            </label>
+            {status ? (
+              <p className="pantry-sync-status" aria-live="polite">
+                {status}
+              </p>
+            ) : null}
             <label className="sr-only" htmlFor="ticket-text">
               Texto del ticket
             </label>
