@@ -7,7 +7,6 @@ tags:
   - ux
   - arquitectura-informacion
 status: draft
-figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
 notion_task: "https://app.notion.com/p/3a1ad407cbfd815d825cf4e1ceb998a9"
 related:
   - "[[00-MiDespensa-Hub]]"

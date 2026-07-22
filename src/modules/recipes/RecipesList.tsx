@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
 
+import { BrandLockup } from '@/components/ui/BrandLockup'
+
 import {
   availableCategories,
   dishTypeLabel,
@@ -76,9 +78,7 @@ export function RecipesList({
   return (
     <main className="shopping-page">
       <aside className="shopping-sidebar">
-        <a className="pantry-brand" href="/plan">
-          <span aria-hidden="true" /> MiDespensa
-        </a>
+        <BrandLockup className="pantry-brand" />
         <Navigation className="shopping-sidebar__nav" />
       </aside>
       <section className="shopping-content" aria-labelledby="recipes-title">

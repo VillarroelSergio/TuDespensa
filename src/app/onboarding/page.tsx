@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { BrandLockup } from '@/components/ui/BrandLockup'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SearchAddCombobox } from '@/components/ui/SearchAddCombobox'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
@@ -233,7 +234,7 @@ export default function OnboardingPage() {
     return (
       <main className="onboarding">
         <section className="onboarding-card">
-          <header className="brand">MiDespensa</header>
+          <BrandLockup className="brand brand--welcome" href="/" />
           <h1 ref={h1} tabIndex={-1}>
             Organiza la comida de casa
           </h1>

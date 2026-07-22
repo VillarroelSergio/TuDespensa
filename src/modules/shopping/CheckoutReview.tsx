@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { BrandLockup } from '@/components/ui/BrandLockup'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 import { confirmPurchase } from './actions'
@@ -49,9 +50,7 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
   return (
     <main className="shopping-page">
       <aside className="shopping-sidebar">
-        <a className="pantry-brand" href="/plan">
-          <span aria-hidden="true" /> MiDespensa
-        </a>
+        <BrandLockup className="pantry-brand" />
         <Navigation className="shopping-sidebar__nav" />
       </aside>
       <section className="shopping-content" aria-labelledby="checkout-title">

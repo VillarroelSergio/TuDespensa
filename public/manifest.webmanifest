@@ -4,8 +4,8 @@
   "description": "Organización doméstica de despensa y planificación semanal.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f6f1e8",
-  "theme_color": "#f6f1e8",
+  "background_color": "#f6f6f4",
+  "theme_color": "#49654e",
   "lang": "es",
   "icons": [
     {

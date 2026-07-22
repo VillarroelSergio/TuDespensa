@@ -9,8 +9,6 @@ tags:
 status: active
 notion: "https://app.notion.com/p/3a1ad407cbfd81979530f32cc6669b0a"
 notion_tasks: "https://app.notion.com/p/0136d6873c8e48d39e7af7a5d4a66c64"
-figma_project: "https://www.figma.com/files/project/627466188"
-figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
 related:
   - "[[00-MiDespensa-Hub]]"
   - "[[ACTIVE-CONTEXT]]"
@@ -26,9 +24,8 @@ related:
 ```mermaid
 flowchart LR
     N["Notion: roadmap y tarea activa"] --> O["Obsidian: contexto y requisitos"]
-    O --> F["Figma: diseño cuando aplica"]
-    F --> R["Repositorio: implementación"]
-    O --> R
+    O --> D["Claude/Codex: diseño en el repositorio"]
+    D --> R["Repositorio: implementación"]
     R --> V["Verificación"]
     V --> D["Obsidian: decisiones y evidencia"]
     D --> N
@@ -40,8 +37,7 @@ flowchart LR
 - Confirmar que existe como máximo una tarea en estado **En curso** por carril habilitado. Actualmente se permiten los carriles UX/UI y Arquitectura para trabajar en paralelo sin mezclar alcance.
 - Abrir [[ACTIVE-CONTEXT]].
 - Leer las notas enlazadas en la tarea activa del carril en el que se va a trabajar.
-- Revisar [Figma](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih) si la tarea es visual.
-- Para MiDespensa, usar únicamente el [proyecto Figma 627466188](https://www.figma.com/files/project/627466188) y sus archivos; no crear ni editar diseños fuera de él.
+- Para una tarea visual, Claude y Codex definen el diseño directamente en código a partir de los requisitos de Obsidian y registran capturas actualizadas en [[VISUAL-CONTEXT]].
 
 ## Durante el trabajo
 
@@ -61,7 +57,7 @@ flowchart LR
 
 - Añadir criterios cumplidos y evidencia a la tarea.
 - Actualizar la documentación afectada.
-- Enlazar el nodo o archivo de Figma cuando exista.
+- Enlazar la especificación de Obsidian y la evidencia de [[VISUAL-CONTEXT]] cuando exista.
 - Enlazar el entregable del repositorio cuando exista.
 - Cambiar el estado de Notion y activar la siguiente tarea solo cuando corresponda.
 - Actualizar [[ACTIVE-CONTEXT]].
@@ -74,7 +70,7 @@ Notion debe mostrar siempre:
 2. Una única tarea activa identificable por cada carril habilitado.
 3. Estado, prioridad, tipo y fase de cada tarea.
 4. Enlaces a la documentación necesaria de Obsidian.
-5. Enlaces a Figma para tareas visuales.
+5. Enlaces a la especificación y evidencia visual para tareas UI/UX.
 6. Criterios de aceptación y dependencias dentro de cada tarea.
 
 ## Reglas de Obsidian

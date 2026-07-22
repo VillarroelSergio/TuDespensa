@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { BrandLockup } from '@/components/ui/BrandLockup'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { formatQuantity } from '@/modules/shopping/presentation'
 
@@ -144,9 +145,7 @@ export function CookReview({ preview }: { preview: CookPreview }) {
   return (
     <main className="shopping-page">
       <aside className="shopping-sidebar">
-        <a className="pantry-brand" href="/plan">
-          <span aria-hidden="true" /> MiDespensa
-        </a>
+        <BrandLockup className="pantry-brand" />
       </aside>
       <section className="shopping-content" aria-labelledby="cook-title">
         <a className="shopping-back" href="/plan">

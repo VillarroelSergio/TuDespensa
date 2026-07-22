@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { BrandLockup } from '@/components/ui/BrandLockup'
 import { timeLabel } from '@/modules/recipes/presentation'
 
 import { assignMealAction, moveMealAction, removeMealAction } from './actions'
@@ -198,9 +199,7 @@ export function WeekView({
   return (
     <main className="shopping-page">
       <aside className="shopping-sidebar">
-        <a className="pantry-brand" href="/plan">
-          <span aria-hidden="true" /> MiDespensa
-        </a>
+        <BrandLockup className="pantry-brand" />
         <Navigation className="shopping-sidebar__nav" />
       </aside>
       <section
