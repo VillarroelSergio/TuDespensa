@@ -81,7 +81,10 @@ export function RecipesList({
         <BrandLockup className="pantry-brand" />
         <Navigation className="shopping-sidebar__nav" />
       </aside>
-      <section className="shopping-content" aria-labelledby="recipes-title">
+      <section
+        className="shopping-content recipes-content"
+        aria-labelledby="recipes-title"
+      >
         <header className="shopping-header">
           <h1 id="recipes-title">Recetas</h1>
           <button
