@@ -7,7 +7,7 @@ tags:
   - arquitectura
   - pruebas
   - calidad
-status: in-progress
+status: completed
 updated: 2026-07-22
 related:
   - "[[MASTER-IMPLEMENTATION-PLAN]]"
@@ -81,9 +81,11 @@ pila local de Supabase (incluido Mailpit) esté levantada.
 El arnés usa el puerto 3001 por defecto para no reutilizar una instancia
 manual en 3000; se puede cambiar mediante `E2E_PORT`.
 
-## Cobertura y límites (pendiente de la Fase 9)
+## Cobertura y límites aceptados
 
-El plan maestro define más alcance para la Fase 9 del que cubre esta evidencia:
+El plan maestro define más alcance para la Fase 9 del que cubre esta evidencia.
+La persona responsable ha aceptado el cierre el 2026-07-22 con los siguientes
+límites conocidos, que no bloquean la versión estable:
 
 - **E2E del ciclo `planificar → comprar → cocinar`**: aún no escrito. El E2E
   actual valida onboarding, no el recorrido funcional completo.
@@ -91,7 +93,8 @@ El plan maestro define más alcance para la Fase 9 del que cubre esta evidencia:
   borrador sin fusionar `e2e/responsive-navigation.spec.ts`.
 - **Integraciones SQL** de fases (p. ej. `supabase/tests/*.sql`): descritas en
   cada fase; su ejecución sistemática queda por consolidar aquí.
-- **Cierre de Notion**: lo realiza la persona responsable (sin conector).
+- **Cierre de Notion**: la tarea de Fase 9 se cierra por aceptación explícita;
+  la anterior tarea de UI de Despensa permanece cerrada.
 
 ## Nota operativa
 

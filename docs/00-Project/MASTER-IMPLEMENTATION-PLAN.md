@@ -8,7 +8,7 @@ tags:
   - roadmap
   - implementación
 status: active
-updated: 2026-07-20
+updated: 2026-07-22
 related:
   - "[[00-MiDespensa-Hub]]"
   - "[[ACTIVE-CONTEXT]]"
@@ -156,7 +156,7 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 
 ## Fase 9 — Cierre de calidad y aceptación
 
-**Rama:** `feature/final-qa-e2e`
+**Ramas:** `feature/fase9-verification-gate` y `feature/e2e-quality-gate`
 
 ### Alcance
 
@@ -164,6 +164,33 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 - Ejecución solicitada de tests unitarios, lint, typecheck y build.
 - E2E de dos sesiones: aislamiento RLS, Realtime, reintentos idempotentes y ciclo planificar → comprar → cocinar.
 - Cierre de las tareas de Notion y actualización final de documentación y evidencias.
+
+### Estado al 2026-07-22
+
+- Puerta estática en verde: lint, tipos, 82 pruebas unitarias, build y comprobación de espacios.
+- E2E de onboarding de dos sesiones en verde con Auth, callback PKCE, RLS y Realtime reales.
+- Fase aceptada por la persona responsable. El E2E del recorrido `planificar → comprar → cocinar` y la revisión manual a 390/768/1440 px se conservan como deuda conocida no bloqueante.
+- Evidencia canónica: [[FASE9-VERIFICATION-EVIDENCE]].
+
+## Fase 10 — Captura asistida de ticket de compra
+
+**Estado:** planificada; no iniciar hasta cerrar Fase 9.
+**Figma:** `COMPRA`, nodos `29:3999` y `29:4136`.
+
+### Objetivo
+
+Reducir la carga de registrar una compra a partir de un ticket, manteniendo siempre una revisión humana antes de modificar la Despensa.
+
+### Preparación requerida
+
+- Decidir el tratamiento de privacidad, retención y borrado de las imágenes del ticket antes de integrar OCR o un proveedor externo.
+- Diseñar una entrega incremental: captura/importación no destructiva → revisión humana → confirmación mediante el cierre de compra existente.
+- Añadir pruebas de aislamiento, reintento idempotente y errores de lectura.
+
+### Fuera de alcance inicial
+
+- Automatizar la confirmación en Despensa sin revisión humana.
+- Inferir precios, presupuestos o analítica de gasto.
 
 ## Orden funcional
 
