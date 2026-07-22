@@ -6,9 +6,9 @@ tags:
   - midespensa
   - ux
   - compra
-status: proposed
-revision: 2
-updated: 2026-07-19
+status: active
+revision: 3
+updated: 2026-07-21
 notion_task: "https://app.notion.com/p/3a1ad407cbfd81a7a919c872fc2a4738"
 figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-3290"
 related:
@@ -31,10 +31,11 @@ Convertir el plan y las necesidades manuales en una lista única, compartida y v
 - CTA **Finalizar compra** solo aparece cuando hay al menos un producto marcado.
 - Supermercados, historial y edición avanzada se sitúan en menú contextual.
 
-### Implementación puente — `feature/shopping-inbox`
+### Estado de implementación — C1, Fase 6 y Fase 7
 
-- La lista activa ya es persistente por hogar y se actualiza en tiempo real; el alta manual y **Añadir a compra** desde Despensa consolidan el mismo producto en una sola fila.
-- Marcar o desmarcar conserva control optimista de versión e idempotencia. Esta entrega no muestra **Finalizar compra** porque C2 todavía no está implementado: ningún marcado modifica Despensa.
+- La lista activa es persistente por hogar y se actualiza en tiempo real; el alta manual y **Añadir a compra** desde Despensa consolidan el mismo producto en una sola fila.
+- Al elegir una receta planificada, sus faltantes se consolidan en **Para el plan** sin duplicar productos ni fusionar unidades incompatibles.
+- Marcar o desmarcar conserva control optimista de versión e idempotencia. **Confirmar compra · {n}** abre C2; ningún marcado modifica Despensa por sí solo.
 
 ## C2 — Compra terminada
 
@@ -43,6 +44,12 @@ Convertir el plan y las necesidades manuales en una lista única, compartida y v
 - Se muestran los productos marcados como comprados y los cambios previstos: añadir, actualizar presencia o dejar sin cambios.
 - CTA: **Confirmar en despensa**.
 - Volver conserva las marcas de la lista.
+
+### Estado de implementación
+
+- C2 está implementada en `/compra/revisar`: muestra el efecto previsto por producto y confirma las entradas o actualizaciones de Despensa de forma idempotente.
+- La confirmación detecta cambios remotos mediante versión y aborta el lote completo para que la persona recargue; no aplica cambios parciales.
+- C4 permanece pendiente. No hay captura de ticket, OCR ni importación automática implementados.
 
 ## C3 — Estados
 

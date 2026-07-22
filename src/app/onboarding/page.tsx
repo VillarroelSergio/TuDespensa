@@ -70,9 +70,13 @@ export default function OnboardingPage() {
       if (!snapshot.household || !snapshot.progress) return
       setName(snapshot.household.name)
       setItems(snapshot.items)
+      const nextPendingZone = snapshot.progress.returnTarget
+        ? snapshot.progress.activeZone
+        : (zones.find((zone) => !snapshot.zones[zone.id].startsWith('reviewed'))
+            ?.id ?? snapshot.progress.activeZone)
       setStep(
         stepForProgress(
-          snapshot.progress.activeZone,
+          nextPendingZone,
           snapshot.progress.globalState,
           snapshot.progress.returnTarget,
         ),
@@ -188,6 +192,10 @@ export default function OnboardingPage() {
     if (!empty && items[activeZone.id].length === 0) return
     setPending(true)
     try {
+      // A zone without foods never goes through `onboarding_add_pantry_item`,
+      // which normally moves it to `in_progress`. Make that transition here
+      // before marking it reviewed so the database state machine remains valid.
+      if (empty) await setZoneState(activeZone.id, 'in_progress')
       await setZoneState(
         activeZone.id,
         empty ? 'reviewed_empty' : 'reviewed_nonempty',

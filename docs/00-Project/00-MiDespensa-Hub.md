@@ -43,6 +43,7 @@ El archivo maestro está organizado en cinco páginas. Antes de implementar una 
 - [[WORKFLOW|Flujo de trabajo obligatorio]]
 - [[ACTIVE-CONTEXT|Contexto y tarea activa]]
 - [[VISUAL-CONTEXT|Contexto visual para modelos]]
+- [[MASTER-IMPLEMENTATION-PLAN|Plan y trazabilidad de implementación]]
 - [[PRODUCT-BRIEF|Visión y definición de producto]]
 - [[MVP-FUNCTIONAL-BRIEF|Contrato funcional del MVP]]
 - [[INFORMATION-ARCHITECTURE|Arquitectura de información minimalista]]

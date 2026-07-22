@@ -40,7 +40,12 @@ npm run lint
 npx tsc --noEmit
 npm test
 npm run test:coverage
+npm run test:e2e
 ```
+
+La prueba E2E requiere Supabase local y valida el navegador contra el flujo real
+de Auth, onboarding, RLS y Realtime. Consulta [e2e/README.md](e2e/README.md)
+para la preparación, ejecución visible y artefactos de diagnóstico.
 
 Con Supabase local iniciado, ejecuta la integración SQL después de `db reset`:
 

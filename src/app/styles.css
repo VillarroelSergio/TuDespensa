@@ -200,3 +200,15 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .recipes-add .recipes-form button:not(:disabled):hover {
   background: var(--primary-soft);
 }
+
+/* Fase 8: revisión de cocina y estado de comida completada. */
+.plan-slot__cooked, .plan-menu__cook { color: #33805a !important; font-size: .6875rem; font-weight: 700; }
+.cook-list { display: grid; gap: .5rem; margin: 1rem 0 0; }
+.cook-row { display: grid; gap: .375rem; border: 1px solid var(--border); border-radius: .5rem; background: #fff; padding: .75rem; }
+.cook-row__toggle { display: flex; align-items: center; gap: .5rem; }
+.cook-row__name { color: var(--ink); font-size: .9375rem; font-weight: 600; }
+.cook-row__current { color: var(--muted); font-size: .8125rem; }
+.cook-row__field { display: flex; align-items: center; gap: .5rem; color: var(--muted-2); font-size: .75rem; font-weight: 700; }
+.cook-row__field input, .cook-row__field select { min-height: 40px; border: 1px solid var(--border); border-radius: .375rem; background: #fff; padding: 0 .5rem; font-size: .875rem; }
+.cook-row__field input { width: 6rem; }
+.cook-row__field input:disabled, .cook-row__field select:disabled { opacity: .5; }

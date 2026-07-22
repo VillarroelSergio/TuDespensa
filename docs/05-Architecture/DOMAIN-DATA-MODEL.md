@@ -8,8 +8,8 @@ tags:
   - arquitectura
   - dominio
   - datos
-status: proposed
-updated: 2026-07-19
+status: active
+updated: 2026-07-21
 notion_task: "https://app.notion.com/p/3a1ad407cbfd814ebd46e96f3d8d1148"
 related:
   - "[[00-MiDespensa-Hub]]"
@@ -24,7 +24,7 @@ related:
 
 Definir un modelo relacional para el MVP que mantenga coherentes recetas, planificación, compra y despensa, con aislamiento por hogar, colaboración entre miembros, trazabilidad e idempotencia.
 
-Esta revisión es una **propuesta**. Las entidades e invariantes están listas para validación; los nombres físicos de columnas, índices y políticas se concretarán en las migraciones después de aprobar el modelo.
+El modelo se materializó progresivamente en las migraciones de las Fases 0–8. Esta nota conserva la intención y las invariantes canónicas; los nombres físicos y el comportamiento ejecutable se verifican contra las migraciones y RPCs. La aceptación integral de los flujos sigue pendiente de la Fase 9.
 
 ## 2. Límites del dominio
 
@@ -117,7 +117,7 @@ Recetas, compra y despensa referencian `household_foods`. Esta capa permite nomb
 | `recipe_category_assignments` | Relación muchos-a-muchos entre recetas y categorías |
 | `recipe_preferences` | Favorito y puntuación opcional de 1 a 5 para cada persona y receta |
 
-Una receta puede estar `pending` con solo nombre y enlace, o `structured`. Solo las recetas estructuradas pueden alimentar consolidaciones y sugerencias basadas en ingredientes.
+Una receta puede estar `pending` con solo nombre y enlace, o `ready`. Solo las recetas `ready` pueden alimentar consolidaciones y sugerencias basadas en ingredientes.
 
 Las recetas iniciales se importan dentro del hogar y después son editables. `recipes` conserva `origin`, `seed_key`, `seed_version`, autor o responsable, URL de fuente, identificador y URL de licencia, atribución y notas de derechos. `seed_key` es único y hace idempotente la carga; una actualización del dataset no sobrescribe silenciosamente una receta modificada por el hogar.
 

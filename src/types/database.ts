@@ -481,6 +481,8 @@ export interface Database {
           meal_type: 'lunch' | 'dinner'
           recipe_id: string
           servings: number | null
+          cooked_at: string | null
+          cooked_by: string | null
           created_by: string
           created_at: string
           updated_at: string
@@ -493,6 +495,8 @@ export interface Database {
           meal_type: 'lunch' | 'dinner'
           recipe_id: string
           servings?: number | null
+          cooked_at?: string | null
+          cooked_by?: string | null
           created_by: string
           created_at?: string
           updated_at?: string
@@ -505,6 +509,8 @@ export interface Database {
           meal_type?: 'lunch' | 'dinner'
           recipe_id?: string
           servings?: number | null
+          cooked_at?: string | null
+          cooked_by?: string | null
           created_by?: string
           created_at?: string
           updated_at?: string
@@ -922,6 +928,15 @@ export interface Database {
         Args: {
           meal_date_value: string
           meal_type_value: 'lunch' | 'dinner'
+          idempotency_key: string
+        }
+        Returns: Json
+      }
+      plan_cook_meal: {
+        Args: {
+          meal_date_value: string
+          meal_type_value: 'lunch' | 'dinner'
+          consumptions: Json
           idempotency_key: string
         }
         Returns: Json
