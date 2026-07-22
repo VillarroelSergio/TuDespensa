@@ -118,7 +118,7 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - **Diseño:** aplicar después el sistema visual mediterráneo contemporáneo y rediseñar primero el bucle `Plan → Compra → Cocina → Despensa`.
 - **Identidad:** integrar nombre y logotipo cuando finalice el trabajo paralelo, sin bloquear las fases anteriores.
 - **Integración:** finalizar la fusión de las PR de Fase 9 y conservar el historial de la versión estable en `develop`.
-- **Siguiente incremento:** Fase 10, captura asistida de ticket. Rebanada 1 (importación por texto + revisión humana + cierre existente) implementada en `feature/fase10-ticket-capture`. **Decisión pendiente antes de la rebanada 2 (imagen + OCR):** privacidad, retención y borrado de las imágenes del ticket; hasta cerrarla no se integra OCR ni proveedor externo.
+- **Siguiente incremento:** Fase 10, captura asistida de ticket. Rebanada 1 (importación por texto + revisión humana + cierre existente) implementada en `feature/fase10-ticket-capture`. **Privacidad decidida (2026-07-22): las imágenes del ticket no se guardan** (sin bucket/columna/fichero; procesar en memoria y descartar). La rebanada 2 (imagen + OCR) alimenta la misma revisión humana; queda por elegir OCR en el dispositivo o proveedor externo sin retención.
 - **Desarrollo:** no ejecutar verificaciones automáticamente; la persona responsable las realizará bajo demanda. Planificar una cobertura E2E automatizada antes de declarar los flujos completos.
 - **Desarrollo local:** `next dev` permite acceder a la interfaz sin autenticación ni redirecciones de onboarding; el bypass está limitado a `NODE_ENV=development` y no habilita datos privados sin sesión de Supabase.
 

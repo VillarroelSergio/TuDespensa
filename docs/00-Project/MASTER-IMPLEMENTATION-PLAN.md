@@ -181,7 +181,7 @@ Reducir la carga de registrar una compra a partir de un ticket, manteniendo siem
 ### Preparación requerida
 
 - Definir en código el flujo de permiso, carga, revisión de líneas detectadas, corrección y confirmación; actualizar [[VISUAL-CONTEXT]].
-- Decidir el tratamiento de privacidad, retención y borrado de las imágenes del ticket antes de integrar OCR o un proveedor externo.
+- **Decidido (2026-07-22): las imágenes del ticket no se guardan.** No hay bucket, columna ni fichero de la imagen; se procesa en memoria y se descarta al terminar. Un OCR externo, si se usa, debe recibir la imagen solo de forma transitoria y sin retención; la alternativa es OCR en el propio dispositivo.
 - Diseñar una entrega incremental: captura/importación no destructiva → revisión humana → confirmación mediante el cierre de compra existente.
 - Añadir pruebas de aislamiento, reintento idempotente y errores de lectura.
 
@@ -190,7 +190,7 @@ Reducir la carga de registrar una compra a partir de un ticket, manteniendo siem
 - Ruta `/compra/ticket`: la persona pega el texto del ticket (una línea por producto), revisa y corrige las líneas detectadas (nombre, cantidad, unidad) y confirma. Nada toca la lista hasta confirmar.
 - Un ticket registra lo **ya comprado**: las líneas entran en la lista activa con `source='ticket'` y **ya marcadas como compradas**, de modo que el cierre de compra existente (C2 → `shopping_confirm_purchase`) las lleva a la Despensa sin flujo nuevo.
 - RPC idempotente `shopping_add_ticket_items(items, idempotency_key)`: no duplica productos ya presentes (los marca comprados conservando su origen), acumula cantidad solo entre unidades compatibles y devuelve `{ added }`. Parser puro `src/modules/shopping/ticket.ts` (heurística simple; la persona corrige). Test SQL de aislamiento/idempotencia/marcado y test unitario del parser.
-- **Deferido a la rebanada 2:** carga de **imagen** y **OCR**, que requieren primero la decisión de privacidad/retención/borrado; y los errores de lectura del proveedor.
+- **Rebanada 2 (siguiente):** carga de **imagen** y **OCR**. La imagen **no se guarda** (decisión arriba): se lee en memoria y se descarta; el resultado del OCR alimenta la misma revisión humana de la rebanada 1. Pendiente: elegir OCR en el dispositivo o proveedor externo sin retención, y manejar errores de lectura.
 
 ### Fuera de alcance inicial
 
