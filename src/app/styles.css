@@ -217,3 +217,12 @@ h1[tabindex='-1']:focus, h2[tabindex='-1']:focus { outline: none; }
 .cook-row__field input, .cook-row__field select { min-height: 40px; border: 1px solid var(--border); border-radius: .375rem; background: #fff; padding: 0 .5rem; font-size: .875rem; }
 .cook-row__field input { width: 6rem; }
 .cook-row__field input:disabled, .cook-row__field select:disabled { opacity: .5; }
+
+/* Despensa móvil: la fila envuelve para que el stepper y los botones de estado
+   caigan bajo el nombre en vez de desbordarse a 390px. El bug solo aparece en
+   filas con cantidad (measure/units), invisibles en los estados vacíos. */
+@media (max-width: 767px) {
+  .pantry-row { flex-wrap: wrap; row-gap: .5rem; }
+  .pantry-row__detail { flex-basis: 100%; }
+  .pantry-stepper, .pantry-presence { flex-wrap: wrap; }
+}
