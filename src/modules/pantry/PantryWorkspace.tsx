@@ -17,7 +17,7 @@ import { PantryDetail } from './PantryDetail'
 import { PantryEntryForm } from './PantryEntryForm'
 import { PantryList } from './PantryList'
 import type { PantryListItem, PresentedPantryItem } from './presentation'
-import type { PantryMutationInput } from './types'
+import type { PantryMutationInput, PantryZone } from './types'
 
 type Props = {
   initialItems: PantryListItem[]
@@ -198,7 +198,7 @@ export function PantryWorkspace({ initialItems }: Props) {
   }
 
   async function handleCreate(input: {
-    zone: 'pantry'
+    zone: PantryZone
     foodName: string
     trackingMode: PantryMutationInput['trackingMode']
     approximateState: PantryMutationInput['approximateState']
@@ -238,7 +238,7 @@ export function PantryWorkspace({ initialItems }: Props) {
           setSelectedItem(item)
         }}
         selectedId={selectedItem?.id}
-        detail={isAdding ? <PantryEntryForm onClose={() => setIsAdding(false)} onSave={handleCreate} /> : selectedItem ? <PantryDetail item={selectedItem} onClose={() => setSelectedItem(null)} onSave={handleSave} /> : null}
+        detail={isAdding ? <PantryEntryForm onClose={() => setIsAdding(false)} onSave={handleCreate} /> : selectedItem ? <PantryDetail key={selectedItem.id} item={selectedItem} onClose={() => setSelectedItem(null)} onSave={handleSave} /> : null}
         status={status}
       />
     </>

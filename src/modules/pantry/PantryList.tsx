@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState, type ReactNode } from 'react'
 
 import {
@@ -107,7 +108,7 @@ function measureStepLabel(unitCode: PresentedPantryItem['unitCode']): string {
 
 function Navigation({ className }: { className: string }) {
   return <nav className={className} aria-label="Navegación principal">
-    <a href="/plan">Plan</a><a href="/recetas">Recetas</a><a href="/compra">Compra</a>
+    <Link href="/plan">Plan</Link><Link href="/recetas">Recetas</Link><Link href="/compra">Compra</Link>
     <a aria-current="page" href="/despensa">Despensa</a>
   </nav>
 }
@@ -149,7 +150,7 @@ export function PantryList({
         </div>
         {detail}
       </div>
-      {onUndo && undoItemName ? <div className="pantry-toast" role="status"><span>{undoItemName} → Se terminó</span>{onAddToShopping ? <button onClick={() => { const item = initialItems.find((candidate) => candidate.name === undoItemName); if (item) onAddToShopping(item) }} type="button">Añadir a compra</button> : null}<button onClick={onUndo} type="button">Deshacer</button></div> : null}
+      {onUndo && undoItemName ? <div className="pantry-toast" role="status"><span>{undoItemName} → Se terminó</span>{onAddToShopping ? <button onClick={() => { const item = prioritizePantryItems(initialItems).find((candidate) => candidate.name === undoItemName); if (item) onAddToShopping(item) }} type="button">Añadir a compra</button> : null}<button onClick={onUndo} type="button">Deshacer</button></div> : null}
     </section>
     <Navigation className="pantry-bottom-nav" />
   </main>

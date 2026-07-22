@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import type {
   PantryApproximateState,
@@ -35,13 +35,8 @@ export function PantryDetail({ item, onClose, onSave }: Props) {
   const [approximateState, setApproximateState] = useState<PantryApproximateState>(item.approximateState ?? 'some')
   const [pending, setPending] = useState(false)
 
-  useEffect(() => {
-    setTrackingMode(item.trackingMode)
-    setQuantity(String(item.quantity ?? ''))
-    setUnitCode(item.unitCode ?? 'unit')
-    setApproximateState(item.approximateState ?? 'some')
-  }, [item])
-
+  // El estado se inicializa desde `item`; el padre remonta con `key={item.id}`
+  // al cambiar de producto, así que no hace falta un efecto de sincronización.
   const quantityValue = quantity === '' ? null : Number(quantity)
 
   async function save() {

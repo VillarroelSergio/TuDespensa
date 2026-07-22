@@ -70,8 +70,8 @@ describe('buildWeek', () => {
     expect(days).toHaveLength(7)
     expect(days.every((day) => day.slots.length === 2)).toBe(true)
     const tuesday = days[1]
-    expect(tuesday.slots[0].meal?.title).toBe('Gazpacho andaluz')
-    expect(tuesday.slots[1].meal).toBeNull()
+    expect(tuesday!.slots[0]!.meal?.title).toBe('Gazpacho andaluz')
+    expect(tuesday!.slots[1]!.meal).toBeNull()
   })
 
   it('ignora comidas fuera de la semana mostrada', () => {

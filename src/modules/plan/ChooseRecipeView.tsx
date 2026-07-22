@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import { timeLabel } from '@/modules/recipes/presentation'
@@ -113,7 +114,7 @@ export function ChooseRecipeView({
       {recipes.length === 0 ? (
         <p className="choose-empty">
           Todavía no tienes recetas guardadas.{' '}
-          <a href="/recetas">Añadir receta</a>
+          <Link href="/recetas">Añadir receta</Link>
         </p>
       ) : results.length === 0 ? (
         <p className="choose-empty">

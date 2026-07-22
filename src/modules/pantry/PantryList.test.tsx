@@ -8,8 +8,8 @@ describe('PantryList', () => {
     render(
       <PantryList
         initialItems={[
-          { id: 'pasta', foodId: 'f-pasta', name: 'Macarrones', version: 1, trackingMode: 'measure', approximateState: null, quantity: 500, unitCode: 'g' },
-          { id: 'milk', foodId: 'f-milk', name: 'Leche', version: 2, trackingMode: 'units', approximateState: null, quantity: 0, unitCode: 'unit' },
+          { id: 'pasta', foodId: 'f-pasta', name: 'Macarrones', version: 1, trackingMode: 'measure', approximateState: null, attentionState: 'none', quantity: 500, unitCode: 'g' },
+          { id: 'milk', foodId: 'f-milk', name: 'Leche', version: 2, trackingMode: 'units', approximateState: null, attentionState: 'none', quantity: 0, unitCode: 'unit' },
         ]}
       />,
     )
@@ -25,7 +25,7 @@ describe('PantryList', () => {
     render(
       <PantryList
         initialItems={[
-          { id: 'yogurt', foodId: 'f-yogurt', name: 'Yogures', version: 3, trackingMode: 'units', approximateState: null, quantity: 4, unitCode: 'unit' },
+          { id: 'yogurt', foodId: 'f-yogurt', name: 'Yogures', version: 3, trackingMode: 'units', approximateState: null, attentionState: 'none', quantity: 4, unitCode: 'unit' },
         ]}
         onMarkLow={onMarkLow}
       />,

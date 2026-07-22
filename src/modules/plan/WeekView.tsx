@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import { timeLabel } from '@/modules/recipes/presentation'
 
 import { assignMealAction, moveMealAction, removeMealAction } from './actions'
@@ -15,12 +17,12 @@ import type { MealType, PlanSlot, PlannedMeal } from './types'
 function Navigation({ className }: { className: string }) {
   return (
     <nav className={className} aria-label="Navegación principal">
-      <a aria-current="page" href="/plan">
+      <Link aria-current="page" href="/plan">
         Plan
-      </a>
-      <a href="/recetas">Recetas</a>
-      <a href="/compra">Compra</a>
-      <a href="/despensa">Despensa</a>
+      </Link>
+      <Link href="/recetas">Recetas</Link>
+      <Link href="/compra">Compra</Link>
+      <Link href="/despensa">Despensa</Link>
     </nav>
   )
 }
@@ -110,7 +112,7 @@ function Slot({ slot }: { slot: PlanSlot }) {
       <span className="plan-slot__label">{mealLabel(slot.mealType)}</span>
       {slot.meal ? (
         <div className="plan-slot__recipe">
-          <a href={`/recetas/${slot.meal.recipeId}`}>{slot.meal.title}</a>
+          <Link href={`/recetas/${slot.meal.recipeId}`}>{slot.meal.title}</Link>
           <span className="plan-slot__meta">
             {[
               timeLabel(slot.meal.totalMinutes),

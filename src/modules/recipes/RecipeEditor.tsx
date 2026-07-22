@@ -97,7 +97,7 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
           unitCode: row.unitCode || null,
         })),
       steps,
-    }).catch(() => ({ ok: false, reason: 'error' as const }))
+    }).catch(() => ({ ok: false as const, reason: 'error' as const }))
     if (result.ok) {
       // ponytail: categorías son metadato secundario; si su guardado falla no bloquea la receta ya guardada.
       await setCategories({

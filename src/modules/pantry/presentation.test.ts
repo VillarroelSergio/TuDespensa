@@ -13,6 +13,7 @@ const item = (overrides: Partial<PantryListItem> = {}): PantryListItem => ({
   version: 1,
   trackingMode: 'approximate',
   approximateState: 'plenty',
+  attentionState: 'none',
   quantity: null,
   unitCode: null,
   consumeSoon: false,

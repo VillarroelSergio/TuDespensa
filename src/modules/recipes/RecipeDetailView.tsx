@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import { dishTypeLabel, formatIngredient, timeLabel } from './presentation'
 import { RecipePreferences } from './RecipePreferences'
 import type { RecipeDetail } from './types'
@@ -11,9 +13,9 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeDetail }) {
 
   return (
     <main className="recipe-detail">
-      <a className="recipe-back" href="/recetas">
+      <Link className="recipe-back" href="/recetas">
         ← Recetas
-      </a>
+      </Link>
       <header className="recipe-detail__header">
         <h1>{recipe.title}</h1>
         {recipe.status === 'pending' ? (
@@ -75,9 +77,9 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeDetail }) {
       </section>
 
       {/* ponytail: «Añadir al plan» es la integración con Plan (Fase 5); aquí solo editar. */}
-      <a className="recipe-detail__edit" href={`/recetas/${recipe.id}/editar`}>
+      <Link className="recipe-detail__edit" href={`/recetas/${recipe.id}/editar`}>
         {recipe.status === 'pending' ? 'Revisar receta' : 'Editar'}
-      </a>
+      </Link>
     </main>
   )
 }

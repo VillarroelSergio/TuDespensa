@@ -1,12 +1,13 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
 
 import { formatQuantity } from './presentation'
 import type { ShoppingItem } from './types'
 
 export function Navigation({ className }: { className: string }) {
-  return <nav className={className} aria-label="Navegación principal"><a href="/plan">Plan</a><a href="/recetas">Recetas</a><a aria-current="page" href="/compra">Compra</a><a href="/despensa">Despensa</a></nav>
+  return <nav className={className} aria-label="Navegación principal"><Link href="/plan">Plan</Link><Link href="/recetas">Recetas</Link><Link aria-current="page" href="/compra">Compra</Link><Link href="/despensa">Despensa</Link></nav>
 }
 
 function Row({ item, pending, onToggle }: { item: ShoppingItem; pending: boolean; onToggle: (item: ShoppingItem) => void }) {
