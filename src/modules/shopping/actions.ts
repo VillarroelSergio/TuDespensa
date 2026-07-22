@@ -3,7 +3,11 @@
 import { revalidatePath } from 'next/cache'
 
 import { AppError } from '@/lib/errors/AppError'
-import { demoFixturesEnabled, demoShoppingItems } from '@/lib/dev/demo-fixtures'
+import {
+  demoCheckoutLines,
+  demoFixturesEnabled,
+  demoShoppingItems,
+} from '@/lib/dev/demo-fixtures'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseFoodName, parseIdempotencyKey } from '@/lib/validation/onboarding'
@@ -183,7 +187,8 @@ export async function getCheckoutPreview(): Promise<CheckoutLine[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user && process.env.NODE_ENV === 'development') return []
+  if (!user && process.env.NODE_ENV === 'development')
+    return demoFixturesEnabled() ? demoCheckoutLines : []
   const { data, error } = await supabase.rpc(
     'shopping_checkout_preview' as never,
   )

@@ -53,7 +53,7 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
         <BrandLockup className="pantry-brand" />
         <Navigation className="shopping-sidebar__nav" />
       </aside>
-      <section className="shopping-content" aria-labelledby="checkout-title">
+      <section className="shopping-content checkout-content" aria-labelledby="checkout-title">
         <a className="shopping-back" href="/compra">
           ← Volver a la lista
         </a>

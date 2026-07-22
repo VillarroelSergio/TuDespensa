@@ -1,7 +1,7 @@
 import type { PantryListItem } from '@/modules/pantry/presentation'
 import type { PlannedMeal } from '@/modules/plan/types'
 import type { Recipe } from '@/modules/recipes/types'
-import type { ShoppingItem } from '@/modules/shopping/types'
+import type { CheckoutLine, ShoppingItem } from '@/modules/shopping/types'
 
 /**
  * Datos de demostración para las capturas de contexto visual. Sintéticos,
@@ -169,6 +169,32 @@ export const demoShoppingItems: ShoppingItem[] = [
     version: 1,
     quantity: 1,
     unitCode: 'l',
+  },
+]
+
+// Revisión C2 de la compra: los dos productos comprados de demoShoppingItems
+// (Leche, Aceite), uno como alta y otro como suma de cantidad, para ver ambas
+// variantes de etiqueta.
+export const demoCheckoutLines: CheckoutLine[] = [
+  {
+    itemId: 'demo-s-5',
+    version: 1,
+    name: 'Leche',
+    action: 'add',
+    fromQuantity: null,
+    fromUnit: null,
+    toQuantity: 1,
+    toUnit: 'l',
+  },
+  {
+    itemId: 'demo-s-6',
+    version: 1,
+    name: 'Aceite de oliva',
+    action: 'update',
+    fromQuantity: 0.5,
+    fromUnit: 'l',
+    toQuantity: 1.5,
+    toUnit: 'l',
   },
 ]
 
