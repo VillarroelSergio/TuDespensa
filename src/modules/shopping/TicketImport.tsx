@@ -21,9 +21,9 @@ const UNIT_OPTIONS: { value: string; label: string }[] = [
 
 const EMPTY_LINE: TicketLine = { name: '', quantity: null, unitCode: null }
 
-// Fase 10: pegar el texto del ticket → revisar y corregir cada línea → añadir a
-// Compra. No hay OCR ni imagen: la persona pega el texto y confirma lo detectado
-// antes de que nada toque la lista.
+// Fase 10: hacer una foto del ticket (OCR en el dispositivo) o pegar su texto →
+// revisar y corregir cada línea → añadir a Compra. La persona confirma lo
+// detectado antes de que nada toque la lista; la imagen no se sube ni se guarda.
 export function TicketImport() {
   const router = useRouter()
   const [text, setText] = useState('')
@@ -45,13 +45,19 @@ export function TicketImport() {
     setPending(true)
     setStatus('Leyendo la foto en tu dispositivo…')
     try {
-      const detected = parseTicketLines(await readTicketImage(file, (ratio) =>
-        setStatus(`Leyendo la foto en tu dispositivo… ${Math.round(ratio * 100)}%`),
-      ))
+      const detected = parseTicketLines(
+        await readTicketImage(file, (ratio) =>
+          setStatus(
+            `Leyendo la foto en tu dispositivo… ${Math.round(ratio * 100)}%`,
+          ),
+        ),
+      )
       setLines(detected.length ? detected : [EMPTY_LINE])
       setStatus('')
     } catch {
-      setStatus('No hemos podido leer la foto. Prueba con más luz o pega el texto a mano.')
+      setStatus(
+        'No hemos podido leer la foto. Prueba con más luz o pega el texto a mano.',
+      )
     } finally {
       setPending(false)
     }
@@ -59,7 +65,9 @@ export function TicketImport() {
 
   function update(index: number, patch: Partial<TicketLine>) {
     setLines((current) =>
-      (current ?? []).map((line, i) => (i === index ? { ...line, ...patch } : line)),
+      (current ?? []).map((line, i) =>
+        i === index ? { ...line, ...patch } : line,
+      ),
     )
   }
 
@@ -81,7 +89,9 @@ export function TicketImport() {
     }
   }
 
-  const usable = (lines ?? []).filter((line) => line.name.trim().length > 0).length
+  const usable = (lines ?? []).filter(
+    (line) => line.name.trim().length > 0,
+  ).length
 
   return (
     <main className="shopping-page">
@@ -100,7 +110,9 @@ export function TicketImport() {
         {lines === null ? (
           <>
             <p className="shopping-review-lead">
-              Haz una foto del ticket o copia sus líneas, una por producto. Podrás revisarlas y corregirlas antes de añadirlas. La foto se lee en tu móvil y no se guarda.
+              Haz una foto del ticket o copia sus líneas, una por producto.
+              Podrás revisarlas y corregirlas antes de añadirlas. La foto se lee
+              en tu móvil y no se guarda.
             </p>
             <label className="shopping-back ticket-photo">
               <input
@@ -144,9 +156,13 @@ export function TicketImport() {
         ) : (
           <>
             <p className="shopping-review-lead">
-              Revisa lo detectado. Corrige el nombre, ajusta la cantidad o quita lo que no compraste.
+              Revisa lo detectado. Corrige el nombre, ajusta la cantidad o quita
+              lo que no compraste.
             </p>
-            <section className="shopping-list" aria-label="Productos detectados">
+            <section
+              className="shopping-list"
+              aria-label="Productos detectados"
+            >
               {lines.map((line, index) => (
                 <div key={index} className="ticket-row">
                   <label className="sr-only" htmlFor={`ticket-name-${index}`}>
@@ -156,7 +172,9 @@ export function TicketImport() {
                     id={`ticket-name-${index}`}
                     className="ticket-name"
                     value={line.name}
-                    onChange={(event) => update(index, { name: event.target.value })}
+                    onChange={(event) =>
+                      update(index, { name: event.target.value })
+                    }
                     maxLength={120}
                     placeholder="Producto"
                   />
@@ -170,7 +188,8 @@ export function TicketImport() {
                     onChange={(event) => {
                       const value = Number(event.target.value.replace(',', '.'))
                       update(index, {
-                        quantity: event.target.value && value > 0 ? value : null,
+                        quantity:
+                          event.target.value && value > 0 ? value : null,
                       })
                     }}
                     inputMode="decimal"
@@ -185,7 +204,8 @@ export function TicketImport() {
                     value={line.unitCode ?? ''}
                     onChange={(event) =>
                       update(index, {
-                        unitCode: (event.target.value || null) as TicketLine['unitCode'],
+                        unitCode: (event.target.value ||
+                          null) as TicketLine['unitCode'],
                       })
                     }
                   >
@@ -208,7 +228,9 @@ export function TicketImport() {
             </section>
             <button
               className="shopping-back ticket-add-line"
-              onClick={() => setLines((current) => [...(current ?? []), EMPTY_LINE])}
+              onClick={() =>
+                setLines((current) => [...(current ?? []), EMPTY_LINE])
+              }
               type="button"
             >
               + Añadir un producto

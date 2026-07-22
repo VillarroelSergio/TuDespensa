@@ -13,7 +13,8 @@ export async function readTicketImage(
   const { data } = await Tesseract.recognize(file, 'spa', {
     logger: onProgress
       ? (message) => {
-          if (message.status === 'recognizing text') onProgress(message.progress)
+          if (message.status === 'recognizing text')
+            onProgress(message.progress)
         }
       : undefined,
   })
