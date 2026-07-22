@@ -44,4 +44,8 @@ Antes de una revisión visual o de pedir cambios de interfaz, ejecutar el comand
 
 ## Archivos generados
 
-Esto genera 30 pantallas visuales y 30 mapas de controles. Los archivos se guardan en `docs/00-Project/visual-context/`. Se actualizan a propósito: forman parte de la evidencia visual del proyecto y no contienen credenciales ni datos privados.
+Esto genera 54 pantallas visuales y 54 mapas de controles. Mantiene las capturas vacías y añade el escenario sintético `everyday` para Despensa, Compra, revisión de compra, Recetas, Plan, selector de receta y Cocina, en móvil, tablet y escritorio.
+
+El escenario `everyday` se activa exclusivamente con `?fixture=everyday` en desarrollo. Contiene datos fijos sin PII —productos, recetas, plan, compra y revisión de Cocina— y nunca consulta ni escribe datos reales de Supabase. El script usa por defecto el puerto `3011` para no compartir servidor con otros worktrees; puede cambiarse con `VISUAL_CONTEXT_PORT`.
+
+Los archivos se guardan en `docs/00-Project/visual-context/`. Se actualizan a propósito: forman parte de la evidencia visual del proyecto y no contienen credenciales ni datos privados.

@@ -1,23 +1,10 @@
 'use client'
 
-import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
 
-import { formatQuantity } from './presentation'
+import { AppShell } from '@/components/ui/AppShell'
+import { formatQuantity, shoppingProgress } from './presentation'
 import type { ShoppingItem } from './types'
-
-export function Navigation({ className }: { className: string }) {
-  return (
-    <nav className={className} aria-label="Navegación principal">
-      <Link href="/plan">Plan</Link>
-      <Link href="/recetas">Recetas</Link>
-      <Link aria-current="page" href="/compra">
-        Compra
-      </Link>
-      <Link href="/despensa">Despensa</Link>
-    </nav>
-  )
-}
 
 function Row({
   item,
@@ -72,6 +59,7 @@ export function ShoppingList({
     [initialItems],
   )
   const purchased = items.filter((item) => item.isPurchased).length
+  const progress = shoppingProgress(items.length, purchased)
   // «Para el plan» agrupa lo que llega de recetas planificadas; el resto es la
   // lista propia (manual o enviado desde Despensa).
   const planItems = items.filter((item) => item.source === 'plan')
@@ -84,19 +72,17 @@ export function ShoppingList({
     setName('')
   }
   return (
-    <main className="shopping-page">
-      <aside className="shopping-sidebar">
-        <a className="pantry-brand" href="/plan">
-          <span aria-hidden="true" /> MiDespensa
-        </a>
-        <Navigation className="shopping-sidebar__nav" />
-      </aside>
-      <section className="shopping-content" aria-labelledby="shopping-title">
+    <AppShell current="compra">
+      <div aria-labelledby="shopping-title">
         <header className="shopping-header">
-          <h1 id="shopping-title">Compra</h1>
-          <p>
-            {purchased} de {items.length}
-          </p>
+          <div>
+            <p className="shopping-kicker">Lista de esta semana</p>
+            <h1 id="shopping-title">Compra</h1>
+          </div>
+          <div className="shopping-progress" aria-label={`${purchased} de ${items.length} productos comprados`}>
+            <strong>{progress.label}</strong>
+            <span>{purchased} / {items.length}</span>
+          </div>
         </header>
         {notice ? <p className="plan-notice">{notice}</p> : null}
         <form className="shopping-add" onSubmit={submit}>
@@ -114,6 +100,9 @@ export function ShoppingList({
             Añadir
           </button>
         </form>
+        <div className="shopping-progress-bar" aria-hidden="true">
+          <span style={{ width: `${progress.ratio * 100}%` }} />
+        </div>
         {status ? (
           <p className="pantry-sync-status" aria-live="polite">
             {status}
@@ -160,8 +149,7 @@ export function ShoppingList({
             Confirmar compra
           </button>
         )}
-      </section>
-      <Navigation className="shopping-bottom-nav" />
-    </main>
+      </div>
+    </AppShell>
   )
 }

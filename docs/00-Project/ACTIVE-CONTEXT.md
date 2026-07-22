@@ -8,7 +8,9 @@ tags:
   - contexto-activo
 status: active
 updated: 2026-07-22
-notion_task: "https://app.notion.com/p/3a5ad407cbfd8190800ae0b89d966a7a"
+notion_task: "https://app.notion.com/p/3a5ad407cbfd8178801ade68a6cfdbb2"
+notion_validation_task: "https://app.notion.com/p/3a5ad407cbfd8190800ae0b89d966a7a"
+notion_identity_task: "https://app.notion.com/p/3a5ad407cbfd816db75cf6cd3dffe3d3"
 notion_architecture_task: "https://app.notion.com/p/3a1ad407cbfd81029a1be5ed18e31e6e"
 figma_project: "https://www.figma.com/files/project/627466188"
 figma: "https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih"
@@ -31,7 +33,15 @@ related:
 
 ### UX/UI
 
-No hay tarea UX/UI activa. La UI de `DESPENSA` de Fase 3 está implementada; la revisión responsive pendiente se gestiona dentro de la validación transversal de Fase 9.
+[Rediseñar la experiencia UI/UX completa del MVP](https://app.notion.com/p/3a5ad407cbfd8178801ade68a6cfdbb2)
+
+- **Estado:** En curso
+- **Fase:** UX/UI
+- **Prioridad:** Alta
+- **Dirección:** mediterránea contemporánea, móvil primero y fotografías opcionales.
+- **Primer entregable:** fixtures sintéticos reproducibles y capturas realistas de estados vacíos, poblados y de atención.
+
+La identidad y el logotipo definitivos se realizan en paralelo y quedan como [tarea pendiente](https://app.notion.com/p/3a5ad407cbfd816db75cf6cd3dffe3d3); no bloquean el sistema visual ni los componentes.
 
 ### Validación
 
@@ -80,7 +90,8 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - Figma AI crea los wireframes; el equipo define el flujo y revisa el resultado.
 - El archivo maestro de Figma está organizado en cinco páginas: `ONBOARDING`, `DESPENSA`, `COMPRA`, `RECETAS` y `PLAN SEMANAL`. Cada una es la fuente visual de su módulo durante la implementación.
 - Objetivo de cinco minutos pendiente de validar con prototipo.
-- No crear todavía diseño visual de alta fidelidad.
+- El rediseño visual de alta fidelidad está autorizado desde el 2026-07-22 y sustituye la restricción anterior de mantener baja fidelidad.
+- Los datos usados para evidencia visual deben ser sintéticos, deterministas, sin PII y estar aislados de producción.
 - Uso cerrado: un único hogar, un máximo de dos cuentas y sin crecimiento previsto.
 - Recetario inicial con recetas preferidas y mediterráneas, categorías, favoritos y puntuaciones individuales para alimentar sugerencias explicables.
 
@@ -105,6 +116,9 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 
 ## Siguientes acciones
 
+- **UX/UI:** Fase 1 completada: fixtures sintéticos aislados y 54 evidencias (vacío y cotidiano) en 390, 768 y 1440 px, incluida la revisión de Cocina.
+- **Diseño:** Fase 2 en curso: shell y tokens mediterráneos aplicados; Plan, Compra, selector de receta y Cocina ya comparten jerarquía, progreso y confirmación clara. Continuar con los estados de confirmación de Despensa y la revisión de compra del bucle `Plan → Compra → Cocina → Despensa`.
+- **Identidad:** integrar nombre y logotipo cuando finalice el trabajo paralelo, sin bloquear las fases anteriores.
 - **Integración:** finalizar la fusión de las PR de Fase 9 y conservar el historial de la versión estable en `develop`.
 - **Siguiente incremento:** Fase 10, captura asistida de ticket. Se activará después de integrar las PR; antes de integrar OCR hay que decidir privacidad/retención y cerrar en Figma el flujo de revisión humana (nodos `COMPRA` 29:3999/29:4136).
 - **Desarrollo:** no ejecutar verificaciones automáticamente; la persona responsable las realizará bajo demanda. Planificar una cobertura E2E automatizada antes de declarar los flujos completos.
@@ -114,5 +128,6 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 
 ## Bloqueos
 
-- **Figma:** los cinco nodos canónicos están accesibles y devuelven contexto de implementación: `ONBOARDING` ([7:1261](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=7-1261)), `DESPENSA` ([47:2](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=47-2)), `COMPRA` ([29:3290](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-3290)), `RECETAS` ([29:1906](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-1906)) y `PLAN SEMANAL` ([29:5](https://www.figma.com/design/mq6mzlMD6bsiKy9HKnrkih/MiDespensa-%E2%80%94-Wireframes-y-UI?node-id=29-5)).
+- **Identidad definitiva:** pendiente del trabajo paralelo; el rediseño continúa con tokens de marca intercambiables.
+- **Verificación de código:** las reglas actuales reservan la ejecución de pruebas a la persona responsable bajo demanda.
 - **Notion:** conexión verificada el 2026-07-19; la evidencia de Fase 2 y el estado de Fase 3 se han sincronizado con la tarea de Arquitectura.

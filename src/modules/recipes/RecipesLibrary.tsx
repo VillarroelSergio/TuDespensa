@@ -11,8 +11,10 @@ import type { Recipe } from './types'
 
 export function RecipesLibrary({
   initialRecipes,
+  isVisualFixture = false,
 }: {
   initialRecipes: Recipe[]
+  isVisualFixture?: boolean
 }) {
   const router = useRouter()
   const [status, setStatus] = useState('')
@@ -20,6 +22,7 @@ export function RecipesLibrary({
   const refresh = useCallback(() => router.refresh(), [router])
 
   useEffect(() => {
+    if (isVisualFixture) return
     const client = createSupabaseBrowserClient()
     const channel = client
       .channel('recipes-refresh')
@@ -34,7 +37,7 @@ export function RecipesLibrary({
     return () => {
       void client.removeChannel(channel)
     }
-  }, [refresh])
+  }, [isVisualFixture, refresh])
 
   // Crear/capturar lleva directo al editor R2 para seguir completando la receta.
   async function run(

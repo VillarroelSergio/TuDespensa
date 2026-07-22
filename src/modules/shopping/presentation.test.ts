@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkoutActionLabel, confirmNotice, formatQuantity } from './presentation'
+import { checkoutActionLabel, confirmNotice, formatQuantity, shoppingProgress } from './presentation'
 import type { CheckoutLine } from './types'
 
 const line = (overrides: Partial<CheckoutLine> = {}): CheckoutLine => ({
@@ -60,5 +60,16 @@ describe('confirmNotice', () => {
     expect(confirmNotice('0')).toBeNull()
     expect(confirmNotice('-1')).toBeNull()
     expect(confirmNotice('dos')).toBeNull()
+  })
+})
+
+describe('shoppingProgress', () => {
+  it('explica lo que queda por comprar con un texto útil', () => {
+    expect(shoppingProgress(6, 3)).toEqual({ label: '3 pendientes', ratio: 0.5 })
+    expect(shoppingProgress(1, 1)).toEqual({ label: 'Compra lista', ratio: 1 })
+  })
+
+  it('no inventa progreso para una lista vacía', () => {
+    expect(shoppingProgress(0, 0)).toEqual({ label: 'Aún no hay productos', ratio: 0 })
   })
 })

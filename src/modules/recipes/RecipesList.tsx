@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
 
+import { AppShell } from '@/components/ui/AppShell'
 import {
   availableCategories,
   dishTypeLabel,
@@ -10,19 +11,6 @@ import {
   timeLabel,
 } from './presentation'
 import type { Recipe } from './types'
-
-function Navigation({ className }: { className: string }) {
-  return (
-    <nav className={className} aria-label="Navegación principal">
-      <Link href="/plan">Plan</Link>
-      <Link aria-current="page" href="/recetas">
-        Recetas
-      </Link>
-      <Link href="/compra">Compra</Link>
-      <Link href="/despensa">Despensa</Link>
-    </nav>
-  )
-}
 
 type Props = {
   initialRecipes: Recipe[]
@@ -74,14 +62,8 @@ export function RecipesList({
   }
 
   return (
-    <main className="shopping-page">
-      <aside className="shopping-sidebar">
-        <a className="pantry-brand" href="/plan">
-          <span aria-hidden="true" /> MiDespensa
-        </a>
-        <Navigation className="shopping-sidebar__nav" />
-      </aside>
-      <section className="shopping-content" aria-labelledby="recipes-title">
+    <AppShell current="recetas">
+      <div aria-labelledby="recipes-title">
         <header className="shopping-header">
           <h1 id="recipes-title">Recetas</h1>
           <button
@@ -222,8 +204,7 @@ export function RecipesList({
             ) : null}
           </div>
         ) : null}
-      </section>
-      <Navigation className="shopping-bottom-nav" />
-    </main>
+      </div>
+    </AppShell>
   )
 }

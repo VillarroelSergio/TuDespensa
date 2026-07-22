@@ -21,9 +21,10 @@ import type { PantryMutationInput, PantryZone } from './types'
 
 type Props = {
   initialItems: PantryListItem[]
+  isVisualFixture?: boolean
 }
 
-export function PantryWorkspace({ initialItems }: Props) {
+export function PantryWorkspace({ initialItems, isVisualFixture = false }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -35,6 +36,7 @@ export function PantryWorkspace({ initialItems }: Props) {
   const refresh = useCallback(() => router.refresh(), [router])
 
   useEffect(() => {
+    if (isVisualFixture) return
     const client = createSupabaseBrowserClient()
     const channel = client
       .channel('pantry-refresh')
@@ -61,7 +63,7 @@ export function PantryWorkspace({ initialItems }: Props) {
     return () => {
       void client.removeChannel(channel)
     }
-  }, [refresh])
+  }, [isVisualFixture, refresh])
 
   async function handleMarkLow(item: PresentedPantryItem) {
     if (pendingId) return

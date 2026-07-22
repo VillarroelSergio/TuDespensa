@@ -27,3 +27,13 @@ export function confirmNotice(value: string | undefined): string | null {
   if (!Number.isInteger(n) || n < 1) return null
   return `Hemos actualizado tu despensa con ${n} ${n === 1 ? 'producto' : 'productos'}.`
 }
+
+/** Progreso de la lista sin dividir por cero ni mostrar una tarea inexistente. */
+export function shoppingProgress(total: number, purchased: number) {
+  if (total <= 0) return { label: 'Aún no hay productos', ratio: 0 }
+  const remaining = Math.max(total - purchased, 0)
+  return {
+    label: remaining === 0 ? 'Compra lista' : `${remaining} pendientes`,
+    ratio: Math.min(Math.max(purchased / total, 0), 1),
+  }
+}
