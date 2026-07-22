@@ -63,6 +63,24 @@ navegador real y enlace mágico capturado de Mailpit.
 | Onboarding completo con línea base vacía y persistencia del estado `completed` | `e2e/onboarding-two-sessions.spec.ts` | PASS |
 | Dos sesiones convergen: Auth + callback PKCE + RLS + Realtime (A añade → B lo ve; B quita → A converge) | mismo spec | PASS · 2/2 |
 
+## Arnés de Auth para E2E local
+
+El desarrollo manual conserva el bypass de Auth para revisar la interfaz sin
+credenciales. El arnés `npm run test:e2e` inicia, en cambio, Next con
+`NEXT_PUBLIC_E2E_AUTH_ENABLED=true`: el login vuelve a solicitar el enlace
+mágico y el middleware exige la sesión de Supabase. Así el recorrido E2E
+ejercita el callback PKCE, las cookies, RLS y las RPC reales. No se usa la
+clave `service_role` desde la aplicación; solo el test la utiliza para limpiar
+el usuario sintético de Supabase local.
+
+La prueba unitaria `src/lib/auth/development-mode.test.ts` cubre los tres
+modos: bypass manual, Auth real para E2E y producción sin bypass. Se ejecutó
+el 2026-07-22: PASS · 3/3. La ejecución completa sigue requiriendo que la
+pila local de Supabase (incluido Mailpit) esté levantada.
+
+El arnés usa el puerto 3001 por defecto para no reutilizar una instancia
+manual en 3000; se puede cambiar mediante `E2E_PORT`.
+
 ## Cobertura y límites (pendiente de la Fase 9)
 
 El plan maestro define más alcance para la Fase 9 del que cubre esta evidencia:

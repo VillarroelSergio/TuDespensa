@@ -2,8 +2,8 @@
  * Real two-session E2E against the local stack: `npx supabase start` + `npm run dev`.
  * Auth uses the actual UI flow — magic link captured from Mailpit (port 54324) —
  * so middleware cookies, the PKCE callback and Realtime are all exercised.
- * Requires env: E2E_BASE_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
- * SUPABASE_SERVICE_ROLE_KEY (local demo key, used only to delete the synthetic user).
+ * Requires local Supabase credentials in `.env.local` (or equivalent process env).
+ * `SUPABASE_SERVICE_ROLE_KEY` is used only to delete the synthetic local user.
  * Run with: npm run test:e2e
  */
 import { createClient } from '@supabase/supabase-js'
@@ -65,7 +65,9 @@ test('two sessions converge during onboarding (auth + RLS + Realtime)', async ({
   browser,
 }) => {
   test.setTimeout(180_000)
-  const baseUrl = required(process.env.E2E_BASE_URL, 'E2E_BASE_URL')
+  const baseUrl =
+    process.env.E2E_BASE_URL ??
+    `http://127.0.0.1:${process.env.E2E_PORT ?? '3001'}`
   const supabaseUrl = required(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     'NEXT_PUBLIC_SUPABASE_URL',

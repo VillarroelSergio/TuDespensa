@@ -77,7 +77,10 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeDetail }) {
       </section>
 
       {/* ponytail: «Añadir al plan» es la integración con Plan (Fase 5); aquí solo editar. */}
-      <Link className="recipe-detail__edit" href={`/recetas/${recipe.id}/editar`}>
+      <Link
+        className="recipe-detail__edit"
+        href={`/recetas/${recipe.id}/editar`}
+      >
         {recipe.status === 'pending' ? 'Revisar receta' : 'Editar'}
       </Link>
     </main>

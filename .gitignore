@@ -4,10 +4,12 @@
 
 # Next.js and test output
 /.next
+/.next-e2e
 /out
 /coverage
 /test-results
 /playwright-report
+/docs/00-Project/visual-context
 
 # local environment files
 .env*
@@ -17,3 +19,4 @@
 .DS_Store
 Thumbs.db
 *.tsbuildinfo
+

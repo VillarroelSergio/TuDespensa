@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { getPublicSupabaseEnvironment } from '@/lib/supabase/env'
+import { isDevelopmentAuthBypassEnabled } from '@/lib/auth/development-mode'
 import type { Database } from '@/types/database'
 
 const appPaths = ['/despensa', '/compra', '/recetas', '/plan']
@@ -9,9 +10,15 @@ const protectedPaths = ['/onboarding', ...appPaths]
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
-  // Local UI work must not depend on OTP delivery or a seeded Supabase session.
-  // This branch is never reached by production deployments.
-  if (process.env.NODE_ENV === 'development') return response
+  // Manual local UI work can skip Auth, but E2E explicitly opts into the real
+  // Supabase session flow so RLS and server actions are exercised end-to-end.
+  if (
+    isDevelopmentAuthBypassEnabled(
+      process.env.NODE_ENV,
+      process.env.NEXT_PUBLIC_E2E_AUTH_ENABLED,
+    )
+  )
+    return response
 
   const { url, anonKey } = getPublicSupabaseEnvironment()
   const supabase = createServerClient<Database>(url, anonKey, {

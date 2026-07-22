@@ -27,7 +27,9 @@ export function PantryWorkspace({ initialItems }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
-  const [selectedItem, setSelectedItem] = useState<PresentedPantryItem | null>(null)
+  const [selectedItem, setSelectedItem] = useState<PresentedPantryItem | null>(
+    null,
+  )
   const [isAdding, setIsAdding] = useState(false)
   const [undo, setUndo] = useState<PresentedPantryItem | null>(null)
   const refresh = useCallback(() => router.refresh(), [router])
@@ -70,7 +72,9 @@ export function PantryWorkspace({ initialItems }: Props) {
       setStatus(`${item.name}: queda poco.`)
       refresh()
     } catch {
-      setStatus('No hemos podido guardar el cambio. Hemos actualizado la lista.')
+      setStatus(
+        'No hemos podido guardar el cambio. Hemos actualizado la lista.',
+      )
       refresh()
     } finally {
       setPendingId(null)
@@ -86,7 +90,9 @@ export function PantryWorkspace({ initialItems }: Props) {
       setSelectedItem(null)
       refresh()
     } catch {
-      setStatus('No hemos podido guardar el cambio. Conservamos el detalle para que puedas reintentarlo.')
+      setStatus(
+        'No hemos podido guardar el cambio. Conservamos el detalle para que puedas reintentarlo.',
+      )
     } finally {
       setPendingId(null)
     }
@@ -106,18 +112,25 @@ export function PantryWorkspace({ initialItems }: Props) {
         quantity,
         unitCode: item.unitCode,
       })
-      setStatus(`${item.name}: ${quantity === 0 ? 'se terminó.' : 'cantidad actualizada.'}`)
+      setStatus(
+        `${item.name}: ${quantity === 0 ? 'se terminó.' : 'cantidad actualizada.'}`,
+      )
       setUndo(quantity === 0 ? { ...item, version: result.version } : null)
       refresh()
     } catch {
-      setStatus('No hemos podido ajustar la cantidad. Hemos actualizado la lista.')
+      setStatus(
+        'No hemos podido ajustar la cantidad. Hemos actualizado la lista.',
+      )
       refresh()
     } finally {
       setPendingId(null)
     }
   }
 
-  async function handlePresence(item: PresentedPantryItem, state: 'available' | 'low' | 'out') {
+  async function handlePresence(
+    item: PresentedPantryItem,
+    state: 'available' | 'low' | 'out',
+  ) {
     if (pendingId) return
     setPendingId(item.id)
     setStatus('')
@@ -153,7 +166,9 @@ export function PantryWorkspace({ initialItems }: Props) {
       }
       refresh()
     } catch {
-      setStatus('No hemos podido guardar el cambio. Hemos actualizado la lista.')
+      setStatus(
+        'No hemos podido guardar el cambio. Hemos actualizado la lista.',
+      )
       refresh()
     } finally {
       setPendingId(null)
@@ -176,7 +191,9 @@ export function PantryWorkspace({ initialItems }: Props) {
       setUndo(null)
       refresh()
     } catch {
-      setStatus('No hemos podido deshacer el cambio. Hemos actualizado la lista.')
+      setStatus(
+        'No hemos podido deshacer el cambio. Hemos actualizado la lista.',
+      )
       refresh()
     } finally {
       setPendingId(null)
@@ -213,7 +230,9 @@ export function PantryWorkspace({ initialItems }: Props) {
       setIsAdding(false)
       refresh()
     } catch {
-      setStatus('No hemos podido añadir el producto. Conservamos el formulario para que puedas reintentarlo.')
+      setStatus(
+        'No hemos podido añadir el producto. Conservamos el formulario para que puedas reintentarlo.',
+      )
     } finally {
       setPendingId(null)
     }
@@ -238,7 +257,21 @@ export function PantryWorkspace({ initialItems }: Props) {
           setSelectedItem(item)
         }}
         selectedId={selectedItem?.id}
-        detail={isAdding ? <PantryEntryForm onClose={() => setIsAdding(false)} onSave={handleCreate} /> : selectedItem ? <PantryDetail key={selectedItem.id} item={selectedItem} onClose={() => setSelectedItem(null)} onSave={handleSave} /> : null}
+        detail={
+          isAdding ? (
+            <PantryEntryForm
+              onClose={() => setIsAdding(false)}
+              onSave={handleCreate}
+            />
+          ) : selectedItem ? (
+            <PantryDetail
+              key={selectedItem.id}
+              item={selectedItem}
+              onClose={() => setSelectedItem(null)}
+              onSave={handleSave}
+            />
+          ) : null
+        }
         status={status}
       />
     </>

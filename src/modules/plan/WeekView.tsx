@@ -47,7 +47,9 @@ function SlotMenu({ meal }: { meal: PlannedMeal }) {
 
   return (
     <details className="plan-menu">
-      <summary aria-label={`Opciones de ${slotLabel(meal.mealDate, meal.mealType)}`}>
+      <summary
+        aria-label={`Opciones de ${slotLabel(meal.mealDate, meal.mealType)}`}
+      >
         Opciones
       </summary>
       <div className="plan-menu__body">
@@ -139,7 +141,12 @@ function Slot({ slot }: { slot: PlanSlot }) {
 function UndoBanner({
   undo,
 }: {
-  undo: { mealDate: string; mealType: MealType; recipeId: string; servings: string }
+  undo: {
+    mealDate: string
+    mealType: MealType
+    recipeId: string
+    servings: string
+  }
 }) {
   return (
     <form className="plan-undo" action={assignMealAction} role="status">
