@@ -2,8 +2,10 @@
  * Real two-session E2E against the local stack: `npx supabase start` + `npm run dev`.
  * Auth uses the actual UI flow — magic link captured from Mailpit (port 54324) —
  * so middleware cookies, the PKCE callback and Realtime are all exercised.
- * Requires env: E2E_BASE_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
- * SUPABASE_SERVICE_ROLE_KEY (local demo key, used only to delete the synthetic user).
+ * Requires NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY and
+ * SUPABASE_SERVICE_ROLE_KEY (local demo key, used only to delete synthetic users).
+ * These are loaded from the untracked `.env.local`. E2E_BASE_URL is optional
+ * when running against a separately started application.
  * Run with: npm run test:e2e
  */
 import { createClient } from '@supabase/supabase-js'
@@ -19,13 +21,34 @@ function required(value: string | undefined, name: string) {
   return value
 }
 
-async function magicLinkFor(sentAfter: number): Promise<string> {
+function addressedTo(
+  message: { To?: Array<{ Address?: string }> },
+  email: string,
+) {
+  return (
+    message.To?.some(
+      (recipient) => recipient.Address?.toLowerCase() === email.toLowerCase(),
+    ) ?? false
+  )
+}
+
+async function magicLinkFor(sentAfter: number, email: string): Promise<string> {
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const listing = (await (
-      await fetch(`${mailpit}/api/v1/messages?limit=1`)
-    ).json()) as { messages?: { ID: string; Created: string }[] }
-    const message = listing.messages?.[0]
-    if (message && Date.parse(message.Created) >= sentAfter) {
+      await fetch(`${mailpit}/api/v1/messages?limit=100`)
+    ).json()) as {
+      messages?: {
+        ID: string
+        Created: string
+        To?: Array<{ Address?: string }>
+      }[]
+    }
+    const message = listing.messages?.find(
+      (candidate) =>
+        Date.parse(candidate.Created) >= sentAfter &&
+        addressedTo(candidate, email),
+    )
+    if (message) {
       const detail = (await (
         await fetch(`${mailpit}/api/v1/message/${message.ID}`)
       ).json()) as { Text?: string; HTML?: string }
@@ -56,16 +79,75 @@ async function loginViaMagicLink(
     await page.getByRole('button', { name: 'Enviar enlace de acceso' }).click()
     await expect(confirmation).toBeVisible({ timeout: 3000 })
   }).toPass({ timeout: 30_000 })
-  await page.goto(await magicLinkFor(sentAfter))
-  await page.waitForURL('**/onboarding')
+  await page.goto(await magicLinkFor(sentAfter, email))
+  // `goto` already waits for the redirect chain. Waiting for a *new*
+  // navigation here can miss the completed redirect and wait until timeout.
+  await expect(page).toHaveURL(/\/onboarding$/)
   return page
 }
+
+test('completes onboarding with an empty baseline and persists the completed state', async ({
+  browser,
+}) => {
+  test.setTimeout(180_000)
+  const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3000'
+  const supabaseUrl = required(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    'NEXT_PUBLIC_SUPABASE_URL',
+  )
+  const admin = createClient(
+    supabaseUrl,
+    required(
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      'SUPABASE_SERVICE_ROLE_KEY',
+    ),
+  )
+  const email = `onboarding-complete-${Date.now()}@example.test`
+  const context = await browser.newContext()
+
+  try {
+    const page = await loginViaMagicLink(context, baseUrl, email)
+    await page.getByRole('button', { name: 'Preparar mi despensa' }).click()
+
+    await page
+      .getByRole('button', { name: 'Mi frigorífico está vacío' })
+      .click()
+    await expect(page.getByRole('heading', { name: 'Congelador' })).toBeVisible(
+      {
+        timeout: 15_000,
+      },
+    )
+    await page.getByRole('button', { name: 'Mi congelador está vacío' }).click()
+    await expect(page.getByRole('heading', { name: 'Despensa' })).toBeVisible({
+      timeout: 15_000,
+    })
+    await page.getByRole('button', { name: 'Mi despensa está vacío' }).click()
+
+    await expect(
+      page.getByRole('heading', { name: 'Revisa tu despensa' }),
+    ).toBeVisible()
+    await page.getByRole('button', { name: 'Confirmar despensa' }).click()
+    await expect(
+      page.getByRole('heading', { name: 'Tu despensa está lista' }),
+    ).toBeVisible()
+
+    // The success screen is client state. A reload verifies that the server-side
+    // middleware has persisted the completed onboarding state.
+    await page.reload()
+    await page.waitForURL('**/despensa')
+  } finally {
+    await context.close()
+    const { data } = await admin.auth.admin.listUsers()
+    const user = data.users.find((candidate) => candidate.email === email)
+    if (user) await admin.auth.admin.deleteUser(user.id)
+  }
+})
 
 test('two sessions converge during onboarding (auth + RLS + Realtime)', async ({
   browser,
 }) => {
   test.setTimeout(180_000)
-  const baseUrl = required(process.env.E2E_BASE_URL, 'E2E_BASE_URL')
+  const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3000'
   const supabaseUrl = required(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     'NEXT_PUBLIC_SUPABASE_URL',
