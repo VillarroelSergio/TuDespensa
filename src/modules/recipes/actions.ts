@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 
 import { AppError } from '@/lib/errors/AppError'
+import { demoFixturesEnabled, demoRecipes } from '@/lib/dev/demo-fixtures'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import {
@@ -215,7 +216,8 @@ export async function getRecipes(): Promise<Recipe[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user && process.env.NODE_ENV === 'development') return []
+  if (!user && process.env.NODE_ENV === 'development')
+    return demoFixturesEnabled() ? demoRecipes : []
   const userId = user?.id ?? ''
   // RLS limita la selección al hogar activo; no hace falta filtrar por hogar aquí.
   const [recipesRes, prefsRes, categories] = await Promise.all([

@@ -5,6 +5,9 @@ import { chromium } from '@playwright/test'
 
 const baseUrl = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3000'
 const outputDir = resolve('docs/00-Project/visual-context')
+// DEMO=1 sirve fixtures sintéticos y guarda las capturas con sufijo `-poblado`,
+// para tener la matriz de estados (vacío por defecto, poblado bajo demanda).
+const demo = process.env.DEMO === '1'
 let server
 
 const viewports = [
@@ -45,10 +48,20 @@ async function waitForApplication() {
 }
 
 if (!(await applicationIsReady())) {
-  server = spawn(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'dev'], {
+  // shell:true is required on Windows: since Node 24, spawning npm.cmd directly
+  // throws EINVAL. The shell resolves npm on every platform.
+  server = spawn('npm', ['run', 'dev'], {
     cwd: process.cwd(),
     stdio: 'ignore',
     windowsHide: true,
+    shell: true,
+    // Force the dev auth bypass on: these captures are the no-login empty states.
+    // A leftover .env.local from an E2E run would otherwise send /despensa to /login.
+    env: {
+      ...process.env,
+      NEXT_PUBLIC_E2E_AUTH_ENABLED: 'false',
+      NEXT_PUBLIC_DEMO_FIXTURES: demo ? 'true' : 'false',
+    },
   })
 }
 
@@ -60,8 +73,14 @@ try {
   try {
     for (const viewport of viewports) {
       const page = await browser.newPage({ viewport })
+      // En demo solo interesan las vistas con datos; acceso/onboarding no cambian.
+      const dataViews = new Set([
+        'despensa', 'despensa-anadir', 'compra', 'compra-revisar',
+        'recetas', 'recetas-anadir', 'plan', 'plan-elegir',
+      ])
       for (const view of views) {
-        const name = `${view.name}-${viewport.name}`
+        if (demo && !dataViews.has(view.name)) continue
+        const name = `${view.name}-${viewport.name}${demo ? '-poblado' : ''}`
         await page.goto(`${baseUrl}${view.path}`, { waitUntil: 'domcontentloaded' })
         if (view.button) await page.getByRole('button', { name: view.button }).click()
 

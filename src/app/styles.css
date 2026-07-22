@@ -3,7 +3,7 @@
 :root {
   color-scheme: light;
 
-  /* Modern neutral palette + tomato accent (all pairings pass WCAG AA) */
+  /* Warm-neutral palette + pantry-green brand (all pairings pass WCAG AA) */
   --bg: #f6f6f4;               /* neutral near-white page */
   --surface: #ffffff;          /* cards */
   --surface-2: #efefec;        /* subtle raised / hover */
@@ -86,6 +86,9 @@ p {
 button, input { font: inherit; }
 button, .primary-button, .secondary-button { min-height: 44px; cursor: pointer; }
 button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* Headings receive programmatic focus() for screen readers; being tabindex=-1 they are
+   never keyboard-reachable, so the browser's default focus ring is just visual noise. */
+h1[tabindex='-1']:focus, h2[tabindex='-1']:focus { outline: none; }
 .onboarding, .auth-main, .placeholder { min-height: 100dvh; background: var(--bg); color: var(--ink); display: grid; place-items: center; padding: 24px; }
 .onboarding-card { width: min(100%, 480px); min-height: min(100dvh - 48px, 760px); background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 .onboarding-card h1 { font-size: clamp(1.75rem, 6vw, 2rem); }.onboarding-card h2 { font-size: 1rem; margin: 8px 0 0; }.onboarding-card p { margin: 0; font-size: .95rem; color: var(--muted); }.brand { font-weight: 700; font-size: 1rem; }.brand--welcome { display: inline-flex; width: fit-content; align-items: center; color: var(--ink); text-decoration: none; }.brand--welcome .brand-lockup__mark { width: 1.75rem; height: 1.75rem; }.label, label { display: grid; gap: 6px; font-size: .85rem; font-weight: 700; color: var(--muted); } input { width: 100%; min-height: 44px; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; color: var(--ink); background: #fff; }

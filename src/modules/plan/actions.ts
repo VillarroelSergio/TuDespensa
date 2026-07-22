@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { AppError } from '@/lib/errors/AppError'
+import { demoFixturesEnabled, demoWeekMeals } from '@/lib/dev/demo-fixtures'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseIdempotencyKey } from '@/lib/validation/onboarding'
@@ -254,7 +255,9 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
       .from('recipe_preferences')
       .select('recipe_id,is_favorite,rating')
       .eq('user_id', user.id),
-    supabase.from('recipe_category_assignments').select('recipe_id,category_id'),
+    supabase
+      .from('recipe_category_assignments')
+      .select('recipe_id,category_id'),
     supabase.from('recipe_categories').select('id,name'),
     supabase
       .from('planned_meals')
@@ -321,7 +324,8 @@ export async function getWeekMeals(startIso: string): Promise<PlannedMeal[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user && process.env.NODE_ENV === 'development') return []
+  if (!user && process.env.NODE_ENV === 'development')
+    return demoFixturesEnabled() ? demoWeekMeals(startIso) : []
   // RLS limita la selección al hogar activo; no hace falta filtrar por hogar aquí.
   const { data, error } = await supabase
     .from('planned_meals')
@@ -398,7 +402,11 @@ export async function getCookPreview(
   if (!meal) return null
 
   const [recipeRes, ingredientsRes, pantry] = await Promise.all([
-    supabase.from('recipes').select('title').eq('id', meal.recipe_id).maybeSingle(),
+    supabase
+      .from('recipes')
+      .select('title')
+      .eq('id', meal.recipe_id)
+      .maybeSingle(),
     supabase
       .from('recipe_ingredients')
       .select('name,quantity,unit_code')
@@ -422,7 +430,9 @@ async function getCookPantry(
 ): Promise<CookPantryItem[]> {
   const { data: items } = await supabase
     .from('pantry_items')
-    .select('id,food_id,version,tracking_mode,approximate_state,quantity,unit_code')
+    .select(
+      'id,food_id,version,tracking_mode,approximate_state,quantity,unit_code',
+    )
     .eq('presence', true)
   if (!items?.length) return []
   const { data: foods } = await supabase
@@ -466,7 +476,9 @@ export async function cookMeal(
     meal_date_value: mealDate,
     meal_type_value: mealType,
     consumptions: consumptions as never,
-    idempotency_key: parseIdempotencyKey(key ?? createIdempotencyKey('plan_cook_meal')),
+    idempotency_key: parseIdempotencyKey(
+      key ?? createIdempotencyKey('plan_cook_meal'),
+    ),
   })
   if (error) failure(error)
   revalidatePath('/plan')
