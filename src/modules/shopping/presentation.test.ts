@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkoutActionLabel, confirmNotice, formatQuantity, ticketNotice } from './presentation'
+import { checkoutActionLabel, confirmNotice, formatQuantity, shoppingProgress, ticketNotice } from './presentation'
 import type { CheckoutLine } from './types'
 
 const line = (overrides: Partial<CheckoutLine> = {}): CheckoutLine => ({
@@ -64,13 +64,25 @@ describe('confirmNotice', () => {
 })
 
 describe('ticketNotice', () => {
-  it('singular y plural', () => {
+  it('informa de los productos importados', () => {
     expect(ticketNotice('1')).toBe('Hemos añadido 1 producto del ticket a Compra, ya marcados como comprados.')
     expect(ticketNotice('4')).toBe('Hemos añadido 4 productos del ticket a Compra, ya marcados como comprados.')
   })
-  it('valores ausentes o inválidos no muestran aviso', () => {
+
+  it('no muestra avisos para valores ausentes o inválidos', () => {
     expect(ticketNotice(undefined)).toBeNull()
     expect(ticketNotice('0')).toBeNull()
     expect(ticketNotice('dos')).toBeNull()
+  })
+})
+
+describe('shoppingProgress', () => {
+  it('explica lo que queda por comprar con un texto útil', () => {
+    expect(shoppingProgress(6, 3)).toEqual({ label: '3 pendientes', ratio: 0.5 })
+    expect(shoppingProgress(1, 1)).toEqual({ label: 'Compra lista', ratio: 1 })
+  })
+
+  it('no inventa progreso para una lista vacía', () => {
+    expect(shoppingProgress(0, 0)).toEqual({ label: 'Aún no hay productos', ratio: 0 })
   })
 })

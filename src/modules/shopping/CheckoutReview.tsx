@@ -3,15 +3,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { BrandLockup } from '@/components/ui/BrandLockup'
+import { AppShell } from '@/components/ui/AppShell'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 import { confirmPurchase } from './actions'
 import { checkoutActionLabel } from './presentation'
-import { Navigation } from './ShoppingList'
 import type { CheckoutLine } from './types'
 
-export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] }) {
+export function CheckoutReview({ initialLines, isVisualFixture = false }: { initialLines: CheckoutLine[]; isVisualFixture?: boolean }) {
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pending, setPending] = useState(false)
@@ -20,6 +19,7 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
   // Un cambio remoto en la lista (otro integrante) recarga la revisión en vivo,
   // sin ocultar lo que ya se ve.
   useEffect(() => {
+    if (isVisualFixture) return
     const client = createSupabaseBrowserClient()
     const channel = client
       .channel('checkout-refresh')
@@ -28,7 +28,7 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
     return () => {
       void client.removeChannel(channel)
     }
-  }, [refresh])
+  }, [isVisualFixture, refresh])
 
   async function handleConfirm() {
     if (pending || !initialLines.length) return
@@ -48,12 +48,8 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
   }
 
   return (
-    <main className="shopping-page">
-      <aside className="shopping-sidebar">
-        <BrandLockup className="pantry-brand" />
-        <Navigation className="shopping-sidebar__nav" />
-      </aside>
-      <section className="shopping-content" aria-labelledby="checkout-title">
+    <AppShell current="compra">
+      <div aria-labelledby="checkout-title">
         <a className="shopping-back" href="/compra">
           ← Volver a la lista
         </a>
@@ -86,8 +82,7 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
             No hay productos marcados para confirmar. <a href="/compra">Volver a la lista</a>.
           </p>
         )}
-      </section>
-      <Navigation className="shopping-bottom-nav" />
-    </main>
+      </div>
+    </AppShell>
   )
 }

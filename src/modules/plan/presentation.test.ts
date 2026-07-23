@@ -21,6 +21,7 @@ const meal = (overrides: Partial<PlannedMeal> = {}): PlannedMeal => ({
   title: 'Gazpacho andaluz',
   totalMinutes: 15,
   servings: 2,
+  cookedAt: null,
   ...overrides,
 })
 

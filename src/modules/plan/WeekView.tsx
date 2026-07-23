@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { BrandLockup } from '@/components/ui/BrandLockup'
+import { AppShell } from '@/components/ui/AppShell'
 import { timeLabel } from '@/modules/recipes/presentation'
 
 import { assignMealAction, moveMealAction, removeMealAction } from './actions'
@@ -14,19 +14,6 @@ import {
   weekRangeLabel,
 } from './presentation'
 import type { MealType, PlanSlot, PlannedMeal } from './types'
-
-function Navigation({ className }: { className: string }) {
-  return (
-    <nav className={className} aria-label="Navegación principal">
-      <Link aria-current="page" href="/plan">
-        Plan
-      </Link>
-      <Link href="/recetas">Recetas</Link>
-      <Link href="/compra">Compra</Link>
-      <Link href="/despensa">Despensa</Link>
-    </nav>
-  )
-}
 
 function chooseHref(mealDate: string, mealType: MealType) {
   return `/plan/elegir?fecha=${mealDate}&servicio=${mealType}`
@@ -197,15 +184,8 @@ export function WeekView({
   const isCurrentWeek = startIso === currentWeekIso
 
   return (
-    <main className="shopping-page">
-      <aside className="shopping-sidebar">
-        <BrandLockup className="pantry-brand" />
-        <Navigation className="shopping-sidebar__nav" />
-      </aside>
-      <section
-        className="shopping-content plan-content"
-        aria-labelledby="plan-title"
-      >
+    <AppShell current="plan" contentClassName="plan-content">
+      <div aria-labelledby="plan-title">
         <header className="shopping-header plan-header">
           <h1 id="plan-title">Plan</h1>
           <div className="plan-weeknav">
@@ -245,10 +225,22 @@ export function WeekView({
           </p>
         ) : null}
 
-        <p className="plan-summary" aria-live="polite">
-          {isCurrentWeek ? 'Esta semana' : 'Semana seleccionada'} · {planned} de
-          14 comidas planificadas
-        </p>
+        <section className="plan-overview" aria-live="polite">
+          <div>
+            <p className="plan-overview__eyebrow">
+              {isCurrentWeek ? 'Esta semana' : 'Semana seleccionada'}
+            </p>
+            <p className="plan-summary">
+              {planned === 14
+                ? 'El menú está listo para la semana.'
+                : 'Elige solo lo que quieras resolver ahora.'}
+            </p>
+          </div>
+          <div className="plan-overview__count">
+            <strong>{planned}<span>/14</span></strong>
+            <span>comidas decididas</span>
+          </div>
+        </section>
         {!isCurrentWeek ? (
           <a className="plan-today" href="/plan">
             Volver a esta semana
@@ -271,8 +263,7 @@ export function WeekView({
             </li>
           ))}
         </ol>
-      </section>
-      <Navigation className="shopping-bottom-nav" />
-    </main>
+      </div>
+    </AppShell>
   )
 }

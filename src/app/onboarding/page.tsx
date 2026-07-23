@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 import { BrandLockup } from '@/components/ui/BrandLockup'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
@@ -53,7 +54,11 @@ const emptyItems: Record<PantryZone, Food[]> = {
   pantry: [],
 }
 
-export default function OnboardingPage() {
+function OnboardingContent() {
+  const searchParams = useSearchParams()
+  const isVisualFixture =
+    process.env.NODE_ENV === 'development' &&
+    searchParams.get('fixture') === 'empty'
   const [step, setStep] = useState(1)
   const [name, setName] = useState('Mi hogar')
   const [people, setPeople] = useState<string[]>([])
@@ -93,6 +98,7 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     h1.current?.focus()
+    if (isVisualFixture) return
     const initialLoad = setTimeout(() => void refresh(), 0)
     const client = createSupabaseBrowserClient()
     const channel = client
@@ -115,7 +121,7 @@ export default function OnboardingPage() {
       clearTimeout(initialLoad)
       void client.removeChannel(channel)
     }
-  }, [refresh])
+  }, [isVisualFixture, refresh])
 
   useEffect(() => {
     localStorage.setItem(
@@ -406,5 +412,13 @@ export default function OnboardingPage() {
         </footer>
       </section>
     </main>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={null}>
+      <OnboardingContent />
+    </Suspense>
   )
 }

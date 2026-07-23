@@ -28,12 +28,19 @@ export function confirmNotice(value: string | undefined): string | null {
   return `Hemos actualizado tu despensa con ${n} ${n === 1 ? 'producto' : 'productos'}.`
 }
 
-// Aviso tras importar un ticket: ?ticket=n → «Hemos añadido n… del ticket».
-// Un valor no numérico o < 1 no muestra aviso (0 productos nuevos no es error:
-// el ticket pudo repetir lo que ya estaba en la lista).
 export function ticketNotice(value: string | undefined): string | null {
   if (!value) return null
   const n = Number(value)
   if (!Number.isInteger(n) || n < 1) return null
   return `Hemos añadido ${n} ${n === 1 ? 'producto' : 'productos'} del ticket a Compra, ya marcados como comprados.`
+}
+
+/** Progreso de la lista sin dividir por cero ni mostrar una tarea inexistente. */
+export function shoppingProgress(total: number, purchased: number) {
+  if (total <= 0) return { label: 'Aún no hay productos', ratio: 0 }
+  const remaining = Math.max(total - purchased, 0)
+  return {
+    label: remaining === 0 ? 'Compra lista' : `${remaining} pendientes`,
+    ratio: Math.min(Math.max(purchased / total, 0), 1),
+  }
 }

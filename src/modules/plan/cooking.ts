@@ -52,8 +52,28 @@ export type Consumption = {
 /** Edición de una fila hecha por la persona en la revisión. */
 export type CookEdit = { included: boolean; discount: number; state: string }
 
+/** Copy breve que anticipa el alcance de la revisión antes de confirmar. */
+export function cookReviewSummary(lines: CookLine[]) {
+  if (lines.length === 0) {
+    return {
+      eyebrow: 'Todo listo',
+      message: 'No hay productos que descontar de tu despensa.',
+    }
+  }
+  return {
+    eyebrow: 'Antes de cocinar',
+    message: `Revisarás ${lines.length} ${lines.length === 1 ? 'producto' : 'productos'} de tu despensa.`,
+  }
+}
+
 // Base común de cada unidad (g/ml), como los helpers `private.unit_*` de la BD.
-const UNIT_FACTOR: Record<string, number> = { unit: 1, g: 1, kg: 1000, ml: 1, l: 1000 }
+const UNIT_FACTOR: Record<string, number> = {
+  unit: 1,
+  g: 1,
+  kg: 1000,
+  ml: 1,
+  l: 1000,
+}
 const UNIT_FAMILY: Record<string, string> = {
   unit: 'units',
   g: 'mass',
@@ -71,14 +91,25 @@ function round(value: number): number {
 
 /** Convierte `qty` de `from` a `to` solo si miden lo mismo; si no, null. */
 function convert(qty: number, from: string, to: string): number | null {
-  if (!UNIT_FAMILY[from] || UNIT_FAMILY[from] !== UNIT_FAMILY[to]) return null
-  return round((qty * UNIT_FACTOR[from]) / UNIT_FACTOR[to])
+  const fromFamily = UNIT_FAMILY[from]
+  const toFamily = UNIT_FAMILY[to]
+  const fromFactor = UNIT_FACTOR[from]
+  const toFactor = UNIT_FACTOR[to]
+  if (!fromFamily || fromFamily !== toFamily || !fromFactor || !toFactor)
+    return null
+  return round((qty * fromFactor) / toFactor)
 }
 
 /** Un nivel menos: la sugerencia por defecto para un producto aproximado. */
 function stepDown(state: string | null): string {
-  const index = APPROX_ORDER.indexOf((state ?? 'some') as (typeof APPROX_ORDER)[number])
-  return APPROX_ORDER[Math.min(index < 0 ? 1 : index + 1, APPROX_ORDER.length - 1)]
+  const index = APPROX_ORDER.indexOf(
+    (state ?? 'some') as (typeof APPROX_ORDER)[number],
+  )
+  return (
+    APPROX_ORDER[
+      Math.min(index < 0 ? 1 : index + 1, APPROX_ORDER.length - 1)
+    ] ?? 'out'
+  )
 }
 
 /**
@@ -93,7 +124,9 @@ export function buildCookLines(
   return pantry.flatMap((item) => {
     // ponytail: primer ingrediente que empareja. Un producto que empareja con dos
     // ingredientes se descuenta una vez; la persona corrige si hace falta.
-    const ingredient = ingredients.find((entry) => matches(entry.name, item.name))
+    const ingredient = ingredients.find((entry) =>
+      matches(entry.name, item.name),
+    )
     if (!ingredient) return []
 
     let proposedDiscount: number | null = null
@@ -104,9 +137,14 @@ export function buildCookLines(
       ingredient.quantity !== null &&
       ingredient.unitCode
     ) {
-      const converted = convert(ingredient.quantity, ingredient.unitCode, item.unitCode)
+      const converted = convert(
+        ingredient.quantity,
+        ingredient.unitCode,
+        item.unitCode,
+      )
       // No se descuenta más de lo que hay: el resto se resolverá al reponer.
-      if (converted !== null) proposedDiscount = Math.min(item.quantity, converted)
+      if (converted !== null)
+        proposedDiscount = Math.min(item.quantity, converted)
     }
 
     return [
@@ -120,7 +158,9 @@ export function buildCookLines(
         approximateState: item.approximateState,
         proposedDiscount,
         proposedState:
-          item.trackingMode === 'approximate' ? stepDown(item.approximateState) : null,
+          item.trackingMode === 'approximate'
+            ? stepDown(item.approximateState)
+            : null,
       },
     ]
   })
