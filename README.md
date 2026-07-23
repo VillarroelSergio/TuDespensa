@@ -58,7 +58,7 @@ acceso de Node.js en redes privadas; no abras el puerto para redes públicas.
 
 Para probar el flujo real con `admin`, inicia `npm run dev:auth:mobile` y cambia
 temporalmente `NEXT_PUBLIC_SUPABASE_URL` en `.env.local` de `127.0.0.1` a la
-misma IP local del ordenador (puerto `54321`); después reinicia Next. Supabase
+misma IP local del ordenador (puerto `55321`); después reinicia Next. Supabase
 local y sus claves son solo de desarrollo: nunca expongas esos puertos fuera de
 tu Wi-Fi privado.
 
@@ -72,12 +72,12 @@ npm run test:coverage
 npm run test:e2e
 ```
 
-La prueba E2E requiere Supabase local y valida el navegador contra el flujo real de Auth, onboarding, RLS y Realtime. Consulta [e2e/README.md](e2e/README.md) para la preparación, ejecución visible y artefactos de diagnóstico.
+La prueba E2E requiere Supabase local y valida el navegador contra el flujo real de Auth, onboarding, RLS y Realtime. Además de `npm run test:e2e` existen `test:e2e:founder`, `test:e2e:actions`, `test:e2e:realtime` (Supabase local) y `test:e2e:ux` (sin Supabase, fixtures de demo). Consulta [e2e/README.md](e2e/README.md) para la preparación, ejecución visible y artefactos de diagnóstico.
 
 Con Supabase local iniciado, ejecuta la integración SQL después de `db reset`:
 
 ```bash
-psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/mvp_onboarding_security.sql
+psql "postgresql://postgres:postgres@127.0.0.1:55322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/mvp_onboarding_security.sql
 ```
 
 El script SQL usa datos sintéticos, termina con `ROLLBACK` y no conserva usuarios ni filas de prueba.

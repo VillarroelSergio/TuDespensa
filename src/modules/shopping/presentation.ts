@@ -9,14 +9,10 @@ export function formatQuantity(quantity: number | null, unitCode: string | null)
   return unit ? `${quantity} ${unit}` : String(quantity)
 }
 
-// Qué le pasará a la despensa al confirmar este producto: alta, suma de cantidad
-// («0.5 L → 1.5 L») o solo refrescar presencia.
+// Qué le pasará a la despensa al confirmar este producto: alta o solo
+// refrescar presencia (ya estaba, aunque estuviera "se terminó").
 export function checkoutActionLabel(line: CheckoutLine): string {
-  if (line.action === 'add') return 'Añadir a despensa'
-  const from = formatQuantity(line.fromQuantity, line.fromUnit)
-  const to = formatQuantity(line.toQuantity, line.toUnit)
-  if (from && to && from !== to) return `Actualizar: ${from} → ${to}`
-  return 'Actualizar en despensa'
+  return line.action === 'add' ? 'Añadir a despensa' : 'Ya estaba en tu despensa'
 }
 
 // Aviso tras confirmar: ?confirmado=n → «Hemos actualizado tu despensa con n…».

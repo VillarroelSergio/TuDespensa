@@ -1,4 +1,6 @@
-import type { PantryZone } from '@/modules/pantry/types'
+// La entrevista guiada de alta solo cubre alimentos perecederos: no incluye
+// la zona de limpieza que sí existe en PantryZone para el resto de la app.
+export type OnboardingZone = 'fridge' | 'freezer' | 'pantry'
 
 export type OnboardingGlobalState =
   | 'household_draft'
@@ -13,6 +15,6 @@ export type OnboardingZoneState =
 export interface OnboardingProgress {
   householdId: string
   globalState: OnboardingGlobalState
-  activeZone: PantryZone | null
+  activeZone: OnboardingZone | null
   returnTarget: 'review' | null
 }

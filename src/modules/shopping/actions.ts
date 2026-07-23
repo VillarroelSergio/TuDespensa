@@ -174,11 +174,7 @@ type CheckoutRow = {
   item_id: string
   version: number
   name: string
-  action: 'add' | 'update'
-  from_quantity: number | null
-  from_unit: string | null
-  to_quantity: number | null
-  to_unit: string | null
+  action: 'add' | 'restore'
 }
 
 // Revisión C2: qué le pasará a la despensa a cada producto comprado.
@@ -198,10 +194,6 @@ export async function getCheckoutPreview(): Promise<CheckoutLine[]> {
     version: row.version,
     name: row.name,
     action: row.action,
-    fromQuantity: row.from_quantity,
-    fromUnit: row.from_unit,
-    toQuantity: row.to_quantity,
-    toUnit: row.to_unit,
   }))
 }
 

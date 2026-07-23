@@ -37,17 +37,15 @@ describe('PantryList', () => {
     expect(
       screen.getByRole('heading', { name: 'Despensa' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Requieren atención')).toBeInTheDocument()
-    expect(
-      screen.getAllByRole('button', { name: /Leche/ })[0],
-    ).toHaveTextContent('Se terminó')
+    expect(screen.getByText('Terminados')).toBeInTheDocument()
+    expect(screen.getByText('Leche')).toBeInTheDocument()
     expect(
       screen.getByRole('searchbox', { name: 'Buscar en despensa' }),
     ).toBeInTheDocument()
   })
 
-  it('offers a one-step action to mark an available item as low', () => {
-    const onMarkLow = vi.fn()
+  it('only offers the finished action from the inventory row', () => {
+    const onSetPresence = vi.fn()
     render(
       <PantryList
         initialItems={[
@@ -63,15 +61,17 @@ describe('PantryList', () => {
             unitCode: 'unit',
           },
         ]}
-        onMarkLow={onMarkLow}
+        onSetPresence={onSetPresence}
       />,
     )
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Marcar Yogures como queda poco' }),
+      screen.getByRole('button', { name: 'Marcar Yogures como terminado' }),
     )
-    expect(onMarkLow).toHaveBeenCalledWith(
+    expect(onSetPresence).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'yogurt', version: 3 }),
+      'out',
     )
+    expect(screen.queryByLabelText('Ajustar Yogures')).not.toBeInTheDocument()
   })
 })

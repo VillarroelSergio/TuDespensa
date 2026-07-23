@@ -17,7 +17,7 @@ import {
   setZoneState,
 } from '@/modules/onboarding/actions'
 import { addFood, stepForProgress } from '@/modules/onboarding/machine'
-import type { PantryZone } from '@/modules/pantry/types'
+import type { OnboardingZone } from '@/modules/onboarding/types'
 
 const zones = [
   {
@@ -47,7 +47,7 @@ const zones = [
   },
 ]
 type Food = { name: string; itemId?: string; version?: number }
-const emptyItems: Record<PantryZone, Food[]> = {
+const emptyItems: Record<OnboardingZone, Food[]> = {
   fridge: [],
   freezer: [],
   pantry: [],
@@ -135,7 +135,7 @@ export default function OnboardingPage() {
       setPending(false)
     }
   }
-  async function add(zone: PantryZone, food: string) {
+  async function add(zone: OnboardingZone, food: string) {
     if (
       addFood(
         items[zone].map((item) => item.name),
@@ -164,7 +164,7 @@ export default function OnboardingPage() {
       setStatus('No hemos podido guardar el alimento. Tus datos siguen aquí.')
     }
   }
-  async function remove(zone: PantryZone, food: Food) {
+  async function remove(zone: OnboardingZone, food: Food) {
     if (!food.itemId || food.version === undefined) {
       await refresh()
       setStatus(

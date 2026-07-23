@@ -7,7 +7,7 @@ tags:
   - proyecto
   - contexto-activo
 status: active
-updated: 2026-07-22
+updated: 2026-07-23
 notion_task: "https://app.notion.com/p/3a5ad407cbfd8178801ade68a6cfdbb2"
 notion_validation_task: "https://app.notion.com/p/3a5ad407cbfd8190800ae0b89d966a7a"
 notion_identity_task: "https://app.notion.com/p/3a5ad407cbfd816db75cf6cd3dffe3d3"
@@ -22,6 +22,7 @@ related:
   - "[[ONBOARDING-SCREEN-SPEC]]"
   - "[[DOMAIN-DATA-MODEL]]"
   - "[[TECHNICAL-ARCHITECTURE]]"
+  - "[[E2E-FOUNDER-VALIDATION-DESIGN]]"
   - "[[adr/README]]"
 ---
 
@@ -33,7 +34,7 @@ related:
 
 [Rediseñar la experiencia UI/UX completa del MVP](https://app.notion.com/p/3a5ad407cbfd8178801ade68a6cfdbb2)
 
-- **Estado:** En curso
+- **Estado:** Hecha
 - **Fase:** UX/UI
 - **Prioridad:** Alta
 - **Dirección:** mediterránea contemporánea, móvil primero y fotografías opcionales.
@@ -43,7 +44,12 @@ La identidad y el logotipo definitivos se realizan en paralelo y quedan como [ta
 
 ### Validación
 
-No hay tarea de validación activa. Fase 9 queda aceptada por la persona responsable el 2026-07-22; sus PR se integran antes de activar el siguiente incremento.
+[Validar el MVP rediseñado con el hogar fundador](https://app.notion.com/p/3a6ad407cbfd8184bf16e2d463eb491d)
+
+- **Estado:** En curso
+- **Fase:** Validación
+- **Prioridad:** Alta
+- **Objetivo:** validar en uso real el ciclo Plan → Compra → Cocina → Despensa y priorizar únicamente correcciones justificadas por evidencia.
 
 ### Arquitectura
 
@@ -82,7 +88,7 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 
 - Web móvil primero, adaptable a tablet y escritorio.
 - Interfaz minimalista y una acción principal visible por pantalla.
-- Presencia obligatoria; cantidad opcional; sin caducidades.
+- Presencia obligatoria; sin cantidades ni caducidades. En Despensa, la única acción de salida es `Se terminó`.
 - Guardado automático y reanudación.
 - Línea base útil, no inventario exhaustivo.
 - Claude y Codex definen y realizan el diseño UI/UX directamente en el repositorio; [[VISUAL-CONTEXT]] conserva las capturas de revisión.
@@ -114,12 +120,11 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 
 ## Siguientes acciones
 
-- **UX/UI:** completar la Fase 1 de la iniciativa activa: fixtures sintéticos, matriz de estados y capturas pobladas en 390, 768 y 1440 px.
-- **Diseño:** aplicar después el sistema visual mediterráneo contemporáneo y rediseñar primero el bucle `Plan → Compra → Cocina → Despensa`.
-- **Identidad:** integrar nombre y logotipo cuando finalice el trabajo paralelo, sin bloquear las fases anteriores.
-- **Integración:** finalizar la fusión de las PR de Fase 9 y conservar el historial de la versión estable en `develop`.
-- **Fase 10 (captura asistida de ticket) implementada** en `feature/fase10-ticket-capture`. Rebanada 1: importación por **texto** (pegar → revisar → cierre de compra existente). Rebanada 2: **foto + OCR en el dispositivo** (`tesseract.js`, `src/modules/shopping/ocr.ts`); **la imagen no se sube ni se guarda** (decisión 2026-07-22), se lee en el móvil y se descarta, y su texto pasa por la misma revisión humana. **Verificación bajo demanda:** `build` con `tesseract.js` en Next 16 puede pedir un ajuste de bundler; OCR se calibra con fotos reales.
-- **Desarrollo:** no ejecutar verificaciones automáticamente; la persona responsable las realizará bajo demanda. Planificar una cobertura E2E automatizada antes de declarar los flujos completos.
+- **Validación con el hogar fundador:** recorrer Plan → Compra → Cocina → Despensa en móvil y registrar hallazgos observables.
+- **Calidad pendiente:** completar el E2E automatizado del ciclo completo y la revisión manual responsive a 390, 768 y 1440 px, incluidos teclado, foco, contraste, overflow y reducción de movimiento.
+- **Diseño E2E:** [[E2E-FOUNDER-VALIDATION-DESIGN]] define el recorrido automatizado, los invariantes de datos y las señales de fricción que se elevan a revisión humana.
+- **Ticket:** calibrar el OCR local con fotos reales y documentar los errores de lectura; la imagen no se sube ni se guarda.
+- **Correcciones:** priorizar solo defectos que afecten a comprensión, confianza o uso recurrente.
 - **Desarrollo local:** `npm run dev:auth` mantiene Next.js y Supabase local activos entre iteraciones y habilita una cuenta sintética persistente (`admin` / `admin`) con Auth, RLS y RPC reales. El seed se recrea únicamente con `npm run dev:reset` (resetea datos/migraciones, no Docker). `npm run dev:demo` conserva el bypass solo visual; ambos modos están limitados a `NODE_ENV=development`.
 
 - **E2E con Auth:** `npm run test:e2e` habilita `NEXT_PUBLIC_E2E_AUTH_ENABLED=true` para recorrer el enlace mágico, cookies, RLS y RPC reales contra Supabase local; el modo manual de `next dev` conserva su bypass visual.

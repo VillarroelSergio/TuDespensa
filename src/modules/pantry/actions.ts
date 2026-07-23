@@ -135,6 +135,19 @@ export async function markPantryOut(
     ),
   })
 }
+export async function removeFinishedPantryItem(
+  itemId: string,
+  version: number,
+  key?: string,
+) {
+  return rpc('pantry_remove_finished_item', {
+    item_id: itemId,
+    version,
+    idempotency_key: parseIdempotencyKey(
+      key ?? createIdempotencyKey('pantry_remove_finished_item'),
+    ),
+  })
+}
 export async function renameHouseholdFood(
   foodId: string,
   name: string,
@@ -186,20 +199,33 @@ export async function getPantryListItems(): Promise<PantryListItem[]> {
   const [
     { data: pantryItems, error: itemsError },
     { data: consumeSoonRows, error: soonError },
+    { data: locations, error: locationsError },
   ] = await Promise.all([
     supabase
       .from('pantry_items')
       .select(
-        'id,food_id,version,tracking_mode,approximate_state,attention_state,quantity,unit_code',
+        'id,food_id,version,tracking_mode,approximate_state,attention_state,quantity,unit_code,location_id',
       )
-      .eq('household_id', householdId),
+      .eq('household_id', householdId)
+      .is('removed_at', null),
     supabase
       .from('pantry_consume_soon')
       .select('pantry_item_id,consume_soon')
       .eq('household_id', householdId),
+    supabase
+      .from('pantry_locations')
+      .select('id,kind')
+      .eq('household_id', householdId),
   ])
   if (itemsError) failure(itemsError)
   if (soonError) failure(soonError)
+  if (locationsError) failure(locationsError)
+  const zones = new Map(
+    (locations ?? []).map((location) => [
+      location.id,
+      location.kind as PantryZone,
+    ]),
+  )
   const foodIds = (pantryItems ?? []).map((item) => item.food_id)
   const { data: foods, error: foodsError } = foodIds.length
     ? await supabase.from('household_foods').select('id,name').in('id', foodIds)
@@ -227,6 +253,7 @@ export async function getPantryListItems(): Promise<PantryListItem[]> {
         quantity: item.quantity,
         unitCode: item.unit_code,
         consumeSoon: consumeSoon.get(item.id) ?? false,
+        zone: zones.get(item.location_id),
       },
     ]
   })

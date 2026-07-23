@@ -188,6 +188,7 @@ export interface Database {
           version: number
           confirmed_at: string | null
           confirmed_by: string | null
+          removed_at: string | null
           created_at: string
           updated_at: string
         }
@@ -206,6 +207,7 @@ export interface Database {
           version?: number
           confirmed_at?: string | null
           confirmed_by?: string | null
+          removed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -224,6 +226,7 @@ export interface Database {
           version?: number
           confirmed_at?: string | null
           confirmed_by?: string | null
+          removed_at?: string | null
           created_at?: string
           updated_at?: string
         }

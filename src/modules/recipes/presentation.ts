@@ -41,6 +41,35 @@ export function formatIngredient(ingredient: RecipeIngredient): string {
   return amount ? `${amount} · ${ingredient.name}` : ingredient.name
 }
 
+function normalizeFoodName(name: string): string {
+  return name
+    .trim()
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+}
+
+function nameVariants(name: string): string[] {
+  const normalized = normalizeFoodName(name)
+  return normalized.endsWith('s')
+    ? [normalized, normalized.slice(0, -1)]
+    : [normalized]
+}
+
+// ponytail: heurística de singular/plural con acentos, no el matching por
+// trigramas de la base de datos (private.resolve_household_food); basta para
+// un aviso visual al revisar los ingredientes de una receta.
+export function pantryNameSet(names: string[]): Set<string> {
+  return new Set(names.flatMap(nameVariants))
+}
+
+export function isIngredientInPantry(
+  ingredientName: string,
+  pantryNames: Set<string>,
+): boolean {
+  return nameVariants(ingredientName).some((variant) => pantryNames.has(variant))
+}
+
 const DISH_TYPE_LABELS: Record<RecipeDishType, string> = {
   breakfast: 'Desayuno',
   starter: 'Entrante',

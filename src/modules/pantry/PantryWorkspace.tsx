@@ -11,9 +11,9 @@ import {
   correctPantryItem,
   markPantryLow,
   recordPantryEntry,
+  removeFinishedPantryItem,
 } from './actions'
 import { addShoppingItem } from '@/modules/shopping/actions'
-import { PantryDetail } from './PantryDetail'
 import { PantryEntryForm } from './PantryEntryForm'
 import { PantryList } from './PantryList'
 import type { PantryListItem, PresentedPantryItem } from './presentation'
@@ -27,9 +27,6 @@ export function PantryWorkspace({ initialItems }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
-  const [selectedItem, setSelectedItem] = useState<PresentedPantryItem | null>(
-    null,
-  )
   const [isAdding, setIsAdding] = useState(false)
   const [undo, setUndo] = useState<PresentedPantryItem | null>(null)
   const refresh = useCallback(() => router.refresh(), [router])
@@ -62,70 +59,6 @@ export function PantryWorkspace({ initialItems }: Props) {
       void client.removeChannel(channel)
     }
   }, [refresh])
-
-  async function handleMarkLow(item: PresentedPantryItem) {
-    if (pendingId) return
-    setPendingId(item.id)
-    setStatus('')
-    try {
-      await markPantryLow(item.id, item.version)
-      setStatus(`${item.name}: queda poco.`)
-      refresh()
-    } catch {
-      setStatus(
-        'No hemos podido guardar el cambio. Hemos actualizado la lista.',
-      )
-      refresh()
-    } finally {
-      setPendingId(null)
-    }
-  }
-
-  async function handleSave(input: PantryMutationInput) {
-    setPendingId(input.itemId)
-    setStatus('')
-    try {
-      await correctPantryItem(input)
-      setStatus('Cambios guardados.')
-      setSelectedItem(null)
-      refresh()
-    } catch {
-      setStatus(
-        'No hemos podido guardar el cambio. Conservamos el detalle para que puedas reintentarlo.',
-      )
-    } finally {
-      setPendingId(null)
-    }
-  }
-
-  async function handleAdjust(item: PresentedPantryItem, delta: number) {
-    if (pendingId || item.quantity === null) return
-    const quantity = Math.max(0, item.quantity + delta)
-    setPendingId(item.id)
-    setStatus('')
-    try {
-      const result = await adjustPantryItem({
-        itemId: item.id,
-        version: item.version,
-        trackingMode: item.trackingMode,
-        approximateState: null,
-        quantity,
-        unitCode: item.unitCode,
-      })
-      setStatus(
-        `${item.name}: ${quantity === 0 ? 'se terminó.' : 'cantidad actualizada.'}`,
-      )
-      setUndo(quantity === 0 ? { ...item, version: result.version } : null)
-      refresh()
-    } catch {
-      setStatus(
-        'No hemos podido ajustar la cantidad. Hemos actualizado la lista.',
-      )
-      refresh()
-    } finally {
-      setPendingId(null)
-    }
-  }
 
   async function handlePresence(
     item: PresentedPantryItem,
@@ -207,8 +140,25 @@ export function PantryWorkspace({ initialItems }: Props) {
     try {
       await addShoppingItem({ foodName: item.name, source: 'pantry' })
       setStatus(`${item.name}: añadido a Compra.`)
+      setUndo(null)
     } catch {
       setStatus('No hemos podido añadirlo a Compra. Puedes reintentarlo.')
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function handleRemove(item: PresentedPantryItem) {
+    if (pendingId) return
+    setPendingId(item.id)
+    setStatus('')
+    try {
+      await removeFinishedPantryItem(item.id, item.version)
+      setStatus(`${item.name}: eliminado de la despensa.`)
+      refresh()
+    } catch {
+      setStatus('No hemos podido eliminarlo. Hemos actualizado la lista.')
+      refresh()
     } finally {
       setPendingId(null)
     }
@@ -242,33 +192,19 @@ export function PantryWorkspace({ initialItems }: Props) {
     <>
       <PantryList
         initialItems={initialItems}
-        onMarkLow={pendingId ? undefined : handleMarkLow}
-        onAdjust={pendingId ? undefined : handleAdjust}
         onSetPresence={pendingId ? undefined : handlePresence}
+        onRemove={pendingId ? undefined : handleRemove}
         onUndo={undo ? handleUndo : undefined}
         onAddToShopping={pendingId ? undefined : handleAddToShopping}
         undoItemName={undo?.name}
         onAdd={() => {
-          setSelectedItem(null)
           setIsAdding(true)
         }}
-        onOpen={(item) => {
-          setIsAdding(false)
-          setSelectedItem(item)
-        }}
-        selectedId={selectedItem?.id}
         detail={
           isAdding ? (
             <PantryEntryForm
               onClose={() => setIsAdding(false)}
               onSave={handleCreate}
-            />
-          ) : selectedItem ? (
-            <PantryDetail
-              key={selectedItem.id}
-              item={selectedItem}
-              onClose={() => setSelectedItem(null)}
-              onSave={handleSave}
             />
           ) : null
         }

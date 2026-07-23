@@ -66,12 +66,15 @@ if (!(await applicationIsReady())) {
 }
 
 try {
-  await mkdir(outputDir, { recursive: true })
   await waitForApplication()
   const browser = await chromium.launch()
 
   try {
     for (const viewport of viewports) {
+      // Cada viewport en su propia carpeta (desktop/mobile/tablet) para que las
+      // capturas queden ordenadas en vez de todas revueltas en un mismo nivel.
+      const viewportDir = resolve(outputDir, viewport.name)
+      await mkdir(viewportDir, { recursive: true })
       const page = await browser.newPage({ viewport })
       // En demo solo interesan las vistas con datos; acceso/onboarding no cambian.
       const dataViews = new Set([
@@ -80,7 +83,7 @@ try {
       ])
       for (const view of views) {
         if (demo && !dataViews.has(view.name)) continue
-        const name = `${view.name}-${viewport.name}${demo ? '-poblado' : ''}`
+        const name = `${view.name}${demo ? '-poblado' : ''}`
         await page.goto(`${baseUrl}${view.path}`, { waitUntil: 'domcontentloaded' })
         if (view.button) await page.getByRole('button', { name: view.button }).click()
 
@@ -88,9 +91,9 @@ try {
         const snapshot = typeof body.ariaSnapshot === 'function'
           ? await body.ariaSnapshot()
           : await body.innerText()
-        await writeFile(resolve(outputDir, `${name}.snapshot.txt`), snapshot, 'utf8')
-        await page.screenshot({ path: resolve(outputDir, `${name}.png`), fullPage: true })
-        console.log(`✓ ${name}`)
+        await writeFile(resolve(viewportDir, `${name}.snapshot.txt`), snapshot, 'utf8')
+        await page.screenshot({ path: resolve(viewportDir, `${name}.png`), fullPage: true })
+        console.log(`✓ ${viewport.name}/${name}`)
       }
       await page.close()
     }

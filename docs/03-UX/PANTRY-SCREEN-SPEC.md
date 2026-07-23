@@ -7,9 +7,10 @@ tags:
   - ux
   - despensa
 status: active
-revision: 3
-updated: 2026-07-21
+revision: 4
+updated: 2026-07-23
 notion_task: "https://app.notion.com/p/3a1ad407cbfd81a7a919c872fc2a4738"
+validation_correction: "2026-07-23: solo marcar Se terminó; alta presente por defecto"
 related:
   - "[[CORE-MVP-FLOWS-SPEC]]"
   - "[[SHOPPING-SCREEN-SPEC]]"

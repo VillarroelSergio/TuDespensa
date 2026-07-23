@@ -8,10 +8,6 @@ const line = (overrides: Partial<CheckoutLine> = {}): CheckoutLine => ({
   version: 1,
   name: 'Tomates',
   action: 'add',
-  fromQuantity: null,
-  fromUnit: null,
-  toQuantity: null,
-  toUnit: null,
   ...overrides,
 })
 
@@ -32,21 +28,10 @@ describe('checkoutActionLabel', () => {
   it('un producto nuevo se añade a la despensa', () => {
     expect(checkoutActionLabel(line({ action: 'add' }))).toBe('Añadir a despensa')
   })
-  it('un producto con cantidad compatible muestra la suma proyectada', () => {
-    const label = checkoutActionLabel(
-      line({ action: 'update', fromQuantity: 0.5, fromUnit: 'l', toQuantity: 1.5, toUnit: 'l' }),
+  it('un producto que ya existía solo refresca la presencia, sin cantidades', () => {
+    expect(checkoutActionLabel(line({ action: 'restore' }))).toBe(
+      'Ya estaba en tu despensa',
     )
-    expect(label).toBe('Actualizar: 0.5 l → 1.5 l')
-  })
-  it('sin suma posible solo refresca la presencia', () => {
-    // Ya presente pero sin cantidad conocida: no hay «de → a» que mostrar.
-    expect(checkoutActionLabel(line({ action: 'update' }))).toBe('Actualizar en despensa')
-  })
-  it('misma cantidad de entrada y salida no finge un cambio', () => {
-    const label = checkoutActionLabel(
-      line({ action: 'update', fromQuantity: 2, fromUnit: 'unit', toQuantity: 2, toUnit: 'unit' }),
-    )
-    expect(label).toBe('Actualizar en despensa')
   })
 })
 

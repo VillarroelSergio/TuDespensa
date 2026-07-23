@@ -168,10 +168,14 @@ Recrear o resetear Development borra el esquema existente y requiere autorizaci�
 - Fase aceptada por la persona responsable. El E2E del recorrido `planificar → comprar → cocinar` y la revisión manual a 390/768/1440 px se conservan como deuda conocida no bloqueante.
 - Evidencia canónica: [[FASE9-VERIFICATION-EVIDENCE]].
 
+### Validación automatizada del hogar fundador
+
+El recorrido E2E posterior al rediseño se define en [[E2E-FOUNDER-VALIDATION-DESIGN]]: acceso, línea base, receta, plan, compra, cocina, despensa y ticket por texto, con aislamiento de datos, trazas al fallar y heurísticas objetivas de fricción. La cámara y la precisión del OCR con tickets físicos siguen siendo una validación manual en móvil.
+
 ## Fase 10 — Captura asistida de ticket de compra
 
 **Rama:** `feature/fase10-ticket-capture`
-**Estado:** en curso; primera rebanada (importación por texto, sin OCR) implementada.
+**Estado:** implementada; pendiente de validación con fotos reales y de la verificación de build bajo demanda.
 **Diseño:** Claude y Codex lo definen en código con evidencia en [[VISUAL-CONTEXT]].
 
 ### Objetivo

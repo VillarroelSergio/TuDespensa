@@ -3,6 +3,7 @@ import type {
   PantryAttentionState,
   PantryTrackingMode,
   PantryUnitCode,
+  PantryZone,
 } from './types'
 
 export type PantryStatus = 'out' | 'low' | 'available'
@@ -18,6 +19,22 @@ export type PantryListItem = {
   quantity: number | null
   unitCode: PantryUnitCode | null
   consumeSoon?: boolean
+  zone?: PantryZone
+}
+
+/** Orden fijo de las cuatro zonas, de mayor a menor rotación habitual. */
+export const PANTRY_ZONE_ORDER: PantryZone[] = [
+  'fridge',
+  'freezer',
+  'pantry',
+  'cleaning',
+]
+
+export const PANTRY_ZONE_META: Record<PantryZone, { label: string }> = {
+  fridge: { label: 'Frigorífico' },
+  freezer: { label: 'Congelador' },
+  pantry: { label: 'Despensa' },
+  cleaning: { label: 'Limpieza' },
 }
 
 export type PresentedPantryItem = PantryListItem & {
@@ -35,7 +52,9 @@ export function pantryStatus(item: PantryListItem): PantryStatus {
   }
 
   if (
-    item.approximateState === 'low' || item.attentionState === 'low' || item.consumeSoon === true
+    item.approximateState === 'low' ||
+    item.attentionState === 'low' ||
+    item.consumeSoon === true
   ) {
     return 'low'
   }
@@ -60,8 +79,24 @@ export function prioritizePantryItems(
       status: pantryStatus(item),
       quantityLabel: formatPantryQuantity(item),
     }))
-    .sort((left, right) =>
-      rank[left.status] - rank[right.status] ||
-      left.name.localeCompare(right.name, 'es'),
+    .sort(
+      (left, right) =>
+        rank[left.status] - rank[right.status] ||
+        left.name.localeCompare(right.name, 'es'),
     )
+}
+
+export type PantryZoneGroup = {
+  zone: PantryZone
+  items: PresentedPantryItem[]
+}
+
+/** Agrupa por zona (orden fijo) y conserva el orden de prioridad dentro de cada una. */
+export function groupPantryItemsByZone(
+  items: PresentedPantryItem[],
+): PantryZoneGroup[] {
+  return PANTRY_ZONE_ORDER.map((zone) => ({
+    zone,
+    items: items.filter((item) => (item.zone ?? 'pantry') === zone),
+  })).filter((group) => group.items.length > 0)
 }
