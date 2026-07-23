@@ -122,7 +122,7 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - **Integración:** incorporar el rediseño UI/UX y conservar en `develop` las capacidades de Fase 10, incluida la captura de ticket y OCR local.
 - **Fase 10:** captura asistida de ticket implementada. La importación de texto y foto con OCR se revisan antes de confirmar; la imagen se procesa en el dispositivo y no se guarda ni sube.
 - **Desarrollo:** no ejecutar verificaciones automáticamente; la persona responsable las realizará bajo demanda. Planificar una cobertura E2E automatizada antes de declarar los flujos completos.
-- **Desarrollo local:** `next dev` permite acceder a la interfaz sin autenticación ni redirecciones de onboarding; el bypass está limitado a `NODE_ENV=development` y no habilita datos privados sin sesión de Supabase.
+- **Desarrollo local:** `npm run dev:auth` mantiene Next.js y Supabase local activos entre iteraciones y habilita una cuenta sintética persistente (`admin` / `admin`) con Auth, RLS y RPC reales. El seed se recrea únicamente con `npm run dev:reset` (resetea datos/migraciones, no Docker). `npm run dev:demo` conserva el bypass solo visual; ambos modos están limitados a `NODE_ENV=development`.
 
 - **E2E con Auth:** `npm run test:e2e` habilita `NEXT_PUBLIC_E2E_AUTH_ENABLED=true` para recorrer el enlace mágico, cookies, RLS y RPC reales contra Supabase local; el modo manual de `next dev` conserva su bypass visual.
 

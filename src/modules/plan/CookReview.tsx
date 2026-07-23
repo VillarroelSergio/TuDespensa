@@ -141,8 +141,11 @@ export function CookReview({
 
   function patch(itemId: string, next: Partial<CookEdit>) {
     setEdits((current) => {
-      const previous = current[itemId]
-      if (!previous) return current
+      const previous = current[itemId] ?? {
+        included: true,
+        discount: 0,
+        state: 'some' as const,
+      }
       return { ...current, [itemId]: { ...previous, ...next } }
     })
   }

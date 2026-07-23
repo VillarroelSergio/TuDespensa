@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { AppError } from '@/lib/errors/AppError'
+import { demoFixturesEnabled, demoWeekMeals } from '@/lib/dev/demo-fixtures'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseIdempotencyKey } from '@/lib/validation/onboarding'
@@ -323,7 +324,8 @@ export async function getWeekMeals(startIso: string): Promise<PlannedMeal[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user && process.env.NODE_ENV === 'development') return []
+  if (!user && process.env.NODE_ENV === 'development')
+    return demoFixturesEnabled() ? demoWeekMeals(startIso) : []
   // RLS limita la selección al hogar activo; no hace falta filtrar por hogar aquí.
   const { data, error } = await supabase
     .from('planned_meals')
