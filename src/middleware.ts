@@ -16,6 +16,7 @@ export async function middleware(request: NextRequest) {
     isDevelopmentAuthBypassEnabled(
       process.env.NODE_ENV,
       process.env.NEXT_PUBLIC_E2E_AUTH_ENABLED,
+      process.env.NEXT_PUBLIC_DEV_AUTH_ENABLED,
     )
   )
     return response

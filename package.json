@@ -11,6 +11,13 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:auth": "node scripts/dev-server.mjs --auth",
+    "dev:demo": "node scripts/dev-server.mjs --demo",
+    "dev:auth:mobile": "node scripts/dev-server.mjs --auth --mobile",
+    "dev:demo:mobile": "node scripts/dev-server.mjs --demo --mobile",
+    "dev:services": "npx supabase start",
+    "dev:reset": "npx supabase db reset",
+    "dev:stop": "npx supabase stop",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",

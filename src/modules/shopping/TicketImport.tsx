@@ -99,7 +99,10 @@ export function TicketImport() {
         <BrandLockup className="pantry-brand" />
         <Navigation className="shopping-sidebar__nav" />
       </aside>
-      <section className="shopping-content" aria-labelledby="ticket-title">
+      <section
+        className="shopping-content ticket-content"
+        aria-labelledby="ticket-title"
+      >
         <a className="shopping-back" href="/compra">
           ← Volver a la lista
         </a>

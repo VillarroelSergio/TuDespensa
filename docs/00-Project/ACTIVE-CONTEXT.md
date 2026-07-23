@@ -120,7 +120,7 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - **Integración:** finalizar la fusión de las PR de Fase 9 y conservar el historial de la versión estable en `develop`.
 - **Fase 10 (captura asistida de ticket) implementada** en `feature/fase10-ticket-capture`. Rebanada 1: importación por **texto** (pegar → revisar → cierre de compra existente). Rebanada 2: **foto + OCR en el dispositivo** (`tesseract.js`, `src/modules/shopping/ocr.ts`); **la imagen no se sube ni se guarda** (decisión 2026-07-22), se lee en el móvil y se descarta, y su texto pasa por la misma revisión humana. **Verificación bajo demanda:** `build` con `tesseract.js` en Next 16 puede pedir un ajuste de bundler; OCR se calibra con fotos reales.
 - **Desarrollo:** no ejecutar verificaciones automáticamente; la persona responsable las realizará bajo demanda. Planificar una cobertura E2E automatizada antes de declarar los flujos completos.
-- **Desarrollo local:** `next dev` permite acceder a la interfaz sin autenticación ni redirecciones de onboarding; el bypass está limitado a `NODE_ENV=development` y no habilita datos privados sin sesión de Supabase.
+- **Desarrollo local:** `npm run dev:auth` mantiene Next.js y Supabase local activos entre iteraciones y habilita una cuenta sintética persistente (`admin` / `admin`) con Auth, RLS y RPC reales. El seed se recrea únicamente con `npm run dev:reset` (resetea datos/migraciones, no Docker). `npm run dev:demo` conserva el bypass solo visual; ambos modos están limitados a `NODE_ENV=development`.
 
 - **E2E con Auth:** `npm run test:e2e` habilita `NEXT_PUBLIC_E2E_AUTH_ENABLED=true` para recorrer el enlace mágico, cookies, RLS y RPC reales contra Supabase local; el modo manual de `next dev` conserva su bypass visual.
 

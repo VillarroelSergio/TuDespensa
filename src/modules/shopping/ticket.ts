@@ -31,7 +31,9 @@ function stripNoise(line: string): string {
 function extractQuantity(line: string): { name: string; quantity: number | null; unitCode: TicketLine['unitCode'] } {
   const match = line.match(/^(.*?)[\s·xX*]*(\d+(?:[.,]\d+)?)\s*([a-zA-Z]+)?\.?\s*$/)
   if (!match) return { name: line, quantity: null, unitCode: null }
-  const [, rawName, rawNumber, rawUnit] = match
+  const rawName = match[1] ?? ''
+  const rawNumber = match[2] ?? ''
+  const rawUnit = match[3]
   const name = rawName.trim()
   if (!name) return { name: '', quantity: null, unitCode: null } // solo cantidad, sin producto: se descarta
   const quantity = Number(rawNumber.replace(',', '.'))

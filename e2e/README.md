@@ -4,7 +4,8 @@ La suite valida el recorrido real de onboarding contra Supabase local: enlace
 mágico, cookies y callback de Auth, RLS, Realtime y la persistencia del estado
 completado. Cada ejecución crea usuarios sintéticos con un correo `example.test`.
 El comando de preparación `db reset` los elimina junto con el resto de datos
-locales antes de la siguiente ejecución aislada.
+locales antes de una ejecución aislada. No borra ni recrea los contenedores de
+Docker: `supabase start` puede mantenerse activo durante todo el trabajo.
 
 ## Preparación local
 

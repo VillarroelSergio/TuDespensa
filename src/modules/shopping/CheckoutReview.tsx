@@ -11,7 +11,11 @@ import { checkoutActionLabel } from './presentation'
 import { Navigation } from './ShoppingList'
 import type { CheckoutLine } from './types'
 
-export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] }) {
+export function CheckoutReview({
+  initialLines,
+}: {
+  initialLines: CheckoutLine[]
+}) {
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pending, setPending] = useState(false)
@@ -23,7 +27,11 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
     const client = createSupabaseBrowserClient()
     const channel = client
       .channel('checkout-refresh')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'shopping_items' }, refresh)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shopping_items' },
+        refresh,
+      )
       .subscribe()
     return () => {
       void client.removeChannel(channel)
@@ -36,12 +44,17 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
     setStatus('')
     try {
       const { confirmed } = await confirmPurchase(
-        initialLines.map((line) => ({ itemId: line.itemId, version: line.version })),
+        initialLines.map((line) => ({
+          itemId: line.itemId,
+          version: line.version,
+        })),
       )
       router.push(`/compra?confirmado=${confirmed}`)
     } catch {
       // Conflicto o fallo: recargamos la revisión sin aplicar nada a medias.
-      setStatus('La lista ha cambiado. Hemos actualizado la revisión; compruébala y vuelve a confirmar.')
+      setStatus(
+        'La lista ha cambiado. Hemos actualizado la revisión; compruébala y vuelve a confirmar.',
+      )
       setPending(false)
       refresh()
     }
@@ -53,7 +66,10 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
         <BrandLockup className="pantry-brand" />
         <Navigation className="shopping-sidebar__nav" />
       </aside>
-      <section className="shopping-content checkout-content" aria-labelledby="checkout-title">
+      <section
+        className="shopping-content checkout-content"
+        aria-labelledby="checkout-title"
+      >
         <a className="shopping-back" href="/compra">
           ← Volver a la lista
         </a>
@@ -67,8 +83,13 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
         ) : null}
         {initialLines.length ? (
           <>
-            <p className="shopping-review-lead">Estos cambios se aplicarán a tu despensa:</p>
-            <section className="shopping-list" aria-label="Cambios en la despensa">
+            <p className="shopping-review-lead">
+              Estos cambios se aplicarán a tu despensa:
+            </p>
+            <section
+              className="shopping-list"
+              aria-label="Cambios en la despensa"
+            >
               {initialLines.map((line) => (
                 <div key={line.itemId} className="shopping-row">
                   <span aria-hidden="true" className="shopping-review-icon" />
@@ -77,13 +98,19 @@ export function CheckoutReview({ initialLines }: { initialLines: CheckoutLine[] 
                 </div>
               ))}
             </section>
-            <button className="shopping-confirm" disabled={pending} onClick={handleConfirm} type="button">
+            <button
+              className="shopping-confirm"
+              disabled={pending}
+              onClick={handleConfirm}
+              type="button"
+            >
               Confirmar en despensa
             </button>
           </>
         ) : (
           <p className="shopping-empty">
-            No hay productos marcados para confirmar. <a href="/compra">Volver a la lista</a>.
+            No hay productos marcados para confirmar.{' '}
+            <a href="/compra">Volver a la lista</a>.
           </p>
         )}
       </section>

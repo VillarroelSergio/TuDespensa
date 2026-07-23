@@ -22,6 +22,7 @@ const meal = (overrides: Partial<PlannedMeal> = {}): PlannedMeal => ({
   totalMinutes: 15,
   servings: 2,
   ...overrides,
+  cookedAt: overrides.cookedAt ?? null,
 })
 
 describe('weekStart', () => {

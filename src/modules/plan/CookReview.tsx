@@ -45,8 +45,8 @@ function CookRow({
 }) {
   const current =
     line.trackingMode === 'approximate'
-      ? (APPROX_STATES.find((state) => state.value === line.approximateState)?.label ??
-        'Algo')
+      ? (APPROX_STATES.find((state) => state.value === line.approximateState)
+          ?.label ?? 'Algo')
       : (formatQuantity(line.quantity, line.unitCode) ?? 'Sin cantidad')
 
   return (
@@ -85,9 +85,13 @@ function CookRow({
             step="any"
             value={edit.discount}
             disabled={!edit.included}
-            onChange={(event) => onChange({ discount: Number(event.target.value) })}
+            onChange={(event) =>
+              onChange({ discount: Number(event.target.value) })
+            }
           />
-          {line.unitCode ? <span aria-hidden="true">{line.unitCode}</span> : null}
+          {line.unitCode ? (
+            <span aria-hidden="true">{line.unitCode}</span>
+          ) : null}
         </label>
       )}
     </div>
@@ -109,8 +113,16 @@ export function CookReview({ preview }: { preview: CookPreview }) {
     const client = createSupabaseBrowserClient()
     const channel = client
       .channel('cook-refresh')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'planned_meals' }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pantry_items' }, refresh)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'planned_meals' },
+        refresh,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pantry_items' },
+        refresh,
+      )
       .subscribe()
     return () => {
       void client.removeChannel(channel)
@@ -123,7 +135,14 @@ export function CookReview({ preview }: { preview: CookPreview }) {
   )
 
   function patch(itemId: string, next: Partial<CookEdit>) {
-    setEdits((current) => ({ ...current, [itemId]: { ...current[itemId], ...next } }))
+    setEdits((current) => {
+      const previous = current[itemId] ?? {
+        included: true,
+        discount: 0,
+        state: 'some',
+      }
+      return { ...current, [itemId]: { ...previous, ...next } }
+    })
   }
 
   async function handleConfirm() {
@@ -131,7 +150,11 @@ export function CookReview({ preview }: { preview: CookPreview }) {
     setPending(true)
     setStatus('')
     try {
-      const { consumed } = await cookMeal(preview.mealDate, preview.mealType, consumptions)
+      const { consumed } = await cookMeal(
+        preview.mealDate,
+        preview.mealType,
+        consumptions,
+      )
       router.push(`/plan?cocinada=${consumed}`)
     } catch {
       setStatus(
@@ -147,13 +170,18 @@ export function CookReview({ preview }: { preview: CookPreview }) {
       <aside className="shopping-sidebar">
         <BrandLockup className="pantry-brand" />
       </aside>
-      <section className="shopping-content" aria-labelledby="cook-title">
+      <section
+        className="shopping-content checkout-content"
+        aria-labelledby="cook-title"
+      >
         <a className="shopping-back" href="/plan">
           ← Volver al plan
         </a>
         <header className="shopping-header">
           <h1 id="cook-title">Cocinar «{preview.title}»</h1>
-          <p className="shopping-review-lead">{slotLabel(preview.mealDate, preview.mealType)}</p>
+          <p className="shopping-review-lead">
+            {slotLabel(preview.mealDate, preview.mealType)}
+          </p>
         </header>
 
         {preview.alreadyCooked ? (
@@ -172,12 +200,22 @@ export function CookReview({ preview }: { preview: CookPreview }) {
             <p className="shopping-review-lead">
               Ajusta lo que hayas usado antes de descontarlo de tu despensa:
             </p>
-            <section className="cook-list" aria-label="Ingredientes a descontar">
+            <section
+              className="cook-list"
+              aria-label="Ingredientes a descontar"
+            >
               {preview.lines.map((line) => (
                 <CookRow
                   key={line.itemId}
                   line={line}
-                  edit={edits[line.itemId]}
+                  edit={
+                    edits[line.itemId] ?? {
+                      included: true,
+                      discount: line.proposedDiscount ?? 0,
+                      state:
+                        line.proposedState ?? line.approximateState ?? 'some',
+                    }
+                  }
                   onChange={(next) => patch(line.itemId, next)}
                 />
               ))}
@@ -194,8 +232,8 @@ export function CookReview({ preview }: { preview: CookPreview }) {
         ) : (
           <>
             <p className="shopping-empty">
-              No hemos encontrado ingredientes de esta receta en tu despensa, así que no
-              hay nada que descontar.
+              No hemos encontrado ingredientes de esta receta en tu despensa,
+              así que no hay nada que descontar.
             </p>
             <button
               className="shopping-confirm"

@@ -420,7 +420,14 @@ export async function getCookPreview(
     mealDate,
     mealType,
     alreadyCooked: meal.cooked_at !== null,
-    lines: buildCookLines(ingredientsRes.data ?? [], pantry),
+    lines: buildCookLines(
+      (ingredientsRes.data ?? []).map((ingredient) => ({
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        unitCode: ingredient.unit_code,
+      })),
+      pantry,
+    ),
   }
 }
 

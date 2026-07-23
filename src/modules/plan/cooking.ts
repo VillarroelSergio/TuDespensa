@@ -71,14 +71,23 @@ function round(value: number): number {
 
 /** Convierte `qty` de `from` a `to` solo si miden lo mismo; si no, null. */
 function convert(qty: number, from: string, to: string): number | null {
-  if (!UNIT_FAMILY[from] || UNIT_FAMILY[from] !== UNIT_FAMILY[to]) return null
-  return round((qty * UNIT_FACTOR[from]) / UNIT_FACTOR[to])
+  const fromFamily = UNIT_FAMILY[from]
+  const toFamily = UNIT_FAMILY[to]
+  const fromFactor = UNIT_FACTOR[from]
+  const toFactor = UNIT_FACTOR[to]
+  if (!fromFamily || !toFamily || !fromFactor || !toFactor || fromFamily !== toFamily) {
+    return null
+  }
+  return round((qty * fromFactor) / toFactor)
 }
 
 /** Un nivel menos: la sugerencia por defecto para un producto aproximado. */
 function stepDown(state: string | null): string {
   const index = APPROX_ORDER.indexOf((state ?? 'some') as (typeof APPROX_ORDER)[number])
-  return APPROX_ORDER[Math.min(index < 0 ? 1 : index + 1, APPROX_ORDER.length - 1)]
+  return (
+    APPROX_ORDER[Math.min(index < 0 ? 1 : index + 1, APPROX_ORDER.length - 1)] ??
+    'out'
+  )
 }
 
 /**
