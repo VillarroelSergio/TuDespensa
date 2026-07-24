@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 
 import {
   adjustPantryItem,
@@ -32,35 +32,11 @@ export function PantryWorkspace({ initialItems, isVisualFixture = false }: Props
   const [undo, setUndo] = useState<PresentedPantryItem | null>(null)
   const refresh = useCallback(() => router.refresh(), [router])
 
-  useEffect(() => {
-    if (isVisualFixture) return
-    const client = createSupabaseBrowserClient()
-    const channel = client
-      .channel('pantry-refresh')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pantry_items' },
-        refresh,
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pantry_movements' },
-        refresh,
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'household_foods' },
-        refresh,
-      )
-      // Resync after reconnecting: realtime does not replay missed events.
-      .subscribe((subscriptionStatus) => {
-        if (subscriptionStatus === 'SUBSCRIBED') refresh()
-      })
-
-    return () => {
-      void client.removeChannel(channel)
-    }
-  }, [isVisualFixture, refresh])
+  useRealtimeRefresh(
+    'pantry-refresh',
+    ['pantry_items', 'pantry_movements', 'household_foods'],
+    { enabled: !isVisualFixture },
+  )
 
   async function handlePresence(
     item: PresentedPantryItem,

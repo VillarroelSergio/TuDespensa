@@ -1,10 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { AppShell } from '@/components/ui/AppShell'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 import {
   PANTRY_ZONE_META,
   PANTRY_ZONE_ORDER,
@@ -26,7 +26,13 @@ export function CheckoutReview({
   const [status, setStatus] = useState('')
   const [pending, setPending] = useState(false)
   const [zoneChoices, setZoneChoices] = useState<Record<string, PantryZone>>({})
-  const refresh = useCallback(() => router.refresh(), [router])
+  // Evita que el eco realtime de nuestra propia confirmación dispare un
+  // refresh mientras ya estamos navegando fuera de esta página.
+  const confirming = useRef(false)
+  const refresh = useCallback(() => {
+    if (confirming.current) return
+    router.refresh()
+  }, [router])
 
   // Solo los altas sin coincidencia de catálogo necesitan que la persona
   // elija la zona a mano; el resto ya sabe dónde va o ya existía.
@@ -37,26 +43,16 @@ export function CheckoutReview({
 
   // Un cambio remoto en la lista (otro integrante) recarga la revisión en vivo,
   // sin ocultar lo que ya se ve.
-  useEffect(() => {
-    if (isVisualFixture) return
-    const client = createSupabaseBrowserClient()
-    const channel = client
-      .channel('checkout-refresh')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'shopping_items' },
-        refresh,
-      )
-      .subscribe()
-    return () => {
-      void client.removeChannel(channel)
-    }
-  }, [isVisualFixture, refresh])
+  useRealtimeRefresh('checkout-refresh', ['shopping_items'], {
+    enabled: !isVisualFixture,
+    shouldRefresh: () => !confirming.current,
+  })
 
   async function handleConfirm() {
     if (pending || !initialLines.length || !canConfirm) return
     setPending(true)
     setStatus('')
+    confirming.current = true
     try {
       const { confirmed } = await confirmPurchase(
         initialLines.map((line) => ({
@@ -68,6 +64,7 @@ export function CheckoutReview({
       router.push(`/compra?confirmado=${confirmed}`)
     } catch {
       // Conflicto o fallo: recargamos la revisión sin aplicar nada a medias.
+      confirming.current = false
       setStatus(
         'La lista ha cambiado. Hemos actualizado la revisión; compruébala y vuelve a confirmar.',
       )
@@ -78,9 +75,7 @@ export function CheckoutReview({
 
   return (
     <AppShell current="compra" contentClassName="checkout-content">
-      <section
-        aria-labelledby="checkout-title"
-      >
+      <section aria-labelledby="checkout-title">
         <a className="shopping-back" href="/compra">
           ← Volver a la lista
         </a>
