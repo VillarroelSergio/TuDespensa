@@ -1,10 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { useMemo, useState, type ReactNode } from 'react'
 
-import { BrandLockup } from '@/components/ui/BrandLockup'
-
+import { AppShell } from '@/components/ui/AppShell'
 import {
   groupPantryItemsByZone,
   prioritizePantryItems,
@@ -170,19 +168,6 @@ function measureStepLabel(unitCode: PresentedPantryItem['unitCode']): string {
       : `250 ${unitCode ?? 'g'}`
 }
 
-function Navigation({ className }: { className: string }) {
-  return (
-    <nav className={className} aria-label="Navegación principal">
-      <Link href="/plan">Plan</Link>
-      <Link href="/recetas">Recetas</Link>
-      <Link href="/compra">Compra</Link>
-      <a aria-current="page" href="/despensa">
-        Despensa
-      </a>
-    </nav>
-  )
-}
-
 export function PantryList({
   initialItems,
   onAdd,
@@ -209,12 +194,8 @@ export function PantryList({
   const zoneGroups = useMemo(() => groupPantryItemsByZone(rows), [rows])
 
   return (
-    <main className="pantry-page">
-      <aside className="pantry-sidebar">
-        <BrandLockup className="pantry-brand" />
-        <Navigation className="pantry-sidebar__nav" />
-      </aside>
-      <section className="pantry-content" aria-labelledby="pantry-title">
+    <AppShell current="despensa">
+      <div aria-labelledby="pantry-title">
         <header className="pantry-header">
           <h1 id="pantry-title">Despensa</h1>
           <button className="pantry-add" onClick={onAdd} type="button">
@@ -347,8 +328,7 @@ export function PantryList({
             </button>
           </div>
         ) : null}
-      </section>
-      <Navigation className="pantry-bottom-nav" />
-    </main>
+      </div>
+    </AppShell>
   )
 }

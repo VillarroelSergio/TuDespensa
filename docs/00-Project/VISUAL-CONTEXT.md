@@ -20,8 +20,6 @@ related:
 
 Las imágenes y los archivos `.snapshot.txt` de `visual-context/` muestran el estado actual de la interfaz ejecutada localmente. Sirven para que una persona o un modelo comprenda qué se ve realmente antes de cambiar una pantalla.
 
-Claude y Codex definen y realizan los diseños UI/UX directamente en el repositorio a partir de las especificaciones de Obsidian. Esta nota es la fuente de evidencia visual de ese trabajo; Figma no se usa para cambios futuros.
-
 - La imagen `.png` muestra el aspecto visual.
 - El archivo `.snapshot.txt` enumera los elementos que un agente puede usar: títulos, botones, campos y enlaces.
 - Las imágenes anotadas numeran los controles; el mismo número aparece como referencia en el archivo de texto correspondiente.
@@ -38,7 +36,7 @@ El comando usa el mismo navegador fiable de las pruebas automáticas, abre la ap
 
 - Acceso de desarrollo y onboarding.
 - Despensa: lista y formulario «Añadir producto».
-- Compra: lista, revisión antes de confirmar la compra e importación de ticket (`/compra/ticket`).
+- Compra: lista, ticket y revisión antes de confirmar la compra.
 - Recetas: biblioteca y formulario «Añadir receta».
 - Plan semanal y selector de receta para un hueco.
 
@@ -46,4 +44,8 @@ Antes de una revisión visual o de pedir cambios de interfaz, ejecutar el comand
 
 ## Archivos generados
 
-Esto genera 33 pantallas visuales y 33 mapas de controles. Los archivos se guardan en `docs/00-Project/visual-context/`. Se actualizan a propósito: forman parte de la evidencia visual del proyecto y no contienen credenciales ni datos privados.
+Esto genera 57 pantallas visuales y 57 mapas de controles. Mantiene las capturas vacías, incluida la importación de ticket, y añade el escenario sintético `everyday` para Despensa, Compra, revisión de compra, Recetas, Plan, selector de receta y Cocina, en móvil, tablet y escritorio.
+
+El escenario `everyday` se activa exclusivamente con `?fixture=everyday` en desarrollo. Contiene datos fijos sin PII —productos, recetas, plan, compra y revisión de Cocina— y nunca consulta ni escribe datos reales de Supabase. El script usa por defecto el puerto `3011` para no compartir servidor con otros worktrees; puede cambiarse con `VISUAL_CONTEXT_PORT`.
+
+Los archivos se guardan en `docs/00-Project/visual-context/`. Se actualizan a propósito: forman parte de la evidencia visual del proyecto y no contienen credenciales ni datos privados.

@@ -3,11 +3,10 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { chromium } from '@playwright/test'
 
-const baseUrl = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3000'
+const visualContextPort = process.env.VISUAL_CONTEXT_PORT ?? '3011'
+const baseUrl =
+  process.env.E2E_BASE_URL ?? `http://127.0.0.1:${visualContextPort}`
 const outputDir = resolve('docs/00-Project/visual-context')
-// DEMO=1 sirve fixtures sintéticos y guarda las capturas con sufijo `-poblado`,
-// para tener la matriz de estados (vacío por defecto, poblado bajo demanda).
-const demo = process.env.DEMO === '1'
 let server
 
 const viewports = [
@@ -18,21 +17,55 @@ const viewports = [
 
 const views = [
   { name: 'acceso', path: '/login' },
-  { name: 'onboarding', path: '/onboarding' },
-  { name: 'despensa', path: '/despensa' },
-  { name: 'despensa-anadir', path: '/despensa', button: '+ Añadir producto' },
-  { name: 'compra', path: '/compra' },
-  { name: 'compra-revisar', path: '/compra/revisar' },
-  { name: 'compra-ticket', path: '/compra/ticket' },
-  { name: 'recetas', path: '/recetas' },
-  { name: 'recetas-anadir', path: '/recetas', button: 'Añadir receta' },
-  { name: 'plan', path: '/plan' },
-  { name: 'plan-elegir', path: '/plan/elegir?fecha=2026-07-20&servicio=lunch' },
+  { name: 'onboarding', path: '/onboarding', fixture: 'empty' },
+  { name: 'despensa', path: '/despensa', fixture: 'empty' },
+  {
+    name: 'despensa-anadir',
+    path: '/despensa',
+    button: '+ Añadir producto',
+    fixture: 'empty',
+  },
+  { name: 'compra', path: '/compra', fixture: 'empty' },
+  { name: 'compra-revisar', path: '/compra/revisar', fixture: 'empty' },
+  { name: 'compra-ticket', path: '/compra/ticket', fixture: 'empty' },
+  { name: 'recetas', path: '/recetas', fixture: 'empty' },
+  {
+    name: 'recetas-anadir',
+    path: '/recetas',
+    button: 'Añadir receta',
+    fixture: 'empty',
+  },
+  { name: 'plan', path: '/plan', fixture: 'empty' },
+  {
+    name: 'plan-elegir',
+    path: '/plan/elegir?fecha=2026-07-20&servicio=lunch',
+    fixture: 'empty',
+  },
+  {
+    name: 'plan-cocinar',
+    path: '/plan/cocinar?fecha=2026-07-20&servicio=lunch',
+    fixture: 'empty',
+  },
+  { name: 'despensa', path: '/despensa', fixture: 'everyday' },
+  { name: 'compra', path: '/compra', fixture: 'everyday' },
+  { name: 'compra-revisar', path: '/compra/revisar', fixture: 'everyday' },
+  { name: 'recetas', path: '/recetas', fixture: 'everyday' },
+  { name: 'plan', path: '/plan', fixture: 'everyday' },
+  {
+    name: 'plan-elegir',
+    path: '/plan/elegir?fecha=2026-07-20&servicio=lunch',
+    fixture: 'everyday',
+  },
+  {
+    name: 'plan-cocinar',
+    path: '/plan/cocinar?fecha=2026-07-20&servicio=lunch',
+    fixture: 'everyday',
+  },
 ]
 
 async function applicationIsReady() {
   try {
-    const response = await fetch(baseUrl)
+    const response = await fetch(new URL('/login', baseUrl))
     return response.status < 500
   } catch {
     return false
@@ -48,52 +81,54 @@ async function waitForApplication() {
 }
 
 if (!(await applicationIsReady())) {
-  // shell:true is required on Windows: since Node 24, spawning npm.cmd directly
-  // throws EINVAL. The shell resolves npm on every platform.
-  server = spawn('npm', ['run', 'dev'], {
-    cwd: process.cwd(),
-    stdio: 'ignore',
-    windowsHide: true,
-    shell: true,
-    // Force the dev auth bypass on: these captures are the no-login empty states.
-    // A leftover .env.local from an E2E run would otherwise send /despensa to /login.
-    env: {
-      ...process.env,
-      NEXT_PUBLIC_E2E_AUTH_ENABLED: 'false',
-      NEXT_PUBLIC_DEMO_FIXTURES: demo ? 'true' : 'false',
+  server = spawn(
+    process.execPath,
+    [
+      resolve('node_modules/next/dist/bin/next'),
+      'dev',
+      '--port',
+      visualContextPort,
+    ],
+    {
+      cwd: process.cwd(),
+      stdio: 'ignore',
+      windowsHide: true,
     },
-  })
+  )
 }
 
 try {
+  await mkdir(outputDir, { recursive: true })
   await waitForApplication()
   const browser = await chromium.launch()
 
   try {
     for (const viewport of viewports) {
-      // Cada viewport en su propia carpeta (desktop/mobile/tablet) para que las
-      // capturas queden ordenadas en vez de todas revueltas en un mismo nivel.
-      const viewportDir = resolve(outputDir, viewport.name)
-      await mkdir(viewportDir, { recursive: true })
       const page = await browser.newPage({ viewport })
-      // En demo solo interesan las vistas con datos; acceso/onboarding no cambian.
-      const dataViews = new Set([
-        'despensa', 'despensa-anadir', 'compra', 'compra-revisar',
-        'recetas', 'recetas-anadir', 'plan', 'plan-elegir',
-      ])
       for (const view of views) {
-        if (demo && !dataViews.has(view.name)) continue
-        const name = `${view.name}${demo ? '-poblado' : ''}`
-        await page.goto(`${baseUrl}${view.path}`, { waitUntil: 'domcontentloaded' })
-        if (view.button) await page.getByRole('button', { name: view.button }).click()
+        const name = `${view.name}${view.fixture === 'everyday' ? '-everyday' : ''}-${viewport.name}`
+        const url = new URL(view.path, baseUrl)
+        if (view.fixture) url.searchParams.set('fixture', view.fixture)
+        await page.goto(url.toString(), { waitUntil: 'domcontentloaded' })
+        if (view.button) {
+          await page.getByRole('button', { name: view.button }).click()
+        }
 
         const body = page.locator('body')
-        const snapshot = typeof body.ariaSnapshot === 'function'
-          ? await body.ariaSnapshot()
-          : await body.innerText()
-        await writeFile(resolve(viewportDir, `${name}.snapshot.txt`), snapshot, 'utf8')
-        await page.screenshot({ path: resolve(viewportDir, `${name}.png`), fullPage: true })
-        console.log(`✓ ${viewport.name}/${name}`)
+        const snapshot =
+          typeof body.ariaSnapshot === 'function'
+            ? await body.ariaSnapshot()
+            : await body.innerText()
+        await writeFile(
+          resolve(outputDir, `${name}.snapshot.txt`),
+          snapshot,
+          'utf8',
+        )
+        await page.screenshot({
+          path: resolve(outputDir, `${name}.png`),
+          fullPage: true,
+        })
+        console.log(`✓ ${name}`)
       }
       await page.close()
     }

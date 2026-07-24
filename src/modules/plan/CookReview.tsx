@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { BrandLockup } from '@/components/ui/BrandLockup'
+import { AppShell } from '@/components/ui/AppShell'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { formatQuantity } from '@/modules/shopping/presentation'
 
 import type { CookPreview } from './actions'
 import { cookMeal } from './actions'
-import { buildConsumptions } from './cooking'
+import { buildConsumptions, cookReviewSummary } from './cooking'
 import type { CookEdit, CookLine } from './cooking'
 import { slotLabel } from './presentation'
 
@@ -33,7 +33,6 @@ function initialEdits(lines: CookLine[]): Record<string, CookEdit> {
   )
 }
 
-/** Una fila editable: descontar una cantidad o bajar el nivel de un aproximado. */
 function CookRow({
   line,
   edit,
@@ -98,7 +97,13 @@ function CookRow({
   )
 }
 
-export function CookReview({ preview }: { preview: CookPreview }) {
+export function CookReview({
+  preview,
+  visualFixture = false,
+}: {
+  preview: CookPreview
+  visualFixture?: boolean
+}) {
   const router = useRouter()
   const [edits, setEdits] = useState<Record<string, CookEdit>>(() =>
     initialEdits(preview.lines),
@@ -107,9 +112,8 @@ export function CookReview({ preview }: { preview: CookPreview }) {
   const [pending, setPending] = useState(false)
   const refresh = useCallback(() => router.refresh(), [router])
 
-  // Si otro integrante cocina la comida o cambia un producto, recargamos la
-  // revisión en vivo en vez de descontar sobre datos viejos.
   useEffect(() => {
+    if (visualFixture) return
     const client = createSupabaseBrowserClient()
     const channel = client
       .channel('cook-refresh')
@@ -127,19 +131,20 @@ export function CookReview({ preview }: { preview: CookPreview }) {
     return () => {
       void client.removeChannel(channel)
     }
-  }, [refresh])
+  }, [refresh, visualFixture])
 
   const consumptions = useMemo(
     () => buildConsumptions(preview.lines, edits),
     [preview.lines, edits],
   )
+  const summary = cookReviewSummary(preview.lines)
 
   function patch(itemId: string, next: Partial<CookEdit>) {
     setEdits((current) => {
       const previous = current[itemId] ?? {
         included: true,
         discount: 0,
-        state: 'some',
+        state: 'some' as const,
       }
       return { ...current, [itemId]: { ...previous, ...next } }
     })
@@ -166,24 +171,16 @@ export function CookReview({ preview }: { preview: CookPreview }) {
   }
 
   return (
-    <main className="shopping-page">
-      <aside className="shopping-sidebar">
-        <BrandLockup className="pantry-brand" />
-      </aside>
-      <section
-        className="shopping-content checkout-content"
-        aria-labelledby="cook-title"
-      >
-        <a className="shopping-back" href="/plan">
+    <AppShell current="plan" contentClassName="cook-page">
+      <section aria-labelledby="cook-title">
+        <a className="cook-back" href="/plan">
           ← Volver al plan
         </a>
-        <header className="shopping-header">
+        <header className="cook-header">
+          <p className="cook-kicker">{summary.eyebrow}</p>
           <h1 id="cook-title">Cocinar «{preview.title}»</h1>
-          <p className="shopping-review-lead">
-            {slotLabel(preview.mealDate, preview.mealType)}
-          </p>
+          <p>{slotLabel(preview.mealDate, preview.mealType)}</p>
         </header>
-
         {preview.alreadyCooked ? (
           <p className="plan-notice" role="status">
             Esta comida ya estaba marcada como cocinada.
@@ -194,58 +191,49 @@ export function CookReview({ preview }: { preview: CookPreview }) {
             {status}
           </p>
         ) : null}
-
+        <section className="cook-overview" aria-label="Resumen de revisión">
+          <p>{summary.message}</p>
+          <span>
+            {preview.lines.length}/{preview.lines.length} seleccionados
+          </span>
+        </section>
         {preview.lines.length ? (
           <>
-            <p className="shopping-review-lead">
-              Ajusta lo que hayas usado antes de descontarlo de tu despensa:
+            <p className="cook-instruction">
+              Ajusta solo lo que hayas usado. Nada se cambia hasta confirmar.
             </p>
             <section
               className="cook-list"
               aria-label="Ingredientes a descontar"
             >
-              {preview.lines.map((line) => (
-                <CookRow
-                  key={line.itemId}
-                  line={line}
-                  edit={
-                    edits[line.itemId] ?? {
-                      included: true,
-                      discount: line.proposedDiscount ?? 0,
-                      state:
-                        line.proposedState ?? line.approximateState ?? 'some',
-                    }
-                  }
-                  onChange={(next) => patch(line.itemId, next)}
-                />
-              ))}
+              {preview.lines.map((line) => {
+                const edit = edits[line.itemId]
+                if (!edit) return null
+                return (
+                  <CookRow
+                    key={line.itemId}
+                    line={line}
+                    edit={edit}
+                    onChange={(next) => patch(line.itemId, next)}
+                  />
+                )
+              })}
             </section>
-            <button
-              className="shopping-confirm"
-              disabled={pending || preview.alreadyCooked}
-              onClick={handleConfirm}
-              type="button"
-            >
-              Marcar como cocinada
-            </button>
           </>
         ) : (
-          <>
-            <p className="shopping-empty">
-              No hemos encontrado ingredientes de esta receta en tu despensa,
-              así que no hay nada que descontar.
-            </p>
-            <button
-              className="shopping-confirm"
-              disabled={pending || preview.alreadyCooked}
-              onClick={handleConfirm}
-              type="button"
-            >
-              Marcar como cocinada
-            </button>
-          </>
+          <p className="shopping-empty">
+            No hemos encontrado ingredientes de esta receta en tu despensa.
+          </p>
         )}
+        <button
+          className="shopping-confirm"
+          disabled={pending || preview.alreadyCooked}
+          onClick={handleConfirm}
+          type="button"
+        >
+          Marcar como cocinada
+        </button>
       </section>
-    </main>
+    </AppShell>
   )
 }
