@@ -3,11 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { BrandLockup } from '@/components/ui/BrandLockup'
+import { AppShell } from '@/components/ui/AppShell'
 
 import { importTicketItems } from './actions'
 import { readTicketImage } from './ocr'
-import { Navigation } from './ShoppingList'
 import { parseTicketLines, type TicketLine } from './ticket'
 
 const UNIT_OPTIONS: { value: string; label: string }[] = [
@@ -94,13 +93,8 @@ export function TicketImport() {
   ).length
 
   return (
-    <main className="shopping-page">
-      <aside className="shopping-sidebar">
-        <BrandLockup className="pantry-brand" />
-        <Navigation className="shopping-sidebar__nav" />
-      </aside>
+    <AppShell current="compra" contentClassName="ticket-content">
       <section
-        className="shopping-content ticket-content"
         aria-labelledby="ticket-title"
       >
         <a className="shopping-back" href="/compra">
@@ -254,7 +248,6 @@ export function TicketImport() {
           </>
         )}
       </section>
-      <Navigation className="shopping-bottom-nav" />
-    </main>
+    </AppShell>
   )
 }
