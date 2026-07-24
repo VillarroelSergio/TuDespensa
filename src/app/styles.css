@@ -2498,3 +2498,51 @@ a:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Gestión del hogar e invitaciones */
+.household-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: 1rem 0;
+}
+.household-manager h1 {
+  margin: 0;
+}
+.household-people,
+.household-invitations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.household-invitations li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.household-invitations__actions {
+  display: flex;
+  gap: 1rem;
+}
+.household-people li {
+  padding: 0.4rem 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.household-invite {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

@@ -5,7 +5,7 @@ import { getPublicSupabaseEnvironment } from '@/lib/supabase/env'
 import { isDevelopmentAuthBypassEnabled } from '@/lib/auth/development-mode'
 import type { Database } from '@/types/database'
 
-const appPaths = ['/despensa', '/compra', '/recetas', '/plan']
+const appPaths = ['/despensa', '/compra', '/recetas', '/plan', '/hogar']
 const protectedPaths = ['/onboarding', ...appPaths]
 
 export async function middleware(request: NextRequest) {
