@@ -1,7 +1,6 @@
 'use client'
 
-import Link from 'next/link'
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useMemo, useState } from 'react'
 
 import { AppShell } from '@/components/ui/AppShell'
 import {

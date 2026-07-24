@@ -1,4 +1,4 @@
--- CatÃ¡logo aprobado: 150 recetas base + 14 recetas familiares favoritas.
+-- Catálogo aprobado: 150 recetas base + 14 recetas familiares favoritas.
 -- Datos generados desde las fichas revisadas; la carga es idempotente y no
 -- sobrescribe recetas que el hogar ya haya editado.
 

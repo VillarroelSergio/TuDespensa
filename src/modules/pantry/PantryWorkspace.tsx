@@ -1,15 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useOptimistic, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 
 import {
   adjustPantryItem,
-  clearPantryAttention,
   correctPantryItem,
-  markPantryLow,
   recordPantryEntry,
   removeFinishedPantryItem,
 } from './actions'
@@ -33,84 +31,70 @@ export function PantryWorkspace({
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [isAdding, setIsAdding] = useState(false)
   const [undo, setUndo] = useState<PresentedPantryItem | null>(null)
+  const [, startTransition] = useTransition()
   const refresh = useCallback(() => router.refresh(), [router])
+  // «Se terminó» pinta el estado al instante; revalidatePath reconcilia con el
+  // servidor sin recarga global. Si algo falla, refrescamos para resincronizar.
+  const [items, markOut] = useOptimistic(
+    initialItems,
+    (current: PantryListItem[], id: string) =>
+      current.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              approximateState:
+                item.trackingMode === 'approximate'
+                  ? 'out'
+                  : item.approximateState,
+              quantity: item.trackingMode === 'approximate' ? item.quantity : 0,
+            }
+          : item,
+      ),
+  )
 
-  useEffect(() => {
-    if (isVisualFixture) return
-    const client = createSupabaseBrowserClient()
-    const channel = client
-      .channel('pantry-refresh')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pantry_items' },
-        refresh,
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pantry_movements' },
-        refresh,
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'household_foods' },
-        refresh,
-      )
-      // Resync after reconnecting: realtime does not replay missed events.
-      .subscribe((subscriptionStatus) => {
-        if (subscriptionStatus === 'SUBSCRIBED') refresh()
-      })
+  useRealtimeRefresh(
+    'pantry-refresh',
+    ['pantry_items', 'pantry_movements', 'household_foods'],
+    { enabled: !isVisualFixture },
+  )
 
-    return () => {
-      void client.removeChannel(channel)
-    }
-  }, [isVisualFixture, refresh])
-
-  async function handlePresence(
+  function handlePresence(
     item: PresentedPantryItem,
     state: 'available' | 'low' | 'out',
   ) {
-    if (pendingId) return
-    setPendingId(item.id)
+    // La única acción de presencia viva es marcar «se terminó».
+    if (state !== 'out') return
     setStatus('')
-    try {
-      if (state === 'low') {
-        await markPantryLow(item.id, item.version)
-        setStatus(`${item.name}: queda poco.`)
-      } else if (state === 'available' && item.trackingMode !== 'approximate') {
-        await clearPantryAttention(item.id, item.version)
-        setStatus(`${item.name}: hay.`)
-      } else if (item.trackingMode === 'approximate') {
-        const result = await correctPantryItem({
-          itemId: item.id,
-          version: item.version,
-          trackingMode: 'approximate',
-          approximateState: state === 'available' ? 'plenty' : 'out',
-          quantity: null,
-          unitCode: null,
-        })
-        setStatus(`${item.name}: ${state === 'out' ? 'se terminó.' : 'hay.'}`)
-        setUndo(state === 'out' ? { ...item, version: result.version } : null)
-      } else {
-        const result = await adjustPantryItem({
-          itemId: item.id,
-          version: item.version,
-          trackingMode: item.trackingMode,
-          approximateState: null,
-          quantity: 0,
-          unitCode: item.unitCode,
-        })
+    startTransition(async () => {
+      markOut(item.id)
+      try {
+        const result =
+          item.trackingMode === 'approximate'
+            ? await correctPantryItem({
+                itemId: item.id,
+                version: item.version,
+                trackingMode: 'approximate',
+                approximateState: 'out',
+                quantity: null,
+                unitCode: null,
+              })
+            : await adjustPantryItem({
+                itemId: item.id,
+                version: item.version,
+                trackingMode: item.trackingMode,
+                approximateState: null,
+                quantity: 0,
+                unitCode: item.unitCode,
+              })
         setStatus(`${item.name}: se terminó.`)
         setUndo({ ...item, version: result.version })
+      } catch {
+        setStatus(
+          'No hemos podido guardar el cambio. Hemos actualizado la lista.',
+        )
+        refresh()
       }
-      refresh()
-    } catch {
-      setStatus(
-        'No hemos podido guardar el cambio. Hemos actualizado la lista.',
-      )
-      refresh()
-    } finally {
-      setPendingId(null)
-    }
+    })
   }
 
   async function handleUndo() {
@@ -196,7 +180,7 @@ export function PantryWorkspace({
   return (
     <>
       <PantryList
-        initialItems={initialItems}
+        initialItems={items}
         onSetPresence={pendingId ? undefined : handlePresence}
         onRemove={pendingId ? undefined : handleRemove}
         onUndo={undo ? handleUndo : undefined}
