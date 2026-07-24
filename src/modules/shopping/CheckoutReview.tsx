@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { BrandLockup } from '@/components/ui/BrandLockup'
+import { AppShell } from '@/components/ui/AppShell'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import {
   PANTRY_ZONE_META,
@@ -13,7 +13,6 @@ import type { PantryZone } from '@/modules/pantry/types'
 
 import { confirmPurchase } from './actions'
 import { checkoutActionLabel } from './presentation'
-import { Navigation } from './ShoppingList'
 import type { CheckoutLine } from './types'
 
 export function CheckoutReview({
@@ -75,13 +74,8 @@ export function CheckoutReview({
   }
 
   return (
-    <main className="shopping-page">
-      <aside className="shopping-sidebar">
-        <BrandLockup className="pantry-brand" />
-        <Navigation className="shopping-sidebar__nav" />
-      </aside>
+    <AppShell current="compra" contentClassName="checkout-content">
       <section
-        className="shopping-content checkout-content"
         aria-labelledby="checkout-title"
       >
         <a className="shopping-back" href="/compra">
@@ -158,7 +152,6 @@ export function CheckoutReview({
           </p>
         )}
       </section>
-      <Navigation className="shopping-bottom-nav" />
-    </main>
+    </AppShell>
   )
 }
