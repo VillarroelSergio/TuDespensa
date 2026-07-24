@@ -17,8 +17,10 @@ import type { CheckoutLine } from './types'
 
 export function CheckoutReview({
   initialLines,
+  isVisualFixture = false,
 }: {
   initialLines: CheckoutLine[]
+  isVisualFixture?: boolean
 }) {
   const router = useRouter()
   const [status, setStatus] = useState('')
@@ -36,6 +38,7 @@ export function CheckoutReview({
   // Un cambio remoto en la lista (otro integrante) recarga la revisión en vivo,
   // sin ocultar lo que ya se ve.
   useEffect(() => {
+    if (isVisualFixture) return
     const client = createSupabaseBrowserClient()
     const channel = client
       .channel('checkout-refresh')
@@ -48,7 +51,7 @@ export function CheckoutReview({
     return () => {
       void client.removeChannel(channel)
     }
-  }, [refresh])
+  }, [isVisualFixture, refresh])
 
   async function handleConfirm() {
     if (pending || !initialLines.length || !canConfirm) return
