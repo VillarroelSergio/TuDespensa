@@ -9,6 +9,7 @@ export type Json =
 type HouseholdOnboardingStatus = 'in_progress' | 'completed'
 type HouseholdRole = 'owner' | 'member'
 type HouseholdMemberStatus = 'active' | 'inactive'
+type HouseholdInvitationStatus = 'pending' | 'accepted' | 'revoked'
 type PantryZone = 'fridge' | 'freezer' | 'pantry'
 type PantryMovementType =
   'entry' | 'removal' | 'correction' | 'consumption' | 'adjustment'
@@ -134,6 +135,50 @@ export interface Database {
           created_at?: string
         }
         Relationships: []
+      }
+      household_invitations: {
+        Row: {
+          id: string
+          household_id: string
+          email: string
+          invited_by: string
+          status: HouseholdInvitationStatus
+          created_at: string
+          updated_at: string
+          accepted_at: string | null
+          accepted_by: string | null
+        }
+        Insert: {
+          id?: string
+          household_id: string
+          email: string
+          invited_by: string
+          status?: HouseholdInvitationStatus
+          created_at?: string
+          updated_at?: string
+          accepted_at?: string | null
+          accepted_by?: string | null
+        }
+        Update: {
+          id?: string
+          household_id?: string
+          email?: string
+          invited_by?: string
+          status?: HouseholdInvitationStatus
+          created_at?: string
+          updated_at?: string
+          accepted_at?: string | null
+          accepted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'household_invitations_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+        ]
       }
       pantry_locations: {
         Row: {
@@ -814,6 +859,22 @@ export interface Database {
       }
       confirm_baseline: {
         Args: { idempotency_key: string }
+        Returns: Json
+      }
+      invite_household_member: {
+        Args: { target_email: string }
+        Returns: Json
+      }
+      revoke_household_invitation: {
+        Args: { invitation_id: string }
+        Returns: Json
+      }
+      get_my_pending_invitation: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      accept_household_invitation: {
+        Args: { invitation_id: string }
         Returns: Json
       }
       pantry_record_entry: {
