@@ -124,6 +124,7 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 - **Uso cotidiano:** recorrer Recetas → Plan → Compra → Cocina → Despensa en situaciones reales y registrar los hallazgos observables.
 - **Ticket:** calibrar el OCR local con tickets reales; la imagen no se sube ni se guarda.
 - **Correcciones:** priorizar solo defectos que afecten a estabilidad, comprensión, confianza, accesibilidad o uso recurrente.
+- **Post-piloto — SMTP:** configurar un proveedor SMTP propio para Supabase Auth antes de ampliar el acceso a otros miembros. Requiere dominio verificado y credenciales guardadas solo en Supabase; resuelve los límites de entrega de enlaces, no el futuro flujo de invitación al hogar.
 - **Puerta de calidad:** mantener [[E2E-FOUNDER-VALIDATION-DESIGN]] en verde tras cada corrección relevante.
 - **Desarrollo local:** `npm run dev:auth` mantiene Next.js y Supabase local activos entre iteraciones y habilita una cuenta sintética persistente (`admin` / `admin`) con Auth, RLS y RPC reales. El seed se recrea únicamente con `npm run dev:reset` (resetea datos/migraciones, no Docker). `npm run dev:demo` conserva el bypass solo visual; ambos modos están limitados a `NODE_ENV=development`.
 
