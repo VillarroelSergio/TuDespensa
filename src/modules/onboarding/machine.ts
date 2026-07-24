@@ -1,6 +1,6 @@
 import type { OnboardingZoneState } from './types'
 import type { OnboardingGlobalState } from './types'
-import type { PantryZone } from '@/modules/pantry/types'
+import type { OnboardingZone } from './types'
 
 const canonical = (value: string) => value.trim().replace(/\s+/g, ' ')
 
@@ -21,7 +21,7 @@ export function reviewZone(foods: string[], empty: boolean): OnboardingZoneState
 }
 
 export function stepForProgress(
-  activeZone: PantryZone | null,
+  activeZone: OnboardingZone | null,
   globalState: OnboardingGlobalState,
   returnTarget: 'review' | null,
 ): number {

@@ -28,6 +28,7 @@ export const demoPantryItems: PantryListItem[] = [
     quantity: 1,
     unitCode: 'l',
     consumeSoon: false,
+    zone: 'fridge',
   },
   {
     id: 'demo-p-2',
@@ -40,6 +41,7 @@ export const demoPantryItems: PantryListItem[] = [
     quantity: 6,
     unitCode: 'unit',
     consumeSoon: false,
+    zone: 'fridge',
   },
   {
     id: 'demo-p-3',
@@ -52,6 +54,7 @@ export const demoPantryItems: PantryListItem[] = [
     quantity: null,
     unitCode: null,
     consumeSoon: true,
+    zone: 'fridge',
   },
   {
     id: 'demo-p-4',
@@ -64,6 +67,7 @@ export const demoPantryItems: PantryListItem[] = [
     quantity: null,
     unitCode: null,
     consumeSoon: true,
+    zone: 'fridge',
   },
   {
     id: 'demo-p-5',
@@ -76,6 +80,7 @@ export const demoPantryItems: PantryListItem[] = [
     quantity: 0.5,
     unitCode: 'l',
     consumeSoon: false,
+    zone: 'pantry',
   },
   {
     id: 'demo-p-6',
@@ -88,6 +93,7 @@ export const demoPantryItems: PantryListItem[] = [
     quantity: null,
     unitCode: null,
     consumeSoon: false,
+    zone: 'pantry',
   },
   {
     id: 'demo-p-7',
@@ -100,6 +106,7 @@ export const demoPantryItems: PantryListItem[] = [
     quantity: null,
     unitCode: null,
     consumeSoon: false,
+    zone: 'freezer',
   },
   {
     id: 'demo-p-8',
@@ -112,6 +119,20 @@ export const demoPantryItems: PantryListItem[] = [
     quantity: null,
     unitCode: null,
     consumeSoon: true,
+    zone: 'freezer',
+  },
+  {
+    id: 'demo-p-9',
+    foodId: 'f9',
+    name: 'Detergente lavavajillas',
+    version: 1,
+    trackingMode: 'approximate',
+    approximateState: 'plenty',
+    attentionState: 'none',
+    quantity: null,
+    unitCode: null,
+    consumeSoon: false,
+    zone: 'cleaning',
   },
 ]
 
@@ -173,28 +194,22 @@ export const demoShoppingItems: ShoppingItem[] = [
 ]
 
 // Revisión C2 de la compra: los dos productos comprados de demoShoppingItems
-// (Leche, Aceite), uno como alta y otro como suma de cantidad, para ver ambas
-// variantes de etiqueta.
+// (Leche, Aceite), uno como alta y otro que ya estaba en la despensa, para
+// ver ambas variantes de etiqueta.
 export const demoCheckoutLines: CheckoutLine[] = [
   {
     itemId: 'demo-s-5',
     version: 1,
     name: 'Leche',
     action: 'add',
-    fromQuantity: null,
-    fromUnit: null,
-    toQuantity: 1,
-    toUnit: 'l',
+    suggestedZone: 'fridge',
   },
   {
     itemId: 'demo-s-6',
     version: 1,
     name: 'Aceite de oliva',
-    action: 'update',
-    fromQuantity: 0.5,
-    fromUnit: 'l',
-    toQuantity: 1.5,
-    toUnit: 'l',
+    action: 'restore',
+    suggestedZone: null,
   },
 ]
 

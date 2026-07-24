@@ -5,14 +5,13 @@ import { AppError } from '@/lib/errors/AppError'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseFoodName, parseHouseholdName, parseIdempotencyKey, parsePeople } from '@/lib/validation/onboarding'
-import type { PantryZone } from '@/modules/pantry/types'
-import type { OnboardingGlobalState, OnboardingZoneState } from './types'
+import type { OnboardingGlobalState, OnboardingZone, OnboardingZoneState } from './types'
 
 export type OnboardingSnapshot = {
   household: { id: string; name: string; onboardingStatus: 'in_progress' | 'completed' } | null
-  progress: { globalState: OnboardingGlobalState; activeZone: PantryZone | null; returnTarget: 'review' | null } | null
-  zones: Record<PantryZone, OnboardingZoneState>
-  items: Record<PantryZone, { name: string; itemId: string; version: number }[]>
+  progress: { globalState: OnboardingGlobalState; activeZone: OnboardingZone | null; returnTarget: 'review' | null } | null
+  zones: Record<OnboardingZone, OnboardingZoneState>
+  items: Record<OnboardingZone, { name: string; itemId: string; version: number }[]>
 }
 
 function failure(error: { code?: string; message: string }): never {
@@ -29,9 +28,9 @@ async function rpc<T>(name: string, args: Record<string, unknown>) {
 export async function createHousehold(input: { name: string; people: string[]; key?: string }) {
   return rpc('create_household_with_onboarding', { name: parseHouseholdName(input.name), people: parsePeople(input.people), idempotency_key: parseIdempotencyKey(input.key ?? createIdempotencyKey('create_household_with_onboarding')) })
 }
-export async function addPantryFood(zone: PantryZone, name: string, key?: string) { return rpc('onboarding_add_pantry_item', { zone, food_name: parseFoodName(name), idempotency_key: parseIdempotencyKey(key ?? createIdempotencyKey('onboarding_add_pantry_item')) }) }
+export async function addPantryFood(zone: OnboardingZone, name: string, key?: string) { return rpc('onboarding_add_pantry_item', { zone, food_name: parseFoodName(name), idempotency_key: parseIdempotencyKey(key ?? createIdempotencyKey('onboarding_add_pantry_item')) }) }
 export async function removePantryFood(itemId: string, version: number) { return rpc('onboarding_remove_pantry_item', { item_id: itemId, version }) }
-export async function setZoneState(zone: PantryZone, state: OnboardingZoneState) { return rpc('onboarding_set_zone_state', { zone, state }) }
+export async function setZoneState(zone: OnboardingZone, state: OnboardingZoneState) { return rpc('onboarding_set_zone_state', { zone, state }) }
 export async function confirmBaseline(key?: string) { return rpc('confirm_baseline', { idempotency_key: parseIdempotencyKey(key ?? createIdempotencyKey('confirm_baseline')) }) }
 
 export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {

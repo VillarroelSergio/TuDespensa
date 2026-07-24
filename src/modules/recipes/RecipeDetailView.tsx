@@ -1,10 +1,23 @@
 import Link from 'next/link'
 
-import { dishTypeLabel, formatIngredient, timeLabel } from './presentation'
+import {
+  dishTypeLabel,
+  formatIngredient,
+  isIngredientInPantry,
+  pantryNameSet,
+  timeLabel,
+} from './presentation'
 import { RecipePreferences } from './RecipePreferences'
 import type { RecipeDetail } from './types'
 
-export function RecipeDetailView({ recipe }: { recipe: RecipeDetail }) {
+export function RecipeDetailView({
+  recipe,
+  pantryItemNames,
+}: {
+  recipe: RecipeDetail
+  pantryItemNames: string[]
+}) {
+  const pantryNames = pantryNameSet(pantryItemNames)
   const meta = [
     recipe.servings ? `${recipe.servings} raciones` : null,
     timeLabel(recipe.totalMinutes),
@@ -55,7 +68,14 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeDetail }) {
         {recipe.ingredients.length ? (
           <ul className="recipe-detail__ingredients">
             {recipe.ingredients.map((ingredient) => (
-              <li key={ingredient.position}>{formatIngredient(ingredient)}</li>
+              <li key={ingredient.position}>
+                {formatIngredient(ingredient)}
+                {isIngredientInPantry(ingredient.name, pantryNames) ? (
+                  <span className="recipe-ingredient-owned">
+                    Ya tienes esto
+                  </span>
+                ) : null}
+              </li>
             ))}
           </ul>
         ) : (

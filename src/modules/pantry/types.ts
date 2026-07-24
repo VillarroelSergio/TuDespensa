@@ -1,4 +1,4 @@
-export type PantryZone = 'fridge' | 'freezer' | 'pantry'
+export type PantryZone = 'fridge' | 'freezer' | 'pantry' | 'cleaning'
 
 export type PantryTrackingMode = 'approximate' | 'units' | 'measure'
 export type PantryApproximateState = 'plenty' | 'some' | 'low' | 'out'

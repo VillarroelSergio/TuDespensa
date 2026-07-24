@@ -4,7 +4,9 @@ import { useMemo, useState, type ReactNode } from 'react'
 
 import { AppShell } from '@/components/ui/AppShell'
 import {
+  groupPantryItemsByZone,
   prioritizePantryItems,
+  PANTRY_ZONE_META,
   type PantryListItem,
   type PresentedPantryItem,
 } from './presentation'
@@ -18,28 +20,21 @@ type Props = {
     item: PresentedPantryItem,
     state: 'available' | 'low' | 'out',
   ) => void
+  onRemove?: (item: PresentedPantryItem) => void
   onUndo?: () => void
   onAddToShopping?: (item: PresentedPantryItem) => void
   undoItemName?: string
-  onOpen?: (item: PresentedPantryItem) => void
-  selectedId?: string | null
   detail?: ReactNode
   status?: string
 }
-
-const statusCopy = {
-  out: 'Se terminó',
-  low: 'Queda poco',
-  available: 'Hay',
-} as const
 
 function PantryRow({
   item,
   onMarkLow,
   onAdjust,
   onSetPresence,
-  onOpen,
-  selected,
+  onRemove,
+  showLegacyPresenceControls = false,
 }: {
   item: PresentedPantryItem
   onMarkLow?: (item: PresentedPantryItem) => void
@@ -48,26 +43,21 @@ function PantryRow({
     item: PresentedPantryItem,
     state: 'available' | 'low' | 'out',
   ) => void
-  onOpen?: (item: PresentedPantryItem) => void
-  selected?: boolean
+  onRemove?: (item: PresentedPantryItem) => void
+  showLegacyPresenceControls?: boolean
 }) {
   return (
     <div
-      className={`pantry-row pantry-row--${item.status}${selected ? ' pantry-row--selected' : ''}`}
+      className={`pantry-row pantry-row--${item.status}`}
+      style={{ backgroundColor: '#fff' }}
     >
-      <button
-        className="pantry-row__detail"
-        type="button"
-        aria-label={`Abrir ${item.name}. ${statusCopy[item.status]}`}
-        onClick={() => onOpen?.(item)}
-      >
+      <div className="pantry-row__detail">
         <span className="pantry-row__dot" aria-hidden="true" />
         <span className="pantry-row__name">{item.name}</span>
         {item.quantityLabel ? (
           <span className="pantry-row__quantity">{item.quantityLabel}</span>
         ) : null}
-        <span className="pantry-row__status">{statusCopy[item.status]}</span>
-      </button>
+      </div>
       {item.trackingMode === 'units' && item.quantity !== null && onAdjust ? (
         <div className="pantry-stepper" aria-label={`Ajustar ${item.name}`}>
           <button
@@ -100,8 +90,14 @@ function PantryRow({
           </button>
         </div>
       ) : null}
-      {item.trackingMode === 'approximate' && onSetPresence ? (
-        <div className="pantry-presence" aria-label={`Estado de ${item.name}`}>
+      {showLegacyPresenceControls &&
+      item.trackingMode === 'approximate' &&
+      onSetPresence ? (
+        <div
+          className="pantry-presence"
+          aria-label={`Estado de ${item.name}`}
+          hidden
+        >
           <button
             className={item.status === 'available' ? 'is-available' : undefined}
             onClick={() => onSetPresence(item, 'available')}
@@ -125,13 +121,23 @@ function PantryRow({
           </button>
         </div>
       ) : null}
-      {onSetPresence && item.trackingMode !== 'approximate' ? (
+      {onSetPresence && item.status !== 'out' ? (
         <button
           className="pantry-quick-action pantry-quick-action--out"
           onClick={() => onSetPresence(item, 'out')}
           type="button"
+          aria-label={`Marcar ${item.name} como terminado`}
         >
           Se terminó
+        </button>
+      ) : null}
+      {onRemove && item.status === 'out' ? (
+        <button
+          className="pantry-quick-action"
+          onClick={() => onRemove(item)}
+          type="button"
+        >
+          Quitar de despensa
         </button>
       ) : null}
       {onMarkLow &&
@@ -168,8 +174,7 @@ export function PantryList({
   onMarkLow,
   onAdjust,
   onSetPresence,
-  onOpen,
-  selectedId,
+  onRemove,
   detail,
   status,
   onUndo,
@@ -186,8 +191,7 @@ export function PantryList({
       ),
     [initialItems, query],
   )
-  const urgent = rows.filter((item) => item.status !== 'available')
-  const regular = rows.filter((item) => item.status === 'available')
+  const zoneGroups = useMemo(() => groupPantryItemsByZone(rows), [rows])
 
   return (
     <AppShell current="despensa">
@@ -219,51 +223,82 @@ export function PantryList({
           className={`pantry-workspace${detail ? ' pantry-workspace--detail' : ''}`}
         >
           <div className="pantry-list-column">
-            <section
-              className="pantry-list"
-              aria-label="Inventario de despensa"
-            >
-              {urgent.length ? (
-                <div className="pantry-list__priority">
-                  <h2>Requieren atención</h2>
-                  {urgent.map((item) => (
-                    <PantryRow
-                      item={item}
-                      key={item.id}
-                      onAdjust={onAdjust}
-                      onMarkLow={onMarkLow}
-                      onOpen={onOpen}
-                      onSetPresence={onSetPresence}
-                      selected={item.id === selectedId}
-                    />
-                  ))}
-                </div>
-              ) : null}
-              {regular.length ? (
-                <div
-                  className={urgent.length ? 'pantry-list__regular' : undefined}
+            {zoneGroups.map(({ zone, items }) => {
+              const urgent = items.filter((item) => item.status === 'low')
+              const finished = items.filter((item) => item.status === 'out')
+              const regular = items.filter(
+                (item) => item.status === 'available',
+              )
+              return (
+                <section
+                  className="pantry-list"
+                  aria-label={`Inventario: ${PANTRY_ZONE_META[zone].label}`}
+                  key={zone}
                 >
-                  {regular.map((item) => (
-                    <PantryRow
-                      item={item}
-                      key={item.id}
-                      onAdjust={onAdjust}
-                      onMarkLow={onMarkLow}
-                      onOpen={onOpen}
-                      onSetPresence={onSetPresence}
-                      selected={item.id === selectedId}
+                  <h2 className="pantry-zone__title">
+                    <span
+                      aria-hidden="true"
+                      className={`pantry-zone-icon pantry-zone-icon--${zone}`}
                     />
-                  ))}
-                </div>
-              ) : null}
-              {!rows.length ? (
-                <p className="pantry-empty">
-                  {query
-                    ? `No encontramos «${query}».`
-                    : 'Añade lo que tienes o termina una compra.'}
-                </p>
-              ) : null}
-            </section>
+                    {PANTRY_ZONE_META[zone].label}
+                    <span className="pantry-zone__count">{items.length}</span>
+                  </h2>
+                  {urgent.length ? (
+                    <div className="pantry-list__priority">
+                      <h3>Requieren atención</h3>
+                      {urgent.map((item) => (
+                        <PantryRow
+                          item={item}
+                          key={item.id}
+                          onAdjust={onAdjust}
+                          onMarkLow={onMarkLow}
+                          onSetPresence={onSetPresence}
+                          onRemove={onRemove}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                  {regular.length ? (
+                    <div
+                      className={
+                        urgent.length ? 'pantry-list__regular' : undefined
+                      }
+                    >
+                      {regular.map((item) => (
+                        <PantryRow
+                          item={item}
+                          key={item.id}
+                          onAdjust={onAdjust}
+                          onMarkLow={onMarkLow}
+                          onSetPresence={onSetPresence}
+                          onRemove={onRemove}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                  {finished.length ? (
+                    <div className="pantry-list__regular pantry-list__finished">
+                      <h3>Terminados</h3>
+                      {finished.map((item) => (
+                        <PantryRow
+                          item={item}
+                          key={item.id}
+                          onSetPresence={onSetPresence}
+                          onRemove={onRemove}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </section>
+              )
+            })}
+            {!rows.length ? (
+              <p className="pantry-empty">
+                {query
+                  ? `No encontramos «${query}».`
+                  : 'Añade lo que tienes o termina una compra.'}
+              </p>
+            ) : null}
             {rows.length ? (
               <p className="pantry-hint">
                 Toca una fila para ver el detalle del producto.
