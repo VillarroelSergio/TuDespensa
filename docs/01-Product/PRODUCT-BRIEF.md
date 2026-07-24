@@ -12,6 +12,7 @@ related:
   - "[[MVP-FUNCTIONAL-BRIEF]]"
   - "[[INFORMATION-ARCHITECTURE]]"
   - "[[COMPETITIVE-BENCHMARK]]"
+  - "[[INITIAL-RECIPE-CATALOG-REVIEW]]"
 ---
 
 # MiDespensa — Product Brief v0.8
@@ -268,6 +269,8 @@ MiDespensa sí automatizará sugerencias, lectura de tickets y estructuración d
 - Priorización de perecederos mediante antigüedad y “hay que gastarlo”.
 - Sugerencias explicables de platos, sin generación automática de un menú completo.
 - Registro de receta cocinada y ajustes rápidos de “queda poco” o “se terminó”.
+
+El borrador editorial del recetario inicial está en [[INITIAL-RECIPE-CATALOG-REVIEW]]. Permanece en revisión y no se cargará en ninguna base de datos hasta que el hogar lo valide.
 
 ### Fase 2 — reducir trabajo manual
 

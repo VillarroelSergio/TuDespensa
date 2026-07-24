@@ -15,7 +15,7 @@ import {
 test('el hogar fundador recorre el valor completo de MiDespensa', async ({
   browser,
 }) => {
-  test.setTimeout(240_000)
+  test.setTimeout(180_000)
   const baseUrl = resolveBaseUrl()
   const admin = adminClient()
   const email = `founder-e2e-${Date.now()}@example.test`
@@ -81,14 +81,19 @@ test('el hogar fundador recorre el valor completo de MiDespensa', async ({
     await page.getByLabel('Buscar una receta').fill(recipeTitle)
     await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: new RegExp(recipeTitle) }).click()
-    await page.waitForURL('**/plan')
-    await expect(page.getByText(recipeTitle)).toBeVisible()
+    await page.waitForURL('**/plan*')
+    await expect(page.getByRole('link', { name: recipeTitle })).toBeVisible()
 
     // Compra: comprobar faltantes, marcar y confirmar sin duplicados.
     await page.goto(`${baseUrl}/compra`)
     const tomateRow = page.getByRole('checkbox', { name: 'Tomate' })
     await expect(tomateRow).toBeVisible()
-    await tomateRow.check()
+    // El toggle es una server action: reintenta el clic hasta que el estado
+    // marcado se refleje, en vez de asumir que un único clic basta.
+    await expect(async () => {
+      if (!(await tomateRow.isChecked())) await tomateRow.click()
+      await expect(tomateRow).toBeChecked({ timeout: 3000 })
+    }).toPass({ timeout: 15_000 })
     await page.getByRole('link', { name: /Confirmar compra · 1/ }).click()
     await page.waitForURL('**/compra/revisar')
     await expect(
@@ -105,7 +110,9 @@ test('el hogar fundador recorre el valor completo de MiDespensa', async ({
     // Cocina: marcar la comida como cocinada y confirmar propuestas.
     await page.goto(`${baseUrl}/plan`)
     const optionsMenu = page.locator('details.plan-menu').first()
-    await optionsMenu.locator('summary').click()
+    // `summary` también matchea el <summary>Eliminar</summary> del <details>
+    // anidado para confirmar el borrado; el de "Opciones" es el primero en el DOM.
+    await optionsMenu.locator('summary').first().click()
     await optionsMenu
       .getByRole('link', { name: 'Marcar como cocinada' })
       .click()
@@ -113,6 +120,13 @@ test('el hogar fundador recorre el valor completo de MiDespensa', async ({
     await expect(
       page.getByRole('heading', { name: new RegExp('Cocinar') }),
     ).toBeVisible()
+    // Por defecto el desplegable conserva el estado actual del ingrediente;
+    // hay que marcarlo "Agotado" para que la confirmación lo dé por terminado.
+    await page
+      .locator('.cook-row')
+      .filter({ has: page.getByRole('checkbox', { name: 'Tomate' }) })
+      .getByRole('combobox')
+      .selectOption({ label: 'Agotado' })
     await page.getByRole('button', { name: 'Marcar como cocinada' }).click()
     await page.waitForURL('**/plan*cocinada*')
     await expect(page.locator('text=✓ Cocinada').first()).toBeVisible()

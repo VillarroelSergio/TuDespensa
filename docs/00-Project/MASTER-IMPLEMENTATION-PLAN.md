@@ -205,6 +205,27 @@ Reducir la carga de registrar una compra a partir de un ticket, manteniendo siem
 - Automatizar la confirmación en Despensa sin revisión humana.
 - Inferir precios, presupuestos o analítica de gasto.
 
+## Fase 11 — Piloto privado del hogar fundador
+
+**Estado:** en curso.
+
+### Objetivo
+
+Usar el MVP con el hogar fundador en situaciones reales antes de preparar un despliegue privado estable. El piloto valida continuidad de uso, confianza en los datos y fricción cotidiana; no abre una nueva fase de funcionalidades.
+
+### Alcance
+
+- Uso real de Recetas → Plan → Compra → Cocina → Despensa y de la captura de ticket.
+- Registro de incidencias reproducibles con impacto, sin guardar datos personales ni imágenes de tickets.
+- Corrección priorizada de estabilidad, claridad, accesibilidad y confianza.
+- Ejecución de [[E2E-FOUNDER-VALIDATION-DESIGN]] después de correcciones relevantes.
+
+### Salida
+
+- No quedan fallos bloqueantes o altos sin decisión explícita.
+- Informe de piloto con hallazgos, decisiones y recomendación de despliegue privado estable.
+- Preparación posterior de identidad definitiva, configuración productiva, copias de seguridad y privacidad antes de cualquier publicación pública.
+
 ## Orden funcional
 
 ```text

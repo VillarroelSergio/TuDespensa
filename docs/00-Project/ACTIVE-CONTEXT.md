@@ -10,6 +10,7 @@ status: active
 updated: 2026-07-23
 notion_task: "https://app.notion.com/p/3a5ad407cbfd8178801ade68a6cfdbb2"
 notion_validation_task: "https://app.notion.com/p/3a5ad407cbfd8190800ae0b89d966a7a"
+notion_pilot_task: "https://app.notion.com/p/3a6ad407cbfd8183a76eee21a6a58c9e"
 notion_identity_task: "https://app.notion.com/p/3a5ad407cbfd816db75cf6cd3dffe3d3"
 notion_architecture_task: "https://app.notion.com/p/3a1ad407cbfd81029a1be5ed18e31e6e"
 related:
@@ -42,14 +43,14 @@ related:
 
 La identidad y el logotipo definitivos se realizan en paralelo y quedan como [tarea pendiente](https://app.notion.com/p/3a5ad407cbfd816db75cf6cd3dffe3d3); no bloquean el sistema visual ni los componentes.
 
-### Validación
+### Piloto privado
 
-[Validar el MVP rediseñado con el hogar fundador](https://app.notion.com/p/3a6ad407cbfd8184bf16e2d463eb491d)
+[Piloto privado del hogar fundador](https://app.notion.com/p/3a6ad407cbfd8183a76eee21a6a58c9e)
 
 - **Estado:** En curso
 - **Fase:** Validación
 - **Prioridad:** Alta
-- **Objetivo:** validar en uso real el ciclo Plan → Compra → Cocina → Despensa y priorizar únicamente correcciones justificadas por evidencia.
+- **Objetivo:** usar el MVP en el día a día y priorizar exclusivamente correcciones justificadas por evidencia de uso.
 
 ### Arquitectura
 
@@ -120,11 +121,10 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 
 ## Siguientes acciones
 
-- **Validación con el hogar fundador:** recorrer Plan → Compra → Cocina → Despensa en móvil y registrar hallazgos observables.
-- **Calidad pendiente:** completar el E2E automatizado del ciclo completo y la revisión manual responsive a 390, 768 y 1440 px, incluidos teclado, foco, contraste, overflow y reducción de movimiento.
-- **Diseño E2E:** [[E2E-FOUNDER-VALIDATION-DESIGN]] define el recorrido automatizado, los invariantes de datos y las señales de fricción que se elevan a revisión humana.
-- **Ticket:** calibrar el OCR local con fotos reales y documentar los errores de lectura; la imagen no se sube ni se guarda.
-- **Correcciones:** priorizar solo defectos que afecten a comprensión, confianza o uso recurrente.
+- **Uso cotidiano:** recorrer Recetas → Plan → Compra → Cocina → Despensa en situaciones reales y registrar los hallazgos observables.
+- **Ticket:** calibrar el OCR local con tickets reales; la imagen no se sube ni se guarda.
+- **Correcciones:** priorizar solo defectos que afecten a estabilidad, comprensión, confianza, accesibilidad o uso recurrente.
+- **Puerta de calidad:** mantener [[E2E-FOUNDER-VALIDATION-DESIGN]] en verde tras cada corrección relevante.
 - **Desarrollo local:** `npm run dev:auth` mantiene Next.js y Supabase local activos entre iteraciones y habilita una cuenta sintética persistente (`admin` / `admin`) con Auth, RLS y RPC reales. El seed se recrea únicamente con `npm run dev:reset` (resetea datos/migraciones, no Docker). `npm run dev:demo` conserva el bypass solo visual; ambos modos están limitados a `NODE_ENV=development`.
 
 - **E2E con Auth:** `npm run test:e2e` habilita `NEXT_PUBLIC_E2E_AUTH_ENABLED=true` para recorrer el enlace mágico, cookies, RLS y RPC reales contra Supabase local; el modo manual de `next dev` conserva su bypass visual.

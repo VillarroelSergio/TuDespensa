@@ -12,6 +12,8 @@ import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseFoodName, parseIdempotencyKey } from '@/lib/validation/onboarding'
 
+import type { PantryZone } from '@/modules/pantry/types'
+
 import type { CheckoutLine, ShoppingItem } from './types'
 
 function failure(error: { code?: string; message: string }): never {
@@ -175,6 +177,7 @@ type CheckoutRow = {
   version: number
   name: string
   action: 'add' | 'restore'
+  suggested_zone: PantryZone | null
 }
 
 // Revisión C2: qué le pasará a la despensa a cada producto comprado.
@@ -194,13 +197,16 @@ export async function getCheckoutPreview(): Promise<CheckoutLine[]> {
     version: row.version,
     name: row.name,
     action: row.action,
+    suggestedZone: row.suggested_zone ?? null,
   }))
 }
 
 // Confirma la compra en la despensa. Idempotente; un CONFLICT significa que otro
 // integrante cambió la lista y la revisión debe recargarse.
+// `zone` solo aplica a productos nuevos sin zona sugerida por el catálogo: la
+// persona la eligió a mano en la revisión.
 export async function confirmPurchase(
-  lines: { itemId: string; version: number }[],
+  lines: { itemId: string; version: number; zone?: PantryZone }[],
   key?: string,
 ) {
   const supabase = await createSupabaseServerClient()
@@ -210,6 +216,7 @@ export async function confirmPurchase(
       item_versions: lines.map((line) => ({
         item_id: line.itemId,
         version: line.version,
+        zone: line.zone,
       })),
       idempotency_key: parseIdempotencyKey(
         key ?? createIdempotencyKey('shopping_confirm_purchase'),

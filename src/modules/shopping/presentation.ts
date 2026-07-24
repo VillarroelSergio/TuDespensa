@@ -1,18 +1,32 @@
+import { PANTRY_ZONE_META } from '@/modules/pantry/presentation'
+
 import type { CheckoutLine } from './types'
 
-const UNIT_LABELS: Record<string, string> = { unit: 'uds.', g: 'g', kg: 'kg', ml: 'ml', l: 'l' }
+const UNIT_LABELS: Record<string, string> = {
+  unit: 'uds.',
+  g: 'g',
+  kg: 'kg',
+  ml: 'ml',
+  l: 'l',
+}
 
 // «500 g», «2 uds.»; sin unidad no mostramos nada, no inventamos «uds.».
-export function formatQuantity(quantity: number | null, unitCode: string | null): string | null {
+export function formatQuantity(
+  quantity: number | null,
+  unitCode: string | null,
+): string | null {
   if (quantity == null) return null
-  const unit = unitCode ? UNIT_LABELS[unitCode] ?? '' : ''
+  const unit = unitCode ? (UNIT_LABELS[unitCode] ?? '') : ''
   return unit ? `${quantity} ${unit}` : String(quantity)
 }
 
-// Qué le pasará a la despensa al confirmar este producto: alta o solo
-// refrescar presencia (ya estaba, aunque estuviera "se terminó").
+// Qué le pasará a la despensa al confirmar este producto: alta (con la zona
+// que detectó el catálogo, si la detectó) o solo refrescar presencia (ya
+// estaba, aunque estuviera "se terminó").
 export function checkoutActionLabel(line: CheckoutLine): string {
-  return line.action === 'add' ? 'Añadir a despensa' : 'Ya estaba en tu despensa'
+  if (line.action !== 'add') return 'Ya estaba en tu despensa'
+  if (!line.suggestedZone) return 'Añadir a despensa — elige dónde'
+  return `Añadir a ${PANTRY_ZONE_META[line.suggestedZone].label}`
 }
 
 // Aviso tras confirmar: ?confirmado=n → «Hemos actualizado tu despensa con n…».

@@ -16,6 +16,18 @@ function uniqueEmail(zone: string): string {
   return `accion-${zone}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.test`
 }
 
+/** Marca/desmarca un checkbox respaldado por una server action: reintenta hasta que se refleje. */
+async function toggleCheckbox(
+  checkbox: ReturnType<Page['getByRole']>,
+  checked: boolean,
+) {
+  await expect(async () => {
+    if ((await checkbox.isChecked()) !== checked) await checkbox.click()
+    if (checked) await expect(checkbox).toBeChecked({ timeout: 3000 })
+    else await expect(checkbox).not.toBeChecked({ timeout: 3000 })
+  }).toPass({ timeout: 15_000 })
+}
+
 /**
  * Crea el hogar y confirma una línea base vacía (sin alimentos) para llegar al
  * área protegida lo antes posible. El recorrido físico de altas se cubre en
@@ -84,10 +96,16 @@ async function createRecipe(
   await page.getByRole('button', { name: 'Crear' }).click()
   await page.waitForURL(/\/recetas\/[0-9a-f-]+\/editar/)
   if (ingredientNames.length) {
-    await page.getByLabel('Ingrediente').first().fill(ingredientNames[0]!)
+    await page
+      .getByLabel('Ingrediente', { exact: true })
+      .first()
+      .fill(ingredientNames[0]!)
     for (let index = 1; index < ingredientNames.length; index += 1) {
       await page.getByRole('button', { name: 'Añadir ingrediente' }).click()
-      await page.getByLabel('Ingrediente').nth(index).fill(ingredientNames[index]!)
+      await page
+        .getByLabel('Ingrediente', { exact: true })
+        .nth(index)
+        .fill(ingredientNames[index]!)
     }
   }
   await page.getByRole('button', { name: 'Guardar receta' }).click()
@@ -97,7 +115,7 @@ async function createRecipe(
 /** Añade un producto por presencia desde `/despensa` (formulario propio del componente). */
 async function addPantryItem(page: Page, name: string, zoneLabel?: string) {
   await page.getByRole('button', { name: '+ Añadir producto' }).click()
-  await page.getByLabel('Producto').fill(name)
+  await page.getByRole('textbox', { name: 'Producto' }).fill(name)
   if (zoneLabel) await page.getByRole('button', { name: zoneLabel }).click()
   await page.getByRole('button', { name: 'Añadir a despensa' }).click()
 }
@@ -209,23 +227,20 @@ test.describe('shopping', () => {
     await expect(checkbox).toBeVisible()
     await expect(checkbox).not.toBeChecked()
 
-    await checkbox.check()
-    await expect(checkbox).toBeChecked()
+    await toggleCheckbox(checkbox, true)
     await page.reload()
     await expect(page.getByRole('checkbox', { name: 'Pan' })).toBeChecked()
 
-    await page.getByRole('checkbox', { name: 'Pan' }).uncheck()
+    await toggleCheckbox(page.getByRole('checkbox', { name: 'Pan' }), false)
     await expect(page.getByRole('checkbox', { name: 'Pan' })).not.toBeChecked()
     await page.reload()
-    await expect(
-      page.getByRole('checkbox', { name: 'Pan' }),
-    ).not.toBeChecked()
+    await expect(page.getByRole('checkbox', { name: 'Pan' })).not.toBeChecked()
   })
 
   test('revisar la compra conserva las marcas al volver y confirma una sola vez', async () => {
     await page.getByLabel('Añadir a la compra').fill('Arroz')
     await page.getByRole('button', { name: 'Añadir' }).click()
-    await page.getByRole('checkbox', { name: 'Arroz' }).check()
+    await toggleCheckbox(page.getByRole('checkbox', { name: 'Arroz' }), true)
 
     await page.getByRole('link', { name: 'Confirmar compra · 1' }).click()
     await expect(
@@ -337,11 +352,11 @@ test.describe('recipes', () => {
 
     await page.getByLabel('Raciones').fill('2')
     await page.getByLabel('Tiempo (min)').fill('20')
-    await page.getByLabel('Ingrediente').first().fill('Harina')
+    await page.getByLabel('Ingrediente', { exact: true }).first().fill('Harina')
     await page.getByLabel('Cantidad').first().fill('200')
     await page.getByLabel('Unidad').first().selectOption('g')
     await page.getByRole('button', { name: 'Añadir ingrediente' }).click()
-    await page.getByLabel('Ingrediente').nth(1).fill('Huevos')
+    await page.getByLabel('Ingrediente', { exact: true }).nth(1).fill('Huevos')
     await page.getByLabel('Cantidad').nth(1).fill('3')
     await page.getByLabel('Unidad').nth(1).selectOption('unit')
     await page.getByLabel('Paso 1').fill('Batir los huevos')
@@ -376,9 +391,7 @@ test.describe('recipes', () => {
     await page.getByLabel('Nombre de la receta').fill(editedTitle)
     await page.getByRole('button', { name: 'Guardar receta' }).click()
     await page.waitForURL(/\/recetas\/[0-9a-f-]+$/)
-    await expect(
-      page.getByRole('heading', { name: editedTitle }),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: editedTitle })).toBeVisible()
 
     await page.goto(`${base}/recetas`)
     await expect(
@@ -424,7 +437,7 @@ test.describe('recipes', () => {
     await page.waitForURL(/\/recetas\/[0-9a-f-]+\/editar/)
     await page.getByRole('button', { name: 'Más detalles' }).click()
     await page.getByRole('button', { name: 'Añadir categoría' }).click()
-    await page.getByLabel('Nombre').fill('Rápido')
+    await page.getByLabel('Nombre', { exact: true }).fill('Rápido')
     await page.getByRole('button', { name: 'Guardar receta' }).click()
     await page.waitForURL(/\/recetas\/[0-9a-f-]+$/)
 
@@ -438,9 +451,10 @@ test.describe('recipes', () => {
     await expect(
       page.getByRole('button', { name: '★ Favorita' }),
     ).toHaveAttribute('aria-pressed', 'true')
-    await expect(
-      page.getByRole('button', { name: '4 de 5' }),
-    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByRole('button', { name: '4 de 5' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     await expect(page.getByText('Rápido')).toBeVisible()
 
     await page.goto(`${base}/recetas`)
@@ -503,7 +517,7 @@ test.describe('plan', () => {
 
     const label = slotLabelOf(fecha, servicio)
     await expect(page.getByRole('link', { name: title })).toBeVisible()
-    await page.getByRole('button', { name: `Opciones de ${label}` }).click()
+    await page.locator(`summary[aria-label="Opciones de ${label}"]`).click()
     await expect(
       page.getByRole('link', { name: 'Cambiar receta' }),
     ).toBeVisible()
@@ -523,8 +537,7 @@ test.describe('plan', () => {
       const slotUrl = new URL(page.url())
       const fecha = slotUrl.searchParams.get('fecha')!
       const servicio = slotUrl.searchParams.get('servicio') as
-        | 'lunch'
-        | 'dinner'
+        'lunch' | 'dinner'
       await page.getByLabel('Buscar una receta').fill(title)
       await page.getByRole('button', { name: 'Buscar' }).click()
       await page.getByRole('button', { name: title }).click()
@@ -540,10 +553,12 @@ test.describe('plan', () => {
     const menu1 = () =>
       page
         .locator('.plan-menu')
-        .filter({ has: page.getByRole('button', { name: `Opciones de ${label1}` }) })
+        .filter({
+          has: page.locator(`summary[aria-label="Opciones de ${label1}"]`),
+        })
 
     // Cambiar receta: solo afecta al hueco 1; el hueco 2 permanece intacto.
-    await page.getByRole('button', { name: `Opciones de ${label1}` }).click()
+    await page.locator(`summary[aria-label="Opciones de ${label1}"]`).click()
     await menu1().getByRole('link', { name: 'Cambiar receta' }).click()
     await page.waitForURL(/\/plan\/elegir/)
     await page.getByLabel('Buscar una receta').fill(titleC)
@@ -552,10 +567,12 @@ test.describe('plan', () => {
     await page.waitForURL(/\/plan\?semana=/)
     await expect(page.getByRole('link', { name: titleC })).toBeVisible()
     await expect(page.getByRole('link', { name: titleB })).toBeVisible()
-    await expect(page.getByRole('button', { name: `Opciones de ${label2}` })).toBeVisible()
+    await expect(
+      page.locator(`summary[aria-label="Opciones de ${label2}"]`),
+    ).toBeVisible()
 
     // Ajustar raciones: persiste tras recargar.
-    await page.getByRole('button', { name: `Opciones de ${label1}` }).click()
+    await page.locator(`summary[aria-label="Opciones de ${label1}"]`).click()
     await menu1().getByLabel('Ajustar raciones').fill('4')
     await menu1().getByRole('button', { name: 'Guardar' }).click()
     await page.waitForURL(/\/plan\?semana=/)
@@ -565,27 +582,29 @@ test.describe('plan', () => {
 
     // Mover a otro día: el origen queda vacío y el destino conserva la comida.
     const movedFecha = addDaysIso(slot1.fecha, 2)
-    await page.getByRole('button', { name: `Opciones de ${label1}` }).click()
+    await page.locator(`summary[aria-label="Opciones de ${label1}"]`).click()
     await menu1().getByLabel('Mover a').fill(movedFecha)
     await menu1().getByRole('button', { name: 'Mover' }).click()
     await page.waitForURL(/\/plan\?semana=/)
     await expect(
-      page.getByRole('button', { name: `Opciones de ${label1}` }),
+      page.locator(`summary[aria-label="Opciones de ${label1}"]`),
     ).toHaveCount(0)
     const labelMoved = slotLabelOf(movedFecha, slot1.servicio)
     const menuMoved = () =>
       page
         .locator('.plan-menu')
-        .filter({ has: page.getByRole('button', { name: `Opciones de ${labelMoved}` }) })
+        .filter({
+          has: page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
+        })
     await expect(
-      page.getByRole('button', { name: `Opciones de ${labelMoved}` }),
+      page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
     ).toBeVisible()
     await expect(page.getByRole('link', { name: titleC })).toBeVisible()
     await expect(page.getByText('4 raciones')).toBeVisible()
 
     // Eliminar y deshacer: restaura la misma receta y raciones en el mismo hueco.
     await page
-      .getByRole('button', { name: `Opciones de ${labelMoved}` })
+      .locator(`summary[aria-label="Opciones de ${labelMoved}"]`)
       .click()
     await menuMoved().getByRole('button', { name: 'Eliminar' }).click()
     await menuMoved().getByRole('button', { name: 'Sí, eliminar' }).click()
@@ -595,7 +614,7 @@ test.describe('plan', () => {
     await toast.getByRole('button', { name: 'Deshacer' }).click()
     await page.waitForURL(/\/plan\?semana=/)
     await expect(
-      page.getByRole('button', { name: `Opciones de ${labelMoved}` }),
+      page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
     ).toBeVisible()
     await expect(page.getByRole('link', { name: titleC })).toBeVisible()
     await expect(page.getByText('4 raciones')).toBeVisible()
@@ -620,7 +639,7 @@ test.describe('plan', () => {
     await page.waitForURL(/\/plan\?semana=/)
 
     const label = slotLabelOf(fecha, servicio)
-    await page.getByRole('button', { name: `Opciones de ${label}` }).click()
+    await page.locator(`summary[aria-label="Opciones de ${label}"]`).click()
     await page.getByRole('link', { name: 'Marcar como cocinada' }).click()
     await page.waitForURL(/\/plan\/cocinar/)
     await expect(
@@ -628,8 +647,12 @@ test.describe('plan', () => {
     ).toBeVisible()
 
     const cookRow = (name: string) =>
-      page.locator('.cook-row').filter({ has: page.getByRole('checkbox', { name }) })
-    await cookRow('Tomate').getByRole('combobox').selectOption({ label: 'Agotado' })
+      page
+        .locator('.cook-row')
+        .filter({ has: page.getByRole('checkbox', { name }) })
+    await cookRow('Tomate')
+      .getByRole('combobox')
+      .selectOption({ label: 'Agotado' })
     await cookRow('Cebolla').getByRole('checkbox').uncheck()
 
     await page.getByRole('button', { name: 'Marcar como cocinada' }).click()

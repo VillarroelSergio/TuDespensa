@@ -1,11 +1,9 @@
 /**
- * Shared magic-link auth helpers for E2E specs running against Supabase local.
+ * Shared login helpers for E2E specs running against Supabase local.
  * Requires local Supabase credentials in `.env.local` (loaded by run-e2e-auth.mjs).
  */
 import { createClient } from '@supabase/supabase-js'
-import { expect, type BrowserContext, type Page } from '@playwright/test'
-
-const mailpit = process.env.E2E_MAILPIT_URL ?? 'http://127.0.0.1:55324'
+import type { BrowserContext, Page } from '@playwright/test'
 
 export function required(value: string | undefined, name: string) {
   if (!value)
@@ -32,6 +30,16 @@ export function adminClient() {
   )
 }
 
+function anonClient() {
+  return createClient(
+    required(process.env.NEXT_PUBLIC_SUPABASE_URL, 'NEXT_PUBLIC_SUPABASE_URL'),
+    required(
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    ),
+  )
+}
+
 export async function deleteSyntheticUser(
   admin: ReturnType<typeof adminClient>,
   email: string,
@@ -41,44 +49,45 @@ export async function deleteSyntheticUser(
   if (user) await admin.auth.admin.deleteUser(user.id)
 }
 
-async function magicLinkFor(sentAfter: number): Promise<string> {
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    const listing = (await (
-      await fetch(`${mailpit}/api/v1/messages?limit=1`)
-    ).json()) as { messages?: { ID: string; Created: string }[] }
-    const message = listing.messages?.[0]
-    if (message && Date.parse(message.Created) >= sentAfter) {
-      const detail = (await (
-        await fetch(`${mailpit}/api/v1/message/${message.ID}`)
-      ).json()) as { Text?: string; HTML?: string }
-      const source = `${detail.Text ?? ''}\n${(detail.HTML ?? '').replaceAll('&amp;', '&')}`
-      const link = source.match(
-        /https?:\/\/[^\s"'<>\])]+\/auth\/v1\/verify[^\s"'<>\])]*/,
-      )?.[0]
-      if (link) return link
-    }
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-  }
-  throw new Error('Magic link email did not arrive in Mailpit')
-}
-
+/**
+ * Logs in as a synthetic user via a real magic-link verification, without
+ * sending or waiting on an actual email. The admin API issues the same OTP
+ * Supabase would have emailed; `verifyOtp` redeems it directly and returns
+ * the session tokens as JSON (no HTTP redirect involved, so this sidesteps
+ * GoTrue's implicit-flow hash fragment, which a server route can't read).
+ * The session, RLS and cookies set by `/auth/callback` are all real — only
+ * the mailbox round-trip is skipped.
+ */
 export async function loginViaMagicLink(
   context: BrowserContext,
   base: string,
   email: string,
 ): Promise<Page> {
+  const admin = adminClient()
+  const { data: link, error: linkError } = await admin.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+  })
+  if (linkError || !link.properties?.hashed_token)
+    throw new Error(
+      `No se pudo generar el enlace de acceso para ${email}: ${linkError?.message ?? 'sin hashed_token'}`,
+    )
+
+  const { data: verified, error: verifyError } =
+    await anonClient().auth.verifyOtp({
+      token_hash: link.properties.hashed_token,
+      type: link.properties.verification_type as 'signup' | 'magiclink',
+    })
+  if (verifyError || !verified.session)
+    throw new Error(
+      `No se pudo verificar el acceso para ${email}: ${verifyError?.message ?? 'sin sesión'}`,
+    )
+
   const page = await context.newPage()
-  const sentAfter = Date.now() - 5000
-  await page.goto(`${base}/login`)
-  // Clicking before React hydrates triggers a native form submit (page reload),
-  // so retry until the client-side handler answers with the confirmation text.
-  const confirmation = page.getByText('Revisa tu correo para continuar.')
-  await expect(async () => {
-    await page.getByLabel('Correo autorizado').fill(email)
-    await page.getByRole('button', { name: 'Enviar enlace de acceso' }).click()
-    await expect(confirmation).toBeVisible({ timeout: 3000 })
-  }).toPass({ timeout: 30_000 })
-  await page.goto(await magicLinkFor(sentAfter))
+  const callback = new URL(`${base}/auth/callback`)
+  callback.searchParams.set('access_token', verified.session.access_token)
+  callback.searchParams.set('refresh_token', verified.session.refresh_token)
+  await page.goto(callback.toString())
   await page.waitForURL('**/onboarding')
   return page
 }

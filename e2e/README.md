@@ -22,11 +22,35 @@ arranca su propio servidor Next con `NEXT_PUBLIC_DEMO_FIXTURES=true` en el
 puerto `E2E_PORT` (por defecto 3002) y no toca Supabase ni requiere login: se
 puede lanzar directamente con `npm run test:e2e:ux`.
 
-Para observar las interacciones en Chromium en cualquiera de los comandos,
-añade `-- --headed` (ej. `npm run test:e2e:founder -- --headed`); para abrir
-el informe de la última ejecución, usa `npm run test:e2e:report`. Los fallos
-conservan captura, vídeo y traza en `test-results/`; el informe HTML se
-escribe en `playwright-report/`. Ambos directorios están excluidos de Git.
+### Ver la ejecución en directo
+
+Por defecto Playwright corre "en modo invisible" (sin ventana). Para ver el
+navegador de verdad mientras ejecuta cada paso, añade `-- --headed` a
+cualquiera de los comandos anteriores:
+
+```powershell
+npm run test:e2e:founder -- --headed
+```
+
+Para ir aún más despacio y controlar el ritmo (útil para seguir el recorrido
+paso a paso):
+
+```powershell
+npm run test:e2e:founder -- --headed --workers=1 --timeout=0
+```
+
+Y para la experiencia más cómoda de "ver qué hace" — una ventana con la lista
+de pasos, el navegador en directo al lado y la posibilidad de pausar/rebobinar
+cada acción — usa el modo UI de Playwright:
+
+```powershell
+npm run test:e2e:founder -- --ui
+```
+
+Los fallos conservan captura, vídeo y traza en `test-results/` aunque se
+ejecute en modo invisible; para revisar la última ejecución fallida sin
+relanzarla, usa `npx playwright show-report`. Tanto `test-results/` como
+`playwright-report/` están excluidos de Git.
 
 ## Preparación local (tests que requieren Supabase)
 

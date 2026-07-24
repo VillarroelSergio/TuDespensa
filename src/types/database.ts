@@ -612,6 +612,7 @@ export interface Database {
           id: string
           canonical_name: string
           category: string
+          default_zone: string
           consume_soon_after: string | null
           created_at: string
         }
@@ -619,6 +620,7 @@ export interface Database {
           id?: string
           canonical_name: string
           category?: string
+          default_zone?: string
           consume_soon_after?: string | null
           created_at?: string
         }
@@ -626,6 +628,7 @@ export interface Database {
           id?: string
           canonical_name?: string
           category?: string
+          default_zone?: string
           consume_soon_after?: string | null
           created_at?: string
         }

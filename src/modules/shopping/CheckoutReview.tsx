@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation'
 
 import { BrandLockup } from '@/components/ui/BrandLockup'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import {
+  PANTRY_ZONE_META,
+  PANTRY_ZONE_ORDER,
+} from '@/modules/pantry/presentation'
+import type { PantryZone } from '@/modules/pantry/types'
 
 import { confirmPurchase } from './actions'
 import { checkoutActionLabel } from './presentation'
@@ -19,7 +24,15 @@ export function CheckoutReview({
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pending, setPending] = useState(false)
+  const [zoneChoices, setZoneChoices] = useState<Record<string, PantryZone>>({})
   const refresh = useCallback(() => router.refresh(), [router])
+
+  // Solo los altas sin coincidencia de catálogo necesitan que la persona
+  // elija la zona a mano; el resto ya sabe dónde va o ya existía.
+  const linesNeedingZone = initialLines.filter(
+    (line) => line.action === 'add' && line.suggestedZone === null,
+  )
+  const canConfirm = linesNeedingZone.every((line) => zoneChoices[line.itemId])
 
   // Un cambio remoto en la lista (otro integrante) recarga la revisión en vivo,
   // sin ocultar lo que ya se ve.
@@ -39,7 +52,7 @@ export function CheckoutReview({
   }, [refresh])
 
   async function handleConfirm() {
-    if (pending || !initialLines.length) return
+    if (pending || !initialLines.length || !canConfirm) return
     setPending(true)
     setStatus('')
     try {
@@ -47,6 +60,7 @@ export function CheckoutReview({
         initialLines.map((line) => ({
           itemId: line.itemId,
           version: line.version,
+          zone: zoneChoices[line.itemId],
         })),
       )
       router.push(`/compra?confirmado=${confirmed}`)
@@ -90,17 +104,47 @@ export function CheckoutReview({
               className="shopping-list"
               aria-label="Cambios en la despensa"
             >
-              {initialLines.map((line) => (
-                <div key={line.itemId} className="shopping-row">
-                  <span aria-hidden="true" className="shopping-review-icon" />
-                  <span>{line.name}</span>
-                  <small>{checkoutActionLabel(line)}</small>
-                </div>
-              ))}
+              {initialLines.map((line) => {
+                const needsZone =
+                  line.action === 'add' && line.suggestedZone === null
+                return (
+                  <div key={line.itemId} className="shopping-row">
+                    <span aria-hidden="true" className="shopping-review-icon" />
+                    <span>{line.name}</span>
+                    <small>{checkoutActionLabel(line)}</small>
+                    {needsZone ? (
+                      <div
+                        className="pantry-detail__chips"
+                        aria-label={`¿Dónde guardas ${line.name}?`}
+                      >
+                        {PANTRY_ZONE_ORDER.map((zone) => (
+                          <button
+                            className={
+                              zoneChoices[line.itemId] === zone
+                                ? 'is-selected'
+                                : undefined
+                            }
+                            key={zone}
+                            onClick={() =>
+                              setZoneChoices((current) => ({
+                                ...current,
+                                [line.itemId]: zone,
+                              }))
+                            }
+                            type="button"
+                          >
+                            {PANTRY_ZONE_META[zone].label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
             </section>
             <button
               className="shopping-confirm"
-              disabled={pending}
+              disabled={pending || !canConfirm}
               onClick={handleConfirm}
               type="button"
             >
