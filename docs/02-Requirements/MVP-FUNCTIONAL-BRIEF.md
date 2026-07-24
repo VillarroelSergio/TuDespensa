@@ -15,9 +15,9 @@ related:
 
 # Contrato funcional del MVP — MiDespensa
 
-**Estado:** Borrador para validación  
-**Revisión:** 1  
-**Fecha:** 18 de julio de 2026  
+**Estado:** Borrador para validación
+**Revisión:** 3
+**Fecha:** 19 de julio de 2026
 **Documento de referencia:** `docs/PRODUCT-BRIEF.md`
 
 ## 1. Objetivo
@@ -28,15 +28,15 @@ Permitir que los miembros de un hogar establezcan primero una línea base manual
 
 ### Visitante
 
-Persona que todavía no tiene una cuenta. Puede conocer el producto, registrarse, iniciar sesión o aceptar una invitación.
+Persona no autenticada. Solo puede iniciar el acceso de una de las dos cuentas autorizadas; no existe registro público.
 
 ### Propietario del hogar
 
-Usuario que crea el hogar. Puede utilizar todas las funciones alimentarias, invitar miembros y administrar o eliminar el hogar.
+Primera cuenta autorizada del hogar. Puede utilizar todas las funciones alimentarias y administrar el único hogar.
 
 ### Miembro del hogar
 
-Usuario invitado. Puede consultar y modificar recetas, menú, compra y despensa. No puede eliminar el hogar ni expulsar al propietario.
+Segunda cuenta autorizada. Puede consultar y modificar recetas, menú, compra y despensa. No puede eliminar el hogar ni sustituir a la cuenta propietaria.
 
 ### Sistema
 
@@ -47,23 +47,25 @@ Procesa consolidaciones, actualiza existencias mediante confirmación, calcula l
 ### Incluido
 
 - Registro e inicio de sesión.
-- Creación de hogar e invitación de miembros.
+- Inicialización de un único hogar con un máximo de dos cuentas autorizadas.
 - Informe inicial manual y guiado de los alimentos disponibles antes de entrar en el uso habitual.
-- Separación estricta de datos entre hogares.
+- Rechazo estricto de cualquier identidad que no pertenezca al hogar autorizado.
 - Recetario estructurado y compartido dentro del hogar.
+- Dataset inicial de recetas preferidas y mediterráneas con procedencia registrada.
+- Categorías, favoritos y puntuación individual de recetas.
 - Captura rápida de enlaces de recetas.
 - Planificador semanal de comidas y cenas con navegación por fechas.
 - Sugerencias de platos controladas por el usuario.
 - Lista de compra consolidada y compartida.
 - Organización opcional por supermercado.
-- Despensa por presencia y cantidad opcional.
+- Despensa por presencia aproximada, unidades exactas o peso/volumen opcional según el producto.
 - Priorización de perecederos por antigüedad estimada.
 - Actualización asistida al comprar, cocinar o registrar consumo manual.
 - Avisos contextuales cuando información relevante de menú, compra o despensa necesite revisión.
 
 ### Excluido
 
-- OCR de tickets y recetas.
+- Modelos de IA locales o modelos generativos externos conectados mediante API.
 - Generación automática de un menú completo.
 - Cálculo exhaustivo de calorías o macronutrientes.
 - Recomendaciones clínicas o deportivas personalizadas.
@@ -72,12 +74,21 @@ Procesa consolidaciones, actualiza existencias mediante confirmación, calcula l
 - Compra integrada con supermercados.
 - Recetas públicas, comunidad, comentarios o valoraciones.
 - Funcionamiento completo sin conexión.
+- Registro público, hogares adicionales y más de dos cuentas.
+- Funciones de crecimiento, administración multiinquilino o cambio entre hogares.
 
-## 4. Supuestos revisables
+## 4. Restricciones confirmadas y supuestos revisables
+
+### Restricciones confirmadas
+
+- La aplicación sirve a un único hogar.
+- Existen como máximo dos cuentas autenticadas.
+- No se diseñará para crecimiento de usuarios, hogares adicionales ni registro público.
+
+### Supuestos revisables
 
 - El método de registro e inicio de sesión está pendiente de decidir. No se presupone correo, contraseña, Google, Apple ni otro proveedor.
 - Las recetas serán privadas para los miembros del hogar.
-- Un usuario pertenecerá a un único hogar durante el MVP.
 - Todos los miembros podrán modificar los datos alimentarios del hogar.
 - El propietario tendrá las únicas acciones administrativas destructivas.
 - Una semana gestionada tendrá inicialmente al menos 10 de sus 14 comidas y cenas planificadas.
@@ -97,7 +108,7 @@ Procesa consolidaciones, actualiza existencias mediante confirmación, calcula l
 
 1. El usuario abre una semana parcialmente vacía.
 2. Solicita sugerencias para un hueco.
-3. El sistema ordena recetas según despensa, productos prioritarios, variedad, tiempo y orientación mediterránea.
+3. El sistema ordena recetas según despensa, productos prioritarios, favoritos y puntuaciones de ambas personas, variedad, repetición reciente, tiempo y orientación mediterránea.
 4. El sistema explica los principales motivos de cada sugerencia.
 5. El usuario elige, descarta o busca otra receta.
 
@@ -126,21 +137,21 @@ Procesa consolidaciones, actualiza existencias mediante confirmación, calcula l
 
 ## 6. Criterios de aceptación
 
-### AC-001 — Crear un hogar aislado
+### AC-001 — Acceder al único hogar autorizado
 
-- **Escenario:** un visitante todavía no tiene una cuenta.
-- **Acción:** completa el mecanismo de registro que se defina y crea un hogar.
-- **Resultado esperado:** obtiene acceso como propietario a un hogar vacío y puede comenzar el recorrido de primer valor.
-- **No debe:** acceder a datos de ningún otro hogar.
-- **Verificación:** prueba de integración de identidad y autorización, más revisión manual del primer acceso.
+- **Escenario:** una de las dos identidades autorizadas todavía no ha iniciado sesión.
+- **Acción:** completa el mecanismo de acceso que se defina.
+- **Resultado esperado:** obtiene acceso al único hogar compartido y puede continuar el recorrido correspondiente.
+- **No debe:** crear otro hogar ni permitir acceso a una tercera identidad.
+- **Verificación:** prueba de integración con las dos identidades autorizadas y prueba negativa con una identidad ajena.
 - **Prioridad:** requerida.
 
 ### AC-002 — Invitar y sincronizar miembros
 
-- **Escenario:** existe un propietario y una segunda persona con una invitación válida.
-- **Acción:** la segunda persona acepta la invitación.
+- **Escenario:** existe la cuenta propietaria y una segunda identidad autorizada pendiente de acceso.
+- **Acción:** la segunda persona completa el mecanismo de incorporación definido.
 - **Resultado esperado:** ambos ven el mismo menú, recetario, compra y despensa; los cambios confirmados por uno aparecen para el otro sin recargar manualmente la aplicación.
-- **No debe:** permitir reutilizar una invitación revocada o acceder a otro hogar.
+- **No debe:** autorizar una tercera cuenta ni reutilizar una incorporación revocada.
 - **Verificación:** prueba de integración con dos sesiones y revisión de sincronización concurrente.
 - **Prioridad:** requerida.
 
@@ -202,7 +213,7 @@ Procesa consolidaciones, actualiza existencias mediante confirmación, calcula l
 
 - **Escenario:** existe un hueco del menú y hay recetas utilizables.
 - **Acción:** el usuario solicita sugerencias.
-- **Resultado esperado:** recibe opciones ordenadas con hasta tres motivos comprensibles relacionados con existencias, prioridad de consumo, variedad, tiempo u orientación mediterránea.
+- **Resultado esperado:** recibe exactamente tres opciones ordenadas, con hasta tres motivos comprensibles relacionados con existencias, prioridad de consumo, variedad, tiempo u orientación mediterránea, y una indicación de los productos faltantes cuando corresponda.
 - **No debe:** afirmar que el menú o la dieta completa son clínicamente adecuados.
 - **Verificación:** conjunto de escenarios de evaluación con datos sintéticos y revisión humana de explicaciones.
 - **Prioridad:** requerida.
@@ -237,10 +248,10 @@ Procesa consolidaciones, actualiza existencias mediante confirmación, calcula l
 ### AC-013 — Mantener una despensa aproximada
 
 - **Escenario:** un miembro consulta o edita un producto.
-- **Acción:** selecciona “hay”, “queda poco” o “no hay” y, opcionalmente, una cantidad y unidad.
-- **Resultado esperado:** el estado queda disponible para el hogar y se registra cuándo fue confirmado.
-- **No debe:** exigir una cantidad o caducidad para guardar el producto.
-- **Verificación:** prueba funcional de los tres estados y cantidades opcionales.
+- **Acción:** selecciona presencia aproximada, unidades exactas o peso/volumen y ajusta el valor cuando corresponda.
+- **Resultado esperado:** el estado queda disponible para el hogar y se registra cuándo fue confirmado; las unidades exactas se pueden incrementar o reducir sin valores negativos.
+- **No debe:** exigir una cantidad o caducidad para guardar un producto aproximado, ni convertir unidades incompatibles.
+- **Verificación:** prueba funcional de los tres tipos de seguimiento, estados y cantidades opcionales.
 - **Prioridad:** requerida.
 
 ### AC-014 — Priorizar perecederos sin fingir una caducidad
@@ -306,6 +317,33 @@ Procesa consolidaciones, actualiza existencias mediante confirmación, calcula l
 - **Verificación:** prueba de integración del estado de onboarding y revisión manual del flujo completo.
 - **Prioridad:** requerida.
 
+### AC-021 — Cargar el dataset inicial sin duplicados
+
+- **Escenario:** el único hogar todavía no ha recibido el catálogo inicial o una instalación repite la carga.
+- **Acción:** se ejecuta la importación versionada de recetas preferidas y mediterráneas.
+- **Resultado esperado:** cada receta válida queda estructurada con raciones, ingredientes, pasos, categorías y procedencia; repetir la misma versión produce el mismo conjunto sin duplicados.
+- **No debe:** incorporar recetas sin procedencia identificable ni sobrescribir cambios realizados por el hogar.
+- **Verificación:** validación automática del manifiesto, prueba de importación repetida y revisión humana de una muestra de recetas.
+- **Prioridad:** requerida.
+
+### AC-022 — Registrar categorías y preferencias individuales
+
+- **Escenario:** cualquiera de las dos personas consulta una receta.
+- **Acción:** marca o desmarca favorita y, opcionalmente, asigna una puntuación entera de 1 a 5.
+- **Resultado esperado:** la preferencia queda asociada a esa persona y receta, puede modificarse y está disponible para calcular sugerencias del hogar.
+- **No debe:** crear más de una preferencia activa por persona y receta ni alterar la puntuación de la otra persona.
+- **Verificación:** pruebas funcionales con dos sesiones y restricciones de unicidad y rango.
+- **Prioridad:** requerida.
+
+### AC-023 — Incorporar preferencias a sugerencias explicables
+
+- **Escenario:** existe un hueco del menú y varias recetas elegibles con distintas preferencias.
+- **Acción:** el hogar solicita sugerencias.
+- **Resultado esperado:** recibe exactamente tres opciones; favoritos y puntuaciones pueden mejorar su orden y la explicación indica cuando una preferencia ha influido.
+- **No debe:** garantizar siempre una receta favorita, ignorar productos que conviene consumir, repetir platos en exceso ni permitir que la preferencia de una sola persona anule silenciosamente la de la otra.
+- **Verificación:** escenarios sintéticos con preferencias coincidentes y opuestas, prueba determinista del ranking y revisión humana de explicaciones.
+- **Prioridad:** requerida.
+
 ## 7. Riesgos que debe cubrir la implementación
 
 | Área | Riesgo | Tratamiento requerido |
@@ -315,15 +353,15 @@ Procesa consolidaciones, actualiza existencias mediante confirmación, calcula l
 | Concurrencia | Dos miembros editan a la vez | Sincronización, detección de conflicto y ausencia de pérdida silenciosa |
 | Nutrición | Recomendaciones interpretadas como médicas | Lenguaje orientativo, motivos visibles y límites explícitos |
 | Usabilidad | Exceso de mantenimiento | Cantidades opcionales, acciones rápidas y corrección simple |
-| Integraciones futuras | OCR y precios contaminan el modelo | Mantener fuente, confianza y confirmación como conceptos desde el diseño inicial |
 
 ## 8. Decisiones pendientes no bloqueantes
 
 1. Confirmar si 10 de 14 comidas y cenas es el umbral adecuado para una semana gestionada.
 2. Definir el mecanismo de registro e inicio de sesión según privacidad, comodidad, coste y plataformas objetivo.
-3. Confirmar si un usuario podrá pertenecer a más de un hogar desde la primera versión.
-4. Decidir cuándo y cómo podrán compartirse recetas fuera del hogar.
-5. Definir cuánto historial de movimientos de despensa verá el usuario.
+3. Decidir cuándo y cómo podrán compartirse recetas fuera del hogar.
+4. Definir cuánto historial de movimientos de despensa verá el usuario.
+5. Definir el tamaño y reparto por categorías del dataset inicial.
+6. Ajustar con uso real los pesos de favoritos, puntuaciones, despensa, variedad y repetición reciente.
 
 ## 9. Verificación del MVP
 

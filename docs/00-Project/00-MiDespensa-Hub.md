@@ -9,30 +9,43 @@ tags:
 status: active
 notion: "https://app.notion.com/p/3a1ad407cbfd81979530f32cc6669b0a"
 notion_tasks: "https://app.notion.com/p/0136d6873c8e48d39e7af7a5d4a66c64"
-figma_project: "https://www.figma.com/files/team/908864607492859633/project/627408443"
-figma_file: "https://www.figma.com/design/5OqgkhvJnvApXAxTD40a0Z"
 ---
 
 # MiDespensa — Centro del proyecto
 
 > [!abstract] Propósito
-> Punto de entrada para la documentación de MiDespensa y contexto principal para personas y modelos de IA.
+> Punto de entrada para la documentación de MiDespensa y contexto principal para las personas y asistentes que trabajen en el proyecto.
 
 ## Enlaces externos
 
 - [Proyecto y tareas en Notion](https://app.notion.com/p/3a1ad407cbfd81979530f32cc6669b0a)
 - [Tablero de tareas — MiDespensa](https://app.notion.com/p/0136d6873c8e48d39e7af7a5d4a66c64)
-- [Archivo maestro de wireframes y UI](https://www.figma.com/design/5OqgkhvJnvApXAxTD40a0Z)
-- [Carpeta del proyecto en Figma](https://www.figma.com/files/team/908864607492859633/project/627408443)
+La evidencia visual ejecutada se conserva en [[VISUAL-CONTEXT]].
+
+### Diseño UI/UX
+
+No se usa Figma para trabajo futuro. Claude y Codex diseñan directamente en el repositorio a partir de las especificaciones de Obsidian, implementan la propuesta y actualizan las capturas de [[VISUAL-CONTEXT]] para su revisión.
 
 ## Documentación principal
 
 - [[WORKFLOW|Flujo de trabajo obligatorio]]
 - [[ACTIVE-CONTEXT|Contexto y tarea activa]]
+- [[VISUAL-CONTEXT|Contexto visual para modelos]]
+- [[MASTER-IMPLEMENTATION-PLAN|Plan y trazabilidad de implementación]]
 - [[PRODUCT-BRIEF|Visión y definición de producto]]
 - [[MVP-FUNCTIONAL-BRIEF|Contrato funcional del MVP]]
 - [[INFORMATION-ARCHITECTURE|Arquitectura de información minimalista]]
+- [[ONBOARDING-WIREFLOW|Wireflow de onboarding e inventario inicial]]
+- [[ONBOARDING-SCREEN-SPEC|Especificación detallada de pantallas del onboarding]]
+- [[CORE-MVP-FLOWS-SPEC|Flujos principales del MVP]]
+- [[PLAN-SCREEN-SPEC|Especificación de pantallas del plan semanal]]
+- [[RECIPES-SCREEN-SPEC|Especificación de pantallas de recetas]]
+- [[SHOPPING-SCREEN-SPEC|Especificación de pantallas de compra]]
+- [[PANTRY-SCREEN-SPEC|Especificación de pantallas de despensa]]
 - [[COMPETITIVE-BENCHMARK|Benchmark competitivo]]
+- [[DOMAIN-DATA-MODEL|Modelo de dominio y datos]]
+- [[TECHNICAL-ARCHITECTURE|Arquitectura técnica del MVP web]]
+- [[adr/README|Registro de decisiones arquitectónicas]]
 
 ## Estructura del vault
 
@@ -43,6 +56,7 @@ figma_file: "https://www.figma.com/design/5OqgkhvJnvApXAxTD40a0Z"
 | `02-Requirements` | Requisitos y criterios de aceptación |
 | `03-UX` | Flujos, arquitectura de información y decisiones UX |
 | `04-Research` | Investigación de mercado, competencia y evidencias externas |
+| `05-Architecture` | Arquitectura técnica, dominio, datos y decisiones de infraestructura |
 
 Se crearán nuevas carpetas únicamente cuando exista contenido canónico que lo justifique.
 
@@ -51,7 +65,7 @@ Se crearán nuevas carpetas únicamente cuando exista contenido canónico que lo
 | Información | Fuente principal | Contenido |
 | --- | --- | --- |
 | Trabajo | Notion | Tareas, estado, prioridad, responsable y dependencias |
-| Diseño | Figma | Wireframes, flujos visuales, prototipos y componentes |
+| Diseño | Claude y Codex + `VISUAL-CONTEXT` | Propuesta UI/UX en código y capturas de la interfaz ejecutada |
 | Conocimiento | Obsidian | Producto, requisitos, arquitectura, decisiones e investigación |
 | Implementación | Repositorio | Código, pruebas, configuración y entregables ejecutables |
 
@@ -60,7 +74,7 @@ Se crearán nuevas carpetas únicamente cuando exista contenido canónico que lo
 Cada tarea de implementación en Notion debería enlazar:
 
 1. la especificación o decisión correspondiente en Obsidian;
-2. el archivo o nodo de Figma cuando tenga impacto visual;
+2. la evidencia visual de `VISUAL-CONTEXT` cuando tenga impacto UI/UX;
 3. el entregable del repositorio cuando se implemente.
 
 Una decisión importante tomada durante el diseño o desarrollo debe documentarse en Obsidian antes de considerar terminada la tarea de Notion.
@@ -70,8 +84,8 @@ Una decisión importante tomada durante el diseño o desarrollo debe documentars
 ```mermaid
 flowchart LR
     N["Notion: tarea"] --> O["Obsidian: requisitos y decisiones"]
-    O --> F["Figma: wireframe o diseño"]
-    F --> C["Repositorio: implementación"]
+    O --> D["Claude/Codex: diseño en código"]
+    D --> C["Repositorio: implementación"]
     C --> V["Verificación"]
     V --> N
 ```
@@ -84,15 +98,16 @@ flowchart LR
 - [x] Onboarding con inventario manual inicial confirmado.
 - [x] Benchmark inicial de productos comparables.
 - [x] Configurar gestión de tareas en Notion.
-- [x] Crear archivo de wireframes en el proyecto de Figma.
 - [x] Abrir esta carpeta como vault de Obsidian.
-- [ ] Diseñar wireframes de baja fidelidad.
+- [x] Definir el modelo de dominio y datos.
+- [x] Aprobar la arquitectura técnica del MVP web.
+- [x] Establecer diseño UI/UX en código por Claude y Codex con evidencia en [[VISUAL-CONTEXT]].
 
 ## Convenciones documentales
 
 - Una nota por decisión o tema estable.
 - Wikilinks para relaciones internas.
-- Enlaces web para Notion, Figma y fuentes externas.
+- Enlaces web para Notion y fuentes externas; `VISUAL-CONTEXT` para evidencia de UI.
 - Las hipótesis deben identificarse como pendientes de validar.
 - Las decisiones confirmadas deben indicar su origen y fecha.
 - No almacenar secretos, credenciales ni datos personales en las notas.

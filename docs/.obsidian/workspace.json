@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "0e5fdc26d6b4507b",
+        "id": "6383c01bfaa29749",
         "type": "tabs",
         "children": [
           {
-            "id": "b020f46a1cf3f9f0",
+            "id": "836feb6005e04efe",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -176,13 +176,31 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "b020f46a1cf3f9f0",
+  "active": "836feb6005e04efe",
   "lastOpenFiles": [
-    "04-Research/COMPETITIVE-BENCHMARK.md",
-    "04-Research",
     "00-Project/00-MiDespensa-Hub.md",
-    "00-Project/ACTIVE-CONTEXT.md",
+    "05-Architecture/POC-TDD-EVIDENCE.md",
+    "adr/0001-monolito-modular-nextjs.md",
+    "03-UX/PLAN-SCREEN-SPEC.md",
+    "adr/0004-acceso-cerrado-rls.md",
+    "adr/0003-vercel-hobby-cloudflare-salida.md",
+    "adr/0002-supabase-postgresql.md",
+    "adr/template.md",
+    "adr/README.md",
+    "adr",
+    "05-Architecture/TECHNICAL-ARCHITECTURE.md",
+    "05-Architecture/DOMAIN-DATA-MODEL.md",
+    "05-Architecture",
+    "03-UX/PANTRY-SCREEN-SPEC.md",
+    "03-UX/SHOPPING-SCREEN-SPEC.md",
+    "03-UX/RECIPES-SCREEN-SPEC.md",
+    "04-Research/COMPETITIVE-BENCHMARK.md",
     "00-Project/WORKFLOW.md",
+    "00-Project/ACTIVE-CONTEXT.md",
+    "03-UX/CORE-MVP-FLOWS-SPEC.md",
+    "03-UX/ONBOARDING-SCREEN-SPEC.md",
+    "03-UX/ONBOARDING-WIREFLOW.md",
+    "04-Research",
     "01-Product/PRODUCT-BRIEF.md",
     "03-UX/INFORMATION-ARCHITECTURE.md",
     "03-UX",

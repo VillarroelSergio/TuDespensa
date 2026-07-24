@@ -6,15 +6,16 @@ tags:
   - midespensa
   - producto
 status: active
-version: "0.6"
+version: "0.8"
 related:
   - "[[00-MiDespensa-Hub]]"
   - "[[MVP-FUNCTIONAL-BRIEF]]"
   - "[[INFORMATION-ARCHITECTURE]]"
   - "[[COMPETITIVE-BENCHMARK]]"
+  - "[[INITIAL-RECIPE-CATALOG-REVIEW]]"
 ---
 
-# MiDespensa — Product Brief v0.6
+# MiDespensa — Product Brief v0.8
 
 Estado: problema, usuario inicial, visión y límites del MVP validados de forma preliminar con el hogar fundador. Preparado para definir capacidades, flujos y requisitos verificables.
 
@@ -88,7 +89,9 @@ La aplicación aconsejará platos y mostrará por qué encajan, pero el hogar co
 
 - Recetas estructuradas: nombre, ingredientes, cantidades, unidades, raciones, tiempos, etiquetas y pasos.
 - Biblioteca compartida de recetas para el hogar.
-- Captura rápida de una receta mediante enlace y estructuración guiada antes de utilizarla en el menú. Cuando la web incluya datos estructurados compatibles, se podrán importar sin IA.
+- Catálogo inicial estructurado con recetas que gustan al hogar y una selección mediterránea suficientemente variada para poder planificar desde el primer uso.
+- Categorías controladas, favoritos y puntuación individual de cada una de las dos personas.
+- Captura rápida de una receta mediante enlace y estructuración guiada antes de utilizarla en el menú. La aplicación puede extraer datos estructurados cuando existan, siempre con revisión del hogar.
 - Ajuste de raciones con recálculo de cantidades.
 - Planificador semanal sencillo para comidas y cenas.
 - Planificación semanal con navegación por fechas y duplicación de semanas como acción secundaria.
@@ -97,17 +100,18 @@ La aplicación aconsejará platos y mostrará por qué encajan, pero el hogar co
 - Lista de compra consolidada desde el menú.
 - Adición manual de productos a la lista para compras no derivadas de recetas.
 - Agrupación de ingredientes equivalentes, edición manual y posibilidad de asignar productos a distintos supermercados.
-- Despensa básica basada en presencia, con cantidad opcional.
+- Despensa básica con tres tipos de seguimiento: unidades exactas para productos contables, peso o volumen opcional para alimentos medibles y presencia aproximada cuando la precisión no aporta valor.
 - Acción rápida para marcar un producto como “hay que gastarlo”.
 - Registro automático de la fecha de entrada de un producto para estimar su antigüedad sin solicitar una caducidad.
 - Avisos orientativos de “consumir pronto” para categorías perecederas, siempre corregibles por el usuario.
 - Descuento de existencias conocidas al generar la compra.
 - Búsqueda y filtros por ingrediente, tipo de plato y tiempo.
 - Etiquetas culinarias sencillas para ayudar a mantener variedad y equilibrio mediterráneo, sin realizar recomendaciones médicas.
-- Sugerencias de platos para completar huecos del menú, priorizadas por existencias, productos que conviene consumir, variedad reciente y orientación mediterránea.
+- Sugerencias de platos para completar huecos del menú, priorizadas por existencias, productos que conviene consumir, preferencias de las dos personas, variedad reciente y orientación mediterránea.
+- Para cada hueco, mostrar exactamente tres recetas y señalar si se pueden preparar con la despensa o qué productos faltan; al elegir una receta, sus faltantes se consolidan en la lista de Compra.
 - Explicación breve de cada sugerencia, por ejemplo: “aprovecha los calabacines”, “esta semana aún no hay legumbres” o “lista en 25 minutos”.
 - Flujo de “receta cocinada” con confirmación sencilla de consumo.
-- Acción rápida para indicar “queda poco” o “se terminó” cuando el consumo no procede de una receta.
+- Acciones rápidas para indicar “queda poco” o “se terminó” cuando el consumo no procede de una receta, y ajuste por unidades para productos contables.
 - Al completar una compra generada desde la aplicación, incorporación asistida de los productos comprados a la despensa.
 
 ### Simplificaciones deliberadas
@@ -115,15 +119,14 @@ La aplicación aconsejará platos y mostrará por qué encajan, pero el hogar co
 - La despensa puede funcionar inicialmente con estados aproximados (“hay”, “queda poco”, “no hay”) cuando una cantidad exacta resulte incómoda.
 - No se registrarán fechas de caducidad en el MVP.
 - Las estimaciones de “consumir pronto” no pretenderán determinar la seguridad alimentaria ni sustituir la inspección del producto.
-- Las recetas familiares, de libros o de vídeos se introducirán mediante un formulario guiado. Fotografías, voz e IA se evaluarán después.
-- Se ofrecerá un pequeño catálogo inicial para alcanzar el primer resultado sin registrar todas las recetas del hogar.
+- Las recetas familiares, de libros o de vídeos se podrán introducir mediante un formulario guiado. La lectura automática de recetas se incorporará como flujo separado, siempre revisable antes de usar sus datos.
+- El catálogo inicial se cargará una sola vez y quedará editable dentro del hogar; su importación será repetible sin crear duplicados.
+- Las recetas del dataset serán originales, aportadas por el hogar o reutilizadas bajo condiciones compatibles y con procedencia registrada. No se copiarán colecciones, fotografías ni textos expresivos de terceros sin autorización.
 - El planificador no optimizará automáticamente el menú en la primera versión.
 
-## 10. Fuera del MVP
+## 10. Capacidades excluidas del MVP
 
-- OCR de tickets.
-- OCR de recetas impresas o manuscritas.
-- Reconocimiento visual de productos.
+- Modelos de IA locales o conectados mediante API para generar, leer o estructurar contenido.
 - Control sistemático de fechas de caducidad.
 - Información nutricional clínica o planes médicos.
 - Cálculo exhaustivo de calorías y macronutrientes.
@@ -132,7 +135,7 @@ La aplicación aconsejará platos y mostrará por qué encajan, pero el hogar co
 - Compra o entrega integrada con comercios.
 - Red social, comentarios o marketplace de recetas.
 - Inventario exacto y obligatorio de cada producto.
-- Generación autónoma completa de menús mediante IA.
+- Generación autónoma completa de menús sin decisión del hogar.
 
 ## 11. Principios de experiencia
 
@@ -154,7 +157,7 @@ La primera sesión seguirá este orden obligatorio:
 2. definir o invitar a sus integrantes;
 3. realizar un informe manual inicial de los alimentos disponibles;
 4. revisar y confirmar la despensa inicial;
-5. continuar con recetas propias, tickets de compra cuando esa capacidad esté disponible o planificación semanal.
+5. continuar con recetas propias, ticket de compra cuando esa capacidad esté disponible o planificación semanal.
 
 El informe inicial debe ser ligero: registrar presencia será suficiente, la cantidad será opcional y no se solicitarán caducidades. El progreso se guardará para poder continuar si la sesión se interrumpe.
 
@@ -217,11 +220,11 @@ La variedad de fuentes —web, vídeo, libros, notas y recetas familiares— pue
 
 Respuesta inicial: guardar enlaces en segundos, importar datos estructurados cuando existan y pedir la estructuración completa solo al incorporar una receta al menú.
 
-### Riesgo 5: falsa precisión del inventario automático
+### Riesgo 5: falsa precisión de la lectura automática
 
-El OCR puede leer mal un ticket, confundir nombres comerciales, no conocer unidades reales o añadir productos que no pertenecen a la despensa alimentaria.
+Un ticket o una receta puede leerse de forma incompleta, confundir nombres comerciales o no identificar una unidad real.
 
-Respuesta inicial: actualizar automáticamente los productos ya conocidos desde la lista de compra y desarrollar después un flujo de OCR que siempre muestre una revisión rápida antes de confirmar.
+Respuesta inicial: usar OCR, parseo determinista y datos estructurados cuando estén disponibles; mostrar siempre una revisión rápida antes de confirmar la incorporación a Despensa o Recetas.
 
 ### Riesgo 6: alcance excesivo
 
@@ -245,18 +248,11 @@ Respuesta inicial: considerar MiDespensa un nombre de trabajo y validar marcas, 
 
 Recomendación provisional: aplicación web adaptable y fácilmente instalable en el móvil (PWA) para validar el producto con una sola base de desarrollo. El uso será predominantemente móvil —cocina y supermercado—, pero la introducción y planificación de recetas puede ser más cómoda en pantalla grande.
 
-La decisión final dependerá de necesidades como notificaciones fiables, trabajo sin conexión, cámara/OCR, escaneo y publicación en tiendas. Ninguna de ellas es imprescindible para demostrar la tesis inicial.
+La decisión final dependerá de necesidades como notificaciones fiables, trabajo sin conexión y publicación en tiendas. Ninguna de ellas es imprescindible para demostrar la tesis inicial.
 
-## 16. Evolución posible
+## 16. Automatización sin modelos de IA
 
-1. Importación asistida de recetas desde texto, fotografía, vídeo o enlace y estructuración con IA.
-2. OCR de tickets con identificación de tienda, revisión rápida y actualización asistida de la despensa.
-3. Sugerencias para aprovechar existencias, perecederos y productos marcados como prioritarios.
-4. Generación asistida de menús mediterráneos equilibrados según frecuencia deportiva y preferencias del hogar.
-5. Nutrición, coste estimado y objetivos de presupuesto.
-6. Historial de precios y comparación entre supermercados cuando exista información suficiente y comparable.
-
-La IA debe reducir trabajo o mejorar decisiones concretas; no ser una sección independiente sin conexión con el bucle central.
+MiDespensa sí automatizará sugerencias, lectura de tickets y estructuración de recetas, pero no incorporará un modelo de IA local ni conectará modelos generativos externos mediante API. Las sugerencias del Plan se calcularán mediante reglas explicables sobre recetas guardadas, despensa, favoritos y puntuaciones de las dos personas, variedad, tiempo y criterio mediterráneo. La lectura y estructuración automática combinarán OCR, parseo determinista y datos estructurados disponibles; cada resultado deberá poder revisarse y corregirse antes de modificar los datos del hogar.
 
 ## 17. Roadmap propuesto
 
@@ -264,6 +260,8 @@ La IA debe reducir trabajo o mejorar decisiones concretas; no ser una sección i
 
 - Creación del hogar, integrantes e informe inicial manual de alimentos.
 - Recetario compartido y captura básica desde enlaces.
+- Catálogo inicial de recetas preferidas y mediterráneas con procedencia verificada.
+- Categorías, favoritos y puntuaciones individuales para ordenar sugerencias.
 - Planificador semanal de comidas y cenas con navegación por fechas.
 - Lista consolidada, editable y compartida.
 - Despensa por presencia y cantidades opcionales.
@@ -272,39 +270,35 @@ La IA debe reducir trabajo o mejorar decisiones concretas; no ser una sección i
 - Sugerencias explicables de platos, sin generación automática de un menú completo.
 - Registro de receta cocinada y ajustes rápidos de “queda poco” o “se terminó”.
 
+El borrador editorial del recetario inicial está en [[INITIAL-RECIPE-CATALOG-REVIEW]]. Permanece en revisión y no se cargará en ninguna base de datos hasta que el hogar lo valide.
+
 ### Fase 2 — reducir trabajo manual
 
 - Prueba controlada de OCR con tickets reales de los supermercados utilizados.
 - Revisión de productos detectados antes de incorporarlos a la despensa.
 - Registro de tienda, fecha, importe y precios por línea.
-- Importación de recetas mediante IA desde texto, fotografía y otras fuentes.
+- Estructuración de recetas desde datos web compatibles y parseo determinista de texto.
 
-### Fase 3 — asistencia inteligente
+### Fase 3 — asistencia basada en reglas
 
-- Propuestas de menú mediterráneo equilibrado.
+- Propuestas de menú mediterráneo equilibrado calculadas con reglas transparentes.
 - Recomendaciones basadas en despensa, perecederos y variedad reciente.
-- Estimaciones nutricionales y adaptación a objetivos deportivos generales.
+- Estimaciones nutricionales y adaptación a objetivos deportivos generales, si se dispone de datos estructurados suficientes.
 - Presupuesto e historial de gasto.
 
-### Fase 4 — inteligencia de precios
+## 18. Modelo de uso cerrado
 
-- Historial comparable por producto, formato y supermercado.
-- Detección de cambios de precio y alternativas.
-- Comparación entre supermercados solo cuando la calidad y cantidad de datos sean suficientes.
-
-## 18. Modelo de producto y crecimiento
-
-Aunque la validación inicial se realizará con el hogar fundador de dos personas, el producto se diseñará para que cualquier persona pueda crear un hogar e invitar a otros miembros.
+MiDespensa se desarrollará para un único hogar formado por dos personas. No se ofrecerá registro público ni se preparará el producto para incorporar más hogares o usuarios.
 
 Principios estructurales desde el inicio:
 
-- cada cuenta de usuario será independiente;
-- recetas, menú, despensa y compras pertenecerán a un hogar;
-- un usuario podrá ser miembro de un hogar mediante invitación;
-- la información de un hogar no será accesible por miembros de otro;
-- el producto deberá soportar hogares con distinto número de personas y preferencias propias.
+- existirán como máximo dos cuentas autenticadas independientes;
+- ambas cuentas compartirán un único hogar;
+- recetas, menú, despensa y compras pertenecerán a ese hogar;
+- una identidad no autorizada no podrá consultar ni modificar información;
+- no se implementarán creación de hogares adicionales, cambio entre hogares, invitaciones abiertas ni administración multiinquilino.
 
-No se intentará validar simultáneamente todos los tipos de hogar. El primer segmento seguirá siendo una pareja que comparte planificación y compra.
+Esta restricción es permanente para el alcance conocido. Si el objetivo cambiara en el futuro, la ampliación a más usuarios se trataría como una nueva decisión de producto y arquitectura, no como una capacidad implícita del MVP.
 
 ## 19. Criterios mediterráneos para las sugerencias
 
@@ -335,14 +329,17 @@ Fuentes de referencia:
 7. La compra en varios supermercados se contemplará en el MVP sin desarrollar todavía comparadores de precios.
 8. El planificador se centrará en comidas y cenas, usando la semana como única vista operativa del MVP.
 9. El equilibrio alimentario se abordará inicialmente mediante variedad y categorías de platos, no como asesoramiento nutricional clínico.
-10. El OCR de tickets es una capacidad objetivo importante, pero no será requisito para validar el primer ciclo del producto.
+10. No se incorporarán modelos de IA locales ni modelos generativos externos por API; OCR y automatismos deterministas se evaluarán como capacidades independientes y revisables.
 11. El planificador sugerirá platos y explicará sus criterios; el usuario tomará la decisión final.
 12. Marcar una receta como cocinada y registrar “queda poco” o “se terminó” son interacciones aceptables para mantener la despensa.
-13. La aplicación se preparará para múltiples hogares, aunque el primer piloto se realizará con una pareja.
+13. La aplicación será de uso cerrado para un único hogar y un máximo de dos cuentas; no se preparará para múltiples hogares ni crecimiento de usuarios.
 14. El éxito se entiende como disponer de una visión completa y fiable de la gestión alimentaria del hogar, no solo como utilizar una función aislada.
 15. El informe manual inicial de alimentos será un paso obligatorio al crear el hogar y precederá a recetas, tickets y planificación.
 16. El informe inicial se organizará por frigorífico, congelador y despensa o armario.
 17. MiDespensa se considera un nombre de trabajo hasta completar una validación específica de identidad.
+18. El hogar partirá de un dataset inicial de recetas preferidas y mediterráneas, estructuradas y editables.
+19. Cada persona podrá marcar favoritos y puntuar recetas de 1 a 5; estas preferencias influirán en las sugerencias sin sustituir los criterios de despensa, variedad y consumo prioritario.
+20. Toda receta del dataset conservará procedencia y condiciones de reutilización; no se incorporarán colecciones ni textos expresivos de terceros sin autorización compatible.
 
 ## 21. Experiencia objetivo a largo plazo
 
@@ -351,7 +348,7 @@ La versión ideal permitirá que las dos personas del hogar:
 1. reúnan recetas procedentes de cualquier fuente;
 2. reciban ayuda para construir un plan mensual flexible de comidas y cenas;
 3. sepan qué productos hay en casa y cuáles conviene consumir;
-4. fotografíen un ticket para actualizar la despensa y registrar el gasto con una revisión mínima;
+4. capturen un ticket para proponer actualizaciones de despensa y gasto, revisándolas antes de confirmar;
 5. consulten la evolución del gasto y, cuando los datos lo permitan, comparen precios entre supermercados.
 
 ## 22. Preguntas abiertas prioritarias
@@ -359,9 +356,10 @@ La versión ideal permitirá que las dos personas del hogar:
 1. ¿Qué porcentaje de comidas y cenas debería estar planificado para considerar que una semana está bien gestionada?
 2. ¿Qué nivel mínimo de confianza en la despensa sería aceptable después de cuatro semanas?
 3. ¿Qué modalidades de acceso necesitará el producto: correo y contraseña, acceso con Google/Apple u otras?
-4. ¿Las recetas serán privadas del hogar, públicas para todos o se contemplarán ambos tipos?
-5. ¿Qué datos del perfil deportivo se estaría dispuesto a facilitar en una fase futura?
-6. ¿Qué nombre definitivo estará disponible y diferenciará el producto de alternativas activas?
+4. ¿Cuántas recetas y qué reparto por categorías debe contener la primera versión del dataset?
+5. ¿Qué peso relativo deben tener favoritos y puntuaciones frente a despensa, variedad y repetición reciente?
+6. ¿Qué datos del perfil deportivo se estaría dispuesto a facilitar en una fase futura?
+7. ¿Qué nombre definitivo estará disponible y diferenciará el producto de alternativas activas?
 
 ## 23. Recomendación provisional
 

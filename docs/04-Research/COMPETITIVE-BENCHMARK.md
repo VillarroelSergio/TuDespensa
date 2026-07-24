@@ -57,7 +57,7 @@ No existe un vacío funcional evidente. La oportunidad está en conectar estas �
 
 ### Tickets e inventario
 
-- [Pantru](https://www.pantru.com/) plantea un flujo acertado: capturar ticket → revisar solo elementos dudosos → recibir sugerencias. Sus indicadores de confianza son una referencia útil para que el OCR futuro no aparente una precisión absoluta.
+- [Pantru](https://www.pantru.com/) plantea un flujo acertado: capturar ticket → revisar solo elementos dudosos → recibir sugerencias. Sus indicadores de confianza son una referencia útil para que la lectura automática no aparente una precisión absoluta.
 - [Expireless](https://expireless.app/) combina fotografía del ticket, clasificación automática entre frigorífico, congelador y despensa, revisión previa y entrada manual o por voz.
 - [Cooklist](https://cooklist.com/cooklist-app) evita el ticket en algunos mercados mediante tarjetas de fidelización. Es potente, pero difícil de generalizar entre supermercados españoles.
 
@@ -76,7 +76,7 @@ No existe un vacío funcional evidente. La oportunidad está en conectar estas �
 2. **Captura progresiva:** permitir guardar una receta por enlace antes de exigir toda su estructuración.
 3. **Compra consolidada y explicable:** combinar equivalencias, conservar cantidades originales y permitir correcciones.
 4. **Colaboración por defecto:** una sola realidad compartida para el hogar, sin acciones especiales de sincronización.
-5. **Revisión por excepción:** cuando exista OCR, destacar únicamente líneas dudosas y confirmar el resto en bloque.
+5. **Revisión por excepción:** en lectura automática, destacar únicamente líneas dudosas y confirmar el resto en bloque.
 6. **Sugerencias con motivo:** explicar si un plato aprovecha existencias, aporta variedad o requiere poco tiempo.
 7. **Entrada multimodal gradual:** texto y selección rápida en el MVP; ticket, voz, código de barras o fotografía cuando reduzcan trabajo de forma demostrable.
 
@@ -128,10 +128,9 @@ Antes de publicar, registrar un dominio o invertir en identidad visual será nec
 2. Mantener cantidades opcionales y excluir caducidades obligatorias.
 3. Diseñar el inventario inicial como captura rápida por zonas y no como formulario repetitivo.
 4. Priorizar captura de recetas por enlace, colaboración doméstica y lista consolidada.
-5. Preparar el modelo para OCR y revisión por confianza, sin incluir el OCR en el primer MVP.
+5. Preparar el modelo para lectura automática y revisión por confianza, sin incluirla en el primer MVP.
 6. Abrir una tarea de validación de nombre antes de trabajar la identidad pública.
 
 ## Próximo paso
 
 Aplicar estos hallazgos a los wireframes del onboarding e inventario inicial. El prototipo debe validar especialmente el tiempo de alta, la claridad de las zonas y el valor mostrado inmediatamente después de confirmar la línea base.
-

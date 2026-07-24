@@ -1,0 +1,217 @@
+'use client'
+
+import { useCallback, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+
+import {
+  adjustPantryItem,
+  clearPantryAttention,
+  correctPantryItem,
+  markPantryLow,
+  recordPantryEntry,
+  removeFinishedPantryItem,
+} from './actions'
+import { addShoppingItem } from '@/modules/shopping/actions'
+import { PantryEntryForm } from './PantryEntryForm'
+import { PantryList } from './PantryList'
+import type { PantryListItem, PresentedPantryItem } from './presentation'
+import type { PantryMutationInput, PantryZone } from './types'
+
+type Props = {
+  initialItems: PantryListItem[]
+  isVisualFixture?: boolean
+}
+
+export function PantryWorkspace({ initialItems, isVisualFixture = false }: Props) {
+  const router = useRouter()
+  const [status, setStatus] = useState('')
+  const [pendingId, setPendingId] = useState<string | null>(null)
+  const [isAdding, setIsAdding] = useState(false)
+  const [undo, setUndo] = useState<PresentedPantryItem | null>(null)
+  const refresh = useCallback(() => router.refresh(), [router])
+
+  useEffect(() => {
+    if (isVisualFixture) return
+    const client = createSupabaseBrowserClient()
+    const channel = client
+      .channel('pantry-refresh')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pantry_items' },
+        refresh,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pantry_movements' },
+        refresh,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'household_foods' },
+        refresh,
+      )
+      // Resync after reconnecting: realtime does not replay missed events.
+      .subscribe((subscriptionStatus) => {
+        if (subscriptionStatus === 'SUBSCRIBED') refresh()
+      })
+
+    return () => {
+      void client.removeChannel(channel)
+    }
+  }, [isVisualFixture, refresh])
+
+  async function handlePresence(
+    item: PresentedPantryItem,
+    state: 'available' | 'low' | 'out',
+  ) {
+    if (pendingId) return
+    setPendingId(item.id)
+    setStatus('')
+    try {
+      if (state === 'low') {
+        await markPantryLow(item.id, item.version)
+        setStatus(`${item.name}: queda poco.`)
+      } else if (state === 'available' && item.trackingMode !== 'approximate') {
+        await clearPantryAttention(item.id, item.version)
+        setStatus(`${item.name}: hay.`)
+      } else if (item.trackingMode === 'approximate') {
+        const result = await correctPantryItem({
+          itemId: item.id,
+          version: item.version,
+          trackingMode: 'approximate',
+          approximateState: state === 'available' ? 'plenty' : 'out',
+          quantity: null,
+          unitCode: null,
+        })
+        setStatus(`${item.name}: ${state === 'out' ? 'se terminó.' : 'hay.'}`)
+        setUndo(state === 'out' ? { ...item, version: result.version } : null)
+      } else {
+        const result = await adjustPantryItem({
+          itemId: item.id,
+          version: item.version,
+          trackingMode: item.trackingMode,
+          approximateState: null,
+          quantity: 0,
+          unitCode: item.unitCode,
+        })
+        setStatus(`${item.name}: se terminó.`)
+        setUndo({ ...item, version: result.version })
+      }
+      refresh()
+    } catch {
+      setStatus(
+        'No hemos podido guardar el cambio. Hemos actualizado la lista.',
+      )
+      refresh()
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function handleUndo() {
+    if (!undo || pendingId) return
+    setPendingId(undo.id)
+    try {
+      await correctPantryItem({
+        itemId: undo.id,
+        version: undo.version,
+        trackingMode: undo.trackingMode,
+        approximateState: undo.approximateState,
+        quantity: undo.quantity,
+        unitCode: undo.unitCode,
+      })
+      setStatus(`${undo.name}: cambio deshecho.`)
+      setUndo(null)
+      refresh()
+    } catch {
+      setStatus(
+        'No hemos podido deshacer el cambio. Hemos actualizado la lista.',
+      )
+      refresh()
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function handleAddToShopping(item: PresentedPantryItem) {
+    if (pendingId) return
+    setPendingId(item.id)
+    setStatus('')
+    try {
+      await addShoppingItem({ foodName: item.name, source: 'pantry' })
+      setStatus(`${item.name}: añadido a Compra.`)
+      setUndo(null)
+    } catch {
+      setStatus('No hemos podido añadirlo a Compra. Puedes reintentarlo.')
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function handleRemove(item: PresentedPantryItem) {
+    if (pendingId) return
+    setPendingId(item.id)
+    setStatus('')
+    try {
+      await removeFinishedPantryItem(item.id, item.version)
+      setStatus(`${item.name}: eliminado de la despensa.`)
+      refresh()
+    } catch {
+      setStatus('No hemos podido eliminarlo. Hemos actualizado la lista.')
+      refresh()
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function handleCreate(input: {
+    zone: PantryZone
+    foodName: string
+    trackingMode: PantryMutationInput['trackingMode']
+    approximateState: PantryMutationInput['approximateState']
+    quantity: PantryMutationInput['quantity']
+    unitCode: PantryMutationInput['unitCode']
+  }) {
+    setPendingId('new-pantry-item')
+    setStatus('')
+    try {
+      await recordPantryEntry(input)
+      setStatus(`${input.foodName}: añadido a la despensa.`)
+      setIsAdding(false)
+      refresh()
+    } catch {
+      setStatus(
+        'No hemos podido añadir el producto. Conservamos el formulario para que puedas reintentarlo.',
+      )
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  return (
+    <>
+      <PantryList
+        initialItems={initialItems}
+        onSetPresence={pendingId ? undefined : handlePresence}
+        onRemove={pendingId ? undefined : handleRemove}
+        onUndo={undo ? handleUndo : undefined}
+        onAddToShopping={pendingId ? undefined : handleAddToShopping}
+        undoItemName={undo?.name}
+        onAdd={() => {
+          setIsAdding(true)
+        }}
+        detail={
+          isAdding ? (
+            <PantryEntryForm
+              onClose={() => setIsAdding(false)}
+              onSave={handleCreate}
+            />
+          ) : null
+        }
+        status={status}
+      />
+    </>
+  )
+}
