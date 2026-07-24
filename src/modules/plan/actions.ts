@@ -10,6 +10,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseIdempotencyKey } from '@/lib/validation/onboarding'
 
 import type { RecipeDishType } from '@/modules/recipes/types'
+import { parseIngredient } from '@/modules/recipes/ingredient-normalize'
 
 import { addPlanItems } from '@/modules/shopping/actions'
 
@@ -117,20 +118,27 @@ async function consolidateShopping(recipeId: string): Promise<number> {
       .eq('recipe_id', recipeId),
     getSuggestionPantry(supabase),
   ])
-  const rows = ingredientsRes.data ?? []
+  // Nombre y cantidad limpios: «1/4 cebolla» → «cebolla», 0.25 uds. La Compra
+  // solo maneja artículos completos, así que las unidades contables se redondean
+  // hacia arriba (nunca se compra media cebolla). El peso/volumen se deja igual.
+  const rows = (ingredientsRes.data ?? []).map((row) => {
+    const parsed = parseIngredient(row.name, row.quantity, row.unit_code)
+    return {
+      name: parsed.name,
+      quantity:
+        parsed.unitCode === 'unit' && parsed.quantity !== null
+          ? Math.ceil(parsed.quantity)
+          : parsed.quantity,
+      unitCode: parsed.unitCode,
+    }
+  })
   const missing = new Set(
     missingIngredients(
       rows.map((row) => row.name),
       pantry,
     ),
   )
-  const items = rows
-    .filter((row) => missing.has(row.name))
-    .map((row) => ({
-      name: row.name,
-      quantity: row.quantity,
-      unitCode: row.unit_code,
-    }))
+  const items = rows.filter((row) => missing.has(row.name))
   if (!items.length) return 0
   try {
     return (await addPlanItems(items)).added
@@ -274,7 +282,7 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
   for (const row of ingredientsRes.data ?? []) {
     ingredientsByRecipe.set(row.recipe_id, [
       ...(ingredientsByRecipe.get(row.recipe_id) ?? []),
-      row.name,
+      parseIngredient(row.name).name,
     ])
   }
   const prefByRecipe = new Map(
@@ -421,11 +429,13 @@ export async function getCookPreview(
     mealType,
     alreadyCooked: meal.cooked_at !== null,
     lines: buildCookLines(
-      (ingredientsRes.data ?? []).map((ingredient) => ({
-        name: ingredient.name,
-        quantity: ingredient.quantity,
-        unitCode: ingredient.unit_code,
-      })),
+      (ingredientsRes.data ?? []).map((ingredient) =>
+        parseIngredient(
+          ingredient.name,
+          ingredient.quantity,
+          ingredient.unit_code,
+        ),
+      ),
       pantry,
     ),
   }

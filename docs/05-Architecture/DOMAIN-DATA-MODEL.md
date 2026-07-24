@@ -90,9 +90,9 @@ erDiagram
 | `profiles` | Perfil mínimo de una identidad | `user_id`, nombre visible, preferencias no sensibles |
 | `households` | Raíz del espacio compartido | nombre, creador, estado de onboarding, `baseline_confirmed_at` |
 | `household_members` | Membresía y autorización | `household_id`, `user_id`, rol, estado, fechas; pertenencia única por pareja hogar/usuario |
-| `household_invitations` | Incorporación inicial de la segunda cuenta | destinatario normalizado, hash del token, caducidad, revocación y aceptación; como máximo una incorporación activa |
+| `household_invitations` | Incorporación inicial de la segunda cuenta | destinatario normalizado, estado pendiente/aceptada/revocada, emisor, aceptación y fecha; como máximo una incorporación pendiente por correo y hogar |
 
-Los tokens de incorporación nunca se almacenan en claro. La aceptación bloquea la reutilización, se ejecuta de forma atómica y rechaza cualquier intento de superar dos miembros activos.
+El enlace de acceso lo emite Supabase Auth y no se almacena en la aplicación. Las invitaciones enviadas desde el servidor usan un callback de invitación con sesión implícita, que la transfiere a las cookies SSR del navegador antes de mostrar la aceptación. La aceptación bloquea la reutilización, se ejecuta de forma atómica y rechaza cualquier intento de superar dos miembros activos.
 
 ### Catálogo y unidades
 

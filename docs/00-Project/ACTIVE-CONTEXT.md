@@ -121,6 +121,7 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 
 ## Siguientes acciones
 
+- **Migraciones Supabase (2026-07-24):** historial remoto reconciliado con los archivos locales. Las tres migraciones `poc_*` sintéticas se marcaron como omitidas en el historial (no se ejecutaron en producción); las reglas de zona del catálogo y las invitaciones del hogar están aplicadas. `npx supabase db push --dry-run` confirma que la base remota está al día.
 - **Uso cotidiano:** recorrer Recetas → Plan → Compra → Cocina → Despensa en situaciones reales y registrar los hallazgos observables.
 - **Ticket:** calibrar el OCR local con tickets reales; la imagen no se sube ni se guarda.
 - **Correcciones:** priorizar solo defectos que afecten a estabilidad, comprensión, confianza, accesibilidad o uso recurrente.

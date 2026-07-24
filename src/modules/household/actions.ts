@@ -20,7 +20,11 @@ export type HouseholdManagement = {
   isOwner: boolean
   householdName: string
   activeMemberCount: number
-  people: string[]
+  activeMembers: {
+    id: string
+    label: string
+    role: 'owner' | 'member'
+  }[]
   pendingInvitations: { id: string; email: string }[]
 }
 
@@ -39,21 +43,28 @@ function failure(error: { code?: string; message: string }): never {
 }
 
 // Reenvía el acceso reutilizando el enlace mágico del login: crea la cuenta si
-// no existe y envía el correo. No toca la sesión del propietario (cliente anónimo
-// sin persistencia). ponytail: la invitación se reconoce dentro de la app tras
-// iniciar sesión; plantilla de correo propia solo si el piloto lo pide.
+// no existe y envía el correo. Como esta solicitud nace en el servidor, el
+// navegador invitado no tiene el verificador de PKCE: se usa un callback propio
+// con flujo implícito que transfiere la sesión a las cookies SSR. No toca la
+// sesión del propietario (cliente anónimo sin persistencia).
 async function sendAccessEmail(email: string): Promise<boolean> {
   const headerList = await headers()
   const host = headerList.get('host')
   const proto = headerList.get('x-forwarded-proto') ?? 'https'
   const { url, anonKey } = getPublicSupabaseEnvironment()
   const anon = createClient<Database>(url, anonKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
+    auth: {
+      flowType: 'implicit',
+      persistSession: false,
+      autoRefreshToken: false,
+    },
   })
   const { error } = await anon.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: host ? `${proto}://${host}/auth/callback` : undefined,
+      emailRedirectTo: host
+        ? `${proto}://${host}/auth/invitation-callback`
+        : undefined,
     },
   })
   return !error
@@ -131,7 +142,6 @@ export async function getHouseholdManagement(): Promise<HouseholdManagement | nu
   const [
     { data: household },
     { data: members },
-    { data: people },
     { data: invitations },
   ] = await Promise.all([
     supabase.from('households').select('name').maybeSingle(),
@@ -139,26 +149,43 @@ export async function getHouseholdManagement(): Promise<HouseholdManagement | nu
       .from('household_members')
       .select('user_id,role')
       .eq('status', 'active'),
-    supabase.from('household_people').select('name'),
     supabase
       .from('household_invitations')
-      .select('id,email')
-      .eq('status', 'pending'),
+      .select('id,email,status,accepted_by')
+      .in('status', ['pending', 'accepted']),
   ])
 
   if (!household) return null
   const isOwner =
     (members ?? []).find((member) => member.user_id === user.id)?.role ===
     'owner'
+  const acceptedEmailByUserId = new Map(
+    (invitations ?? [])
+      .filter(
+        (invitation) =>
+          invitation.status === 'accepted' && invitation.accepted_by,
+      )
+      .map((invitation) => [invitation.accepted_by!, invitation.email]),
+  )
+  const activeMembers = (members ?? []).map((member) => ({
+    id: member.user_id,
+    label:
+      member.user_id === user.id
+        ? 'Tú'
+        : (acceptedEmailByUserId.get(member.user_id) ?? 'Integrante del hogar'),
+    role: member.role,
+  }))
 
   return {
     isOwner,
     householdName: household.name,
-    activeMemberCount: (members ?? []).length,
-    people: (people ?? []).map((person) => person.name),
-    pendingInvitations: (invitations ?? []).map((invitation) => ({
-      id: invitation.id,
-      email: invitation.email,
-    })),
+    activeMemberCount: activeMembers.length,
+    activeMembers,
+    pendingInvitations: (invitations ?? [])
+      .filter((invitation) => invitation.status === 'pending')
+      .map((invitation) => ({
+        id: invitation.id,
+        email: invitation.email,
+      })),
   }
 }

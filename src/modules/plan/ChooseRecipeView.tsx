@@ -56,11 +56,14 @@ export function ChooseRecipeView({
   suggestions: Suggestion[]
 }) {
   const backHref = `/plan?semana=${weekStart(mealDate)}`
+  // Sin búsqueda no se listan todas las recetas (con 164 es un muro y un coste
+  // de render alto): solo salen las sugerencias y el buscador. La lista aparece
+  // al escribir.
   const results = query
     ? recipes.filter((recipe) =>
         recipe.title.toLowerCase().includes(query.toLowerCase()),
       )
-    : recipes
+    : []
 
   return (
     <AppShell current="plan" contentClassName="choose-page">
@@ -124,13 +127,13 @@ export function ChooseRecipeView({
             Todavía no tienes recetas guardadas.{' '}
             <Link href="/recetas">Añadir receta</Link>
           </p>
-        ) : results.length === 0 ? (
+        ) : !query ? (
           <p className="choose-empty">
-            Ninguna receta coincide con «{query}».{' '}
-            <a href={`/plan/elegir?fecha=${mealDate}&servicio=${mealType}`}>
-              Ver todas las recetas
-            </a>
+            Escribe el nombre de una receta para buscar entre tus{' '}
+            {recipes.length} recetas.
           </p>
+        ) : results.length === 0 ? (
+          <p className="choose-empty">Ninguna receta coincide con «{query}».</p>
         ) : (
           <ul className="choose-list">
             {results.map((recipe) => (

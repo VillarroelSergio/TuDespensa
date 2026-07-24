@@ -1323,6 +1323,17 @@ footer {
   cursor: wait;
   opacity: 0.6;
 }
+.recipes-show-more {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: #fff;
+  color: var(--primary-strong);
+  font-weight: 700;
+}
 .recipe-preferences {
   display: flex;
   flex-wrap: wrap;
@@ -2536,10 +2547,19 @@ a:focus-visible {
   gap: 1rem;
 }
 .household-people li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.4rem 0.75rem;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+.household-access-role {
+  color: var(--muted);
+  font-size: 0.875rem;
+  white-space: nowrap;
 }
 .household-invite {
   display: flex;

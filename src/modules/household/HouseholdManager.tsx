@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import {
   inviteMember,
   resendInvitation,
@@ -11,11 +13,28 @@ import {
 } from './actions'
 
 export function HouseholdManager({ data }: { data: HouseholdManagement }) {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('')
   const [pending, startTransition] = useTransition()
   const hasFreeSpot = data.activeMemberCount < 2
   const canInvite = data.isOwner && hasFreeSpot
+
+  useEffect(() => {
+    const client = createSupabaseBrowserClient()
+    const channel = client
+      .channel('household-membership-refresh')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'household_invitations' },
+        () => router.refresh(),
+      )
+      .subscribe()
+
+    return () => {
+      void client.removeChannel(channel)
+    }
+  }, [router])
 
   function invite(event: React.FormEvent) {
     event.preventDefault()
@@ -69,16 +88,19 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
           : 'Dos personas tienen acceso a este hogar.'}
       </p>
 
-      {data.people.length ? (
-        <>
-          <p className="label">Personas del hogar</p>
-          <ul className="household-people">
-            {data.people.map((person) => (
-              <li key={person}>{person}</li>
-            ))}
-          </ul>
-        </>
-      ) : null}
+      <>
+        <p className="label">Cuentas con acceso</p>
+        <ul className="household-people">
+          {data.activeMembers.map((member) => (
+            <li key={member.id}>
+              <span>{member.label}</span>
+              <span className="household-access-role">
+                {member.role === 'owner' ? 'Propietaria' : 'Integrante'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </>
 
       {data.isOwner ? (
         <form onSubmit={invite} className="household-invite">

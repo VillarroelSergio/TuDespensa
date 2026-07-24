@@ -4,7 +4,6 @@ import {
   dishTypeLabel,
   formatIngredient,
   isIngredientInPantry,
-  pantryNameSet,
   timeLabel,
 } from './presentation'
 import { RecipePreferences } from './RecipePreferences'
@@ -17,7 +16,6 @@ export function RecipeDetailView({
   recipe: RecipeDetail
   pantryItemNames: string[]
 }) {
-  const pantryNames = pantryNameSet(pantryItemNames)
   const meta = [
     recipe.servings ? `${recipe.servings} raciones` : null,
     timeLabel(recipe.totalMinutes),
@@ -70,7 +68,7 @@ export function RecipeDetailView({
             {recipe.ingredients.map((ingredient) => (
               <li key={ingredient.position}>
                 {formatIngredient(ingredient)}
-                {isIngredientInPantry(ingredient.name, pantryNames) ? (
+                {isIngredientInPantry(ingredient.name, pantryItemNames) ? (
                   <span className="recipe-ingredient-owned">
                     Ya tienes esto
                   </span>
