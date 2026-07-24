@@ -41,19 +41,15 @@ export async function middleware(request: NextRequest) {
   if (protectedPaths.some((path) => pathname.startsWith(path)) && !user)
     return NextResponse.redirect(new URL('/login', request.url))
   if (!user) return response
+  // Un solo viaje a Supabase (crítico: el middleware corre en el edge y no se
+  // puede fijar a Europa): la pertenencia y el estado de onboarding se traen
+  // con un join embebido en vez de dos consultas encadenadas.
   const { data: membership } = await supabase
     .from('household_members')
-    .select('household_id')
+    .select('households(onboarding_status)')
     .eq('status', 'active')
     .maybeSingle()
-  const { data: household } = membership
-    ? await supabase
-        .from('households')
-        .select('onboarding_status')
-        .eq('id', membership.household_id)
-        .maybeSingle()
-    : { data: null }
-  const completed = household?.onboarding_status === 'completed'
+  const completed = membership?.households?.onboarding_status === 'completed'
   if (
     completed &&
     (pathname === '/login' || pathname.startsWith('/onboarding'))
