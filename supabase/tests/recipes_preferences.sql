@@ -59,14 +59,24 @@ begin
   exception when invalid_parameter_value then null;
   end;
 
-  -- Dataset inicial: carga idempotente y no destructiva.
+  -- Dataset inicial aprobado: 150 recetas base y 14 recetas familiares.
+  -- Además de comprobar la idempotencia, validamos la categoría automática:
+  -- una categoría nula abortaría toda la carga del catálogo.
   seed_result := public.recipes_load_seed('seed-load-0001');
-  if (seed_result->>'loaded')::int <> 3 then raise exception 'Seed did not load the expected recipes'; end if;
-  if (select count(*) from public.recipes where origin = 'seed') <> 3 then raise exception 'Seed recipes are not present'; end if;
+  if (seed_result->>'loaded')::int <> 164 then raise exception 'Seed did not load the expected recipes'; end if;
+  if (select count(*) from public.recipes where origin = 'seed') <> 164 then raise exception 'Seed recipes are not present'; end if;
+  if (
+    select count(*)
+    from public.recipe_category_assignments assignments
+    join public.recipes recipes on recipes.id = assignments.recipe_id
+    where recipes.origin = 'seed'
+  ) <> 164 then
+    raise exception 'Seed recipes are missing their Mediterranean category';
+  end if;
   -- Editar una receta base y recargar: no se sobrescribe.
-  update public.recipes set title = 'Gazpacho de la casa', version = version + 1 where seed_key = 'gazpacho-andaluz';
+  update public.recipes set title = 'Gazpacho de la casa', version = version + 1 where seed_key = 'base-v2-001';
   if (public.recipes_load_seed('seed-load-0002'))->>'loaded' <> '0' then raise exception 'Reload duplicated seed recipes'; end if;
-  if (select title from public.recipes where seed_key = 'gazpacho-andaluz') <> 'Gazpacho de la casa' then
+  if (select title from public.recipes where seed_key = 'base-v2-001') <> 'Gazpacho de la casa' then
     raise exception 'Seed reload overwrote a household edit';
   end if;
 end;

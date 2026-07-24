@@ -6,6 +6,7 @@ const destinations = [
   { id: 'recetas', href: '/recetas', label: 'Recetas', icon: '⌘' },
   { id: 'compra', href: '/compra', label: 'Compra', icon: '◌' },
   { id: 'despensa', href: '/despensa', label: 'Despensa', icon: '□' },
+  { id: 'hogar', href: '/hogar', label: 'Hogar', icon: '⌂' },
 ] as const
 
 type Destination = (typeof destinations)[number]['id']
@@ -27,7 +28,9 @@ function AppNavigation({
           href={destination.href}
           key={destination.id}
         >
-          <span aria-hidden="true" className="app-shell__nav-icon">{destination.icon}</span>
+          <span aria-hidden="true" className="app-shell__nav-icon">
+            {destination.icon}
+          </span>
           <span>{destination.label}</span>
         </Link>
       ))}
@@ -48,12 +51,16 @@ export function AppShell({
     <main className={`app-shell app-shell--${current}`}>
       <aside className="app-shell__rail">
         <Link className="app-shell__brand" href="/plan">
-          <span aria-hidden="true" className="app-shell__brand-mark">M</span>
+          <span aria-hidden="true" className="app-shell__brand-mark">
+            M
+          </span>
           <span>MiDespensa</span>
         </Link>
         <AppNavigation className="app-shell__rail-nav" current={current} />
       </aside>
-      <section className={`app-shell__content ${contentClassName}`}>{children}</section>
+      <section className={`app-shell__content ${contentClassName}`}>
+        {children}
+      </section>
       <AppNavigation
         className="app-shell__dock"
         current={current}
