@@ -1,10 +1,12 @@
 import type { RecipeDishType } from '@/modules/recipes/types'
 
+import { classifyFoodGroup, foodGroupLabel, type FoodGroup } from './foodGroups'
+
 /**
  * Pesos versionados del ranking. Subir la versión al cambiar cualquier peso:
  * es lo que permite explicar por qué una sugerencia de ayer no sale hoy.
  */
-export const SUGGESTION_WEIGHTS_VERSION = 1
+export const SUGGESTION_WEIGHTS_VERSION = 2
 
 export const SUGGESTION_WEIGHTS = {
   /** Por fracción de ingredientes ya disponibles en la despensa. */
@@ -23,6 +25,10 @@ export const SUGGESTION_WEIGHTS = {
   mediterranean: 6,
   /** Ya planificada esta semana: no se prohíbe, se hunde. */
   repeated: -60,
+  /** Su grupo (legumbre, carne roja...) aún no aparece esta semana. */
+  balanceBonus: 6,
+  /** Su grupo ya aparece 2 o más veces esta semana: dieta equilibrada, no monótona. */
+  balancePenalty: -18,
 } as const
 
 /** Se considera rápida por debajo de este umbral (minutos). */
@@ -54,6 +60,8 @@ export type SuggestionInput = {
   plannedRecipeIds: string[]
   /** Tipos de plato ya presentes en la semana mostrada. */
   plannedDishTypes: (RecipeDishType | null)[]
+  /** Grupo de alimento de cada comida ya planificada esta semana (equilibrio). */
+  plannedFoodGroups?: (FoodGroup | null)[]
 }
 
 export type SuggestionFactor = { label: string; points: number }
@@ -177,11 +185,34 @@ function scoreCandidate(
     factors.push({ label: 'Repetida', points: SUGGESTION_WEIGHTS.repeated })
   }
 
-  // Un único motivo, por orden de peso: aprovechar > rapidez > variedad.
+  // Equilibrio semanal: cuenta cuántas veces ya aparece el grupo de esta
+  // receta (legumbre, carne roja...) entre lo ya planificado, y penaliza la
+  // sobrerrepresentación en vez de prohibirla, igual que «Repetida».
+  const foodGroup = classifyFoodGroup(candidate.ingredients)
+  const groupOccurrences = foodGroup
+    ? (input.plannedFoodGroups ?? []).filter((group) => group === foodGroup)
+        .length
+    : 0
+  let balanceReason: string | null = null
+  if (foodGroup && groupOccurrences >= 2) {
+    factors.push({
+      label: `Ya llevas ${foodGroupLabel(foodGroup)} ${groupOccurrences} veces esta semana`,
+      points: SUGGESTION_WEIGHTS.balancePenalty,
+    })
+  } else if (foodGroup && groupOccurrences === 0) {
+    factors.push({
+      label: 'Equilibrio semanal',
+      points: SUGGESTION_WEIGHTS.balanceBonus,
+    })
+    balanceReason = `Esta semana aún no has tomado ${foodGroupLabel(foodGroup)}`
+  }
+
+  // Un único motivo, por orden de peso: aprovechar > rapidez > variedad > equilibrio.
   const reason =
     (priorityUsed[0] ? `Aprovecha ${priorityUsed[0]}` : null) ??
     quick ??
     (varies ? 'Para variar esta semana' : null) ??
+    balanceReason ??
     (missing.length === 0 && total > 0
       ? 'La tienes a mano'
       : 'De tu biblioteca')
@@ -202,7 +233,10 @@ function scoreCandidate(
  * puntuación gana el título alfabético y, si empata, el id. Dos ejecuciones con
  * los mismos datos dan siempre el mismo resultado.
  */
-export function rankSuggestions(input: SuggestionInput): Suggestion[] {
+export function rankSuggestions(
+  input: SuggestionInput,
+  count = SUGGESTION_COUNT,
+): Suggestion[] {
   return input.candidates
     .map((candidate) => scoreCandidate(candidate, input))
     .sort(
@@ -211,7 +245,7 @@ export function rankSuggestions(input: SuggestionInput): Suggestion[] {
         left.title.localeCompare(right.title, 'es') ||
         left.recipeId.localeCompare(right.recipeId),
     )
-    .slice(0, SUGGESTION_COUNT)
+    .slice(0, count)
 }
 
 /** Línea de disponibilidad de Plan P2. */

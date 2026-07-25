@@ -118,6 +118,9 @@ async function addPantryItem(page: Page, name: string, zoneLabel?: string) {
   await page.getByRole('textbox', { name: 'Producto' }).fill(name)
   if (zoneLabel) await page.getByRole('button', { name: zoneLabel }).click()
   await page.getByRole('button', { name: 'Añadir a despensa' }).click()
+  // El panel se cierra al confirmarse el alta: esperarlo evita que una alta
+  // consecutiva reabra el mismo formulario mientras esta sigue en curso.
+  await expect(page.getByRole('textbox', { name: 'Producto' })).toBeHidden()
 }
 
 test.describe('pantry', () => {
@@ -495,7 +498,6 @@ test.describe('plan', () => {
       page.getByRole('heading', { name: '¿Qué quieres comer?' }),
     ).toBeVisible()
     await page.getByLabel('Buscar una receta').fill(title)
-    await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: title }).click()
     await page.waitForURL(/\/plan\?semana=/)
     await expect(page.getByRole('link', { name: title })).toBeVisible()
@@ -511,7 +513,6 @@ test.describe('plan', () => {
     const fecha = slotUrl.searchParams.get('fecha')!
     const servicio = slotUrl.searchParams.get('servicio') as 'lunch' | 'dinner'
     await page.getByLabel('Buscar una receta').fill(title)
-    await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: title }).click()
     await page.waitForURL(/\/plan\?semana=/)
 
@@ -524,7 +525,7 @@ test.describe('plan', () => {
     await expect(page.getByRole('link', { name: title })).toBeVisible()
   })
 
-  test('cambiar receta, ajustar raciones, mover, eliminar y deshacer solo tocan el hueco objetivo', async () => {
+  test('cambiar receta, mover, eliminar y deshacer solo tocan el hueco objetivo', async () => {
     const titleA = `Plan A ${Date.now()}`
     const titleB = `Plan B ${Date.now()}`
     const titleC = `Plan C ${Date.now()}`
@@ -539,7 +540,6 @@ test.describe('plan', () => {
       const servicio = slotUrl.searchParams.get('servicio') as
         'lunch' | 'dinner'
       await page.getByLabel('Buscar una receta').fill(title)
-      await page.getByRole('button', { name: 'Buscar' }).click()
       await page.getByRole('button', { name: title }).click()
       await page.waitForURL(/\/plan\?semana=/)
       return { fecha, servicio }
@@ -551,18 +551,21 @@ test.describe('plan', () => {
     const label1 = slotLabelOf(slot1.fecha, slot1.servicio)
     const label2 = slotLabelOf(slot2.fecha, slot2.servicio)
     const menu1 = () =>
+      page.locator('.plan-menu').filter({
+        has: page.locator(`summary[aria-label="Opciones de ${label1}"]`),
+      })
+    // Toda receta se planifica siempre a 2 raciones, así que el texto por sí
+    // solo no distingue huecos: hay que acotarlo al bloque de la receta elegida.
+    const slotOf = (title: string) =>
       page
-        .locator('.plan-menu')
-        .filter({
-          has: page.locator(`summary[aria-label="Opciones de ${label1}"]`),
-        })
+        .locator('.plan-slot__recipe')
+        .filter({ has: page.getByRole('link', { name: title }) })
 
     // Cambiar receta: solo afecta al hueco 1; el hueco 2 permanece intacto.
     await page.locator(`summary[aria-label="Opciones de ${label1}"]`).click()
     await menu1().getByRole('link', { name: 'Cambiar receta' }).click()
     await page.waitForURL(/\/plan\/elegir/)
     await page.getByLabel('Buscar una receta').fill(titleC)
-    await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: titleC }).click()
     await page.waitForURL(/\/plan\?semana=/)
     await expect(page.getByRole('link', { name: titleC })).toBeVisible()
@@ -570,15 +573,6 @@ test.describe('plan', () => {
     await expect(
       page.locator(`summary[aria-label="Opciones de ${label2}"]`),
     ).toBeVisible()
-
-    // Ajustar raciones: persiste tras recargar.
-    await page.locator(`summary[aria-label="Opciones de ${label1}"]`).click()
-    await menu1().getByLabel('Ajustar raciones').fill('4')
-    await menu1().getByRole('button', { name: 'Guardar' }).click()
-    await page.waitForURL(/\/plan\?semana=/)
-    await expect(page.getByText('4 raciones')).toBeVisible()
-    await page.reload()
-    await expect(page.getByText('4 raciones')).toBeVisible()
 
     // Mover a otro día: el origen queda vacío y el destino conserva la comida.
     const movedFecha = addDaysIso(slot1.fecha, 2)
@@ -591,23 +585,22 @@ test.describe('plan', () => {
     ).toHaveCount(0)
     const labelMoved = slotLabelOf(movedFecha, slot1.servicio)
     const menuMoved = () =>
-      page
-        .locator('.plan-menu')
-        .filter({
-          has: page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
-        })
+      page.locator('.plan-menu').filter({
+        has: page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
+      })
     await expect(
       page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
     ).toBeVisible()
     await expect(page.getByRole('link', { name: titleC })).toBeVisible()
-    await expect(page.getByText('4 raciones')).toBeVisible()
+    await expect(slotOf(titleC).getByText('2 raciones')).toBeVisible()
 
     // Eliminar y deshacer: restaura la misma receta y raciones en el mismo hueco.
     await page
       .locator(`summary[aria-label="Opciones de ${labelMoved}"]`)
       .click()
-    await menuMoved().getByRole('button', { name: 'Eliminar' }).click()
-    await menuMoved().getByRole('button', { name: 'Sí, eliminar' }).click()
+    await menuMoved()
+      .getByRole('button', { name: 'Quitar de este hueco' })
+      .click()
     await page.waitForURL(/\/plan\?semana=.*deshacer=/)
     const toast = page.getByRole('status')
     await expect(toast).toContainText(`Hemos quitado ${labelMoved}.`)
@@ -617,7 +610,7 @@ test.describe('plan', () => {
       page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
     ).toBeVisible()
     await expect(page.getByRole('link', { name: titleC })).toBeVisible()
-    await expect(page.getByText('4 raciones')).toBeVisible()
+    await expect(slotOf(titleC).getByText('2 raciones')).toBeVisible()
   })
 
   test('cocinar con revisión solo descuenta en Despensa los productos que quedan marcados', async () => {
@@ -634,7 +627,6 @@ test.describe('plan', () => {
     const fecha = slotUrl.searchParams.get('fecha')!
     const servicio = slotUrl.searchParams.get('servicio') as 'lunch' | 'dinner'
     await page.getByLabel('Buscar una receta').fill(title)
-    await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: title }).click()
     await page.waitForURL(/\/plan\?semana=/)
 

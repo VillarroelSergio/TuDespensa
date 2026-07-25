@@ -125,7 +125,6 @@ test('el plan converge en tiempo real entre dos sesiones', async ({
     await pageA.getByRole('link', { name: 'Añadir' }).first().click()
     await pageA.waitForURL('**/plan/elegir*')
     await pageA.getByLabel('Buscar una receta').fill(recipeTitle)
-    await pageA.getByRole('button', { name: 'Buscar' }).click()
     await pageA.getByRole('button', { name: new RegExp(recipeTitle) }).click()
     await pageA.waitForURL('**/plan*')
 

@@ -51,21 +51,6 @@ function SlotMenu({ meal }: { meal: PlannedMeal }) {
         )}
         <a href={chooseHref(meal.mealDate, meal.mealType)}>Cambiar receta</a>
 
-        <form className="plan-menu__form" action={assignMealAction}>
-          {hidden}
-          <label htmlFor={`raciones-${slotId}`}>Ajustar raciones</label>
-          <input
-            id={`raciones-${slotId}`}
-            name="raciones"
-            type="number"
-            min={1}
-            max={99}
-            step={1}
-            defaultValue={meal.servings ?? ''}
-          />
-          <button type="submit">Guardar</button>
-        </form>
-
         <form className="plan-menu__form" action={moveMealAction}>
           <input type="hidden" name="origen-fecha" value={meal.mealDate} />
           <input type="hidden" name="origen-servicio" value={meal.mealType} />
@@ -89,16 +74,14 @@ function SlotMenu({ meal }: { meal: PlannedMeal }) {
           <button type="submit">Mover</button>
         </form>
 
-        {/* Eliminar pide confirmación: el segundo `details` es el paso extra. */}
-        <details className="plan-menu__danger">
-          <summary>Eliminar</summary>
-          <form action={removeMealAction}>
-            {hidden}
-            <input type="hidden" name="raciones" value={meal.servings ?? ''} />
-            <p>Se quitará «{meal.title}» de este hueco.</p>
-            <button type="submit">Sí, eliminar</button>
-          </form>
-        </details>
+        {/* Sin confirmación extra: el banner de Deshacer ya cubre el error. */}
+        <form action={removeMealAction}>
+          {hidden}
+          <input type="hidden" name="raciones" value={meal.servings ?? ''} />
+          <button className="plan-menu__remove" type="submit">
+            Quitar de este hueco
+          </button>
+        </form>
       </div>
     </details>
   )
@@ -237,7 +220,10 @@ export function WeekView({
             </p>
           </div>
           <div className="plan-overview__count">
-            <strong>{planned}<span>/14</span></strong>
+            <strong>
+              {planned}
+              <span>/14</span>
+            </strong>
             <span>comidas decididas</span>
           </div>
         </section>

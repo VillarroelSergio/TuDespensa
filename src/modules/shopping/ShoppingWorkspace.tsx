@@ -68,6 +68,30 @@ export function ShoppingWorkspace({
     })
   }
 
+  function handleToggleAll(purchased: boolean) {
+    const targets = items.filter((item) => item.isPurchased !== purchased)
+    if (!targets.length) return
+    setStatus('')
+    startTransition(async () => {
+      targets.forEach((item) => applyToggle(item.id))
+      try {
+        await Promise.all(
+          targets.map((item) =>
+            toggleShoppingItem(item.id, item.version, purchased),
+          ),
+        )
+        setStatus(
+          purchased ? 'Todo marcado como comprado.' : 'Todo desmarcado.',
+        )
+      } catch {
+        setStatus(
+          'No hemos podido guardar los cambios. Hemos actualizado la lista.',
+        )
+        router.refresh()
+      }
+    })
+  }
+
   return (
     <ShoppingList
       initialItems={items}
@@ -76,6 +100,7 @@ export function ShoppingWorkspace({
       notice={notice}
       onAdd={handleAdd}
       onToggle={handleToggle}
+      onToggleAll={handleToggleAll}
     />
   )
 }

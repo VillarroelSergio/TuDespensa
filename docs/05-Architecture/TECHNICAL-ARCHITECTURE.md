@@ -118,7 +118,7 @@ No se implementará en el MVP una réplica completa de PostgreSQL en el disposit
 | Preview | Revisar cada rama o pull request | Proyecto aislado o datos sintéticos; nunca producción |
 | Producción | Uso real de las dos cuentas | Proyecto Supabase europeo dedicado |
 
-El entorno de desarrollo remoto está creado en Supabase como `TuDespensa Development`, referencia `ibubyiqfmujazblgcbps`, región `eu-west-1`. Está vacío, usa PostgreSQL 17 y solo admite datos sintéticos. Sus URL y claves se gestionarán exclusivamente mediante variables de entorno; no se almacenan en este repositorio.
+El entorno remoto activo está creado en Supabase como `MiDespensa Pilot`, referencia `knucezvymejdbpibdbkg`, región `eu-west-1`. Usa PostgreSQL 17. Sus URL y claves se gestionan exclusivamente mediante variables de entorno; no se almacenan en este repositorio.
 
 Flujo de entrega:
 

@@ -3,21 +3,26 @@ import Link from 'next/link'
 import {
   dishTypeLabel,
   formatIngredient,
-  isIngredientInPantry,
-  pantryNameSet,
+  ingredientAvailability,
   timeLabel,
+  type PantryAvailabilityItem,
 } from './presentation'
 import { RecipePreferences } from './RecipePreferences'
 import type { RecipeDetail } from './types'
 
+const AVAILABILITY_LABEL = {
+  owned: 'Ya tienes esto',
+  low: 'Queda poco',
+  missing: 'Te falta',
+} as const
+
 export function RecipeDetailView({
   recipe,
-  pantryItemNames,
+  pantryAvailability,
 }: {
   recipe: RecipeDetail
-  pantryItemNames: string[]
+  pantryAvailability: PantryAvailabilityItem[]
 }) {
-  const pantryNames = pantryNameSet(pantryItemNames)
   const meta = [
     recipe.servings ? `${recipe.servings} raciones` : null,
     timeLabel(recipe.totalMinutes),
@@ -67,16 +72,26 @@ export function RecipeDetailView({
         <h2 id="detail-ingredients">Ingredientes</h2>
         {recipe.ingredients.length ? (
           <ul className="recipe-detail__ingredients">
-            {recipe.ingredients.map((ingredient) => (
-              <li key={ingredient.position}>
-                {formatIngredient(ingredient)}
-                {isIngredientInPantry(ingredient.name, pantryNames) ? (
-                  <span className="recipe-ingredient-owned">
-                    Ya tienes esto
+            {recipe.ingredients.map((ingredient) => {
+              const availability = ingredientAvailability(
+                ingredient.name,
+                pantryAvailability,
+              )
+              return (
+                <li className="recipe-detail__ingredient" key={ingredient.position}>
+                  <span
+                    aria-hidden="true"
+                    className={`recipe-ingredient-dot recipe-ingredient-dot--${availability}`}
+                  />
+                  <span className="recipe-detail__ingredient-text">
+                    {formatIngredient(ingredient)}
                   </span>
-                ) : null}
-              </li>
-            ))}
+                  <span className="recipe-ingredient-owned">
+                    {AVAILABILITY_LABEL[availability]}
+                  </span>
+                </li>
+              )
+            })}
           </ul>
         ) : (
           <p className="recipes-empty">Aún no hay ingredientes.</p>

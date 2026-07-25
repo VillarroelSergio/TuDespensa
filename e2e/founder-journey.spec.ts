@@ -79,7 +79,6 @@ test('el hogar fundador recorre el valor completo de MiDespensa', async ({
       page.getByRole('heading', { name: '¿Qué quieres comer?' }),
     ).toBeVisible()
     await page.getByLabel('Buscar una receta').fill(recipeTitle)
-    await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: new RegExp(recipeTitle) }).click()
     await page.waitForURL('**/plan*')
     await expect(page.getByRole('link', { name: recipeTitle })).toBeVisible()
@@ -110,8 +109,6 @@ test('el hogar fundador recorre el valor completo de MiDespensa', async ({
     // Cocina: marcar la comida como cocinada y confirmar propuestas.
     await page.goto(`${baseUrl}/plan`)
     const optionsMenu = page.locator('details.plan-menu').first()
-    // `summary` también matchea el <summary>Eliminar</summary> del <details>
-    // anidado para confirmar el borrado; el de "Opciones" es el primero en el DOM.
     await optionsMenu.locator('summary').first().click()
     await optionsMenu
       .getByRole('link', { name: 'Marcar como cocinada' })

@@ -1,10 +1,37 @@
 'use client'
 
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 
 import { AppShell } from '@/components/ui/AppShell'
 import { formatQuantity, shoppingProgress } from './presentation'
 import type { ShoppingItem } from './types'
+
+function SelectAllRow({
+  total,
+  purchased,
+  onToggleAll,
+}: {
+  total: number
+  purchased: number
+  onToggleAll: (purchased: boolean) => void
+}) {
+  const ref = useRef<HTMLInputElement>(null)
+  const allChecked = total > 0 && purchased === total
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = purchased > 0 && !allChecked
+  }, [purchased, allChecked])
+  return (
+    <label className="shopping-select-all">
+      <input
+        ref={ref}
+        checked={allChecked}
+        onChange={() => onToggleAll(!allChecked)}
+        type="checkbox"
+      />
+      <span>Seleccionar todo</span>
+    </label>
+  )
+}
 
 function Row({
   item,
@@ -27,8 +54,12 @@ function Row({
         type="checkbox"
       />
       <span>{item.name}</span>
-      {quantity ? <small className="shopping-qty">{quantity}</small> : null}
-      {item.source === 'pantry' ? <small>Desde despensa</small> : null}
+      {quantity || item.source === 'pantry' ? (
+        <span className="shopping-row__meta">
+          {quantity ? <small className="shopping-qty">{quantity}</small> : null}
+          {item.source === 'pantry' ? <small>Desde despensa</small> : null}
+        </span>
+      ) : null}
     </label>
   )
 }
@@ -40,6 +71,7 @@ export function ShoppingList({
   notice,
   onAdd,
   onToggle,
+  onToggleAll,
 }: {
   initialItems: ShoppingItem[]
   pending: boolean
@@ -47,6 +79,7 @@ export function ShoppingList({
   notice?: string | null
   onAdd: (name: string) => void
   onToggle: (item: ShoppingItem) => void
+  onToggleAll: (purchased: boolean) => void
 }) {
   const [name, setName] = useState('')
   const items = useMemo(
@@ -79,9 +112,14 @@ export function ShoppingList({
             <p className="shopping-kicker">Lista de esta semana</p>
             <h1 id="shopping-title">Compra</h1>
           </div>
-          <div className="shopping-progress" aria-label={`${purchased} de ${items.length} productos comprados`}>
+          <div
+            className="shopping-progress"
+            aria-label={`${purchased} de ${items.length} productos comprados`}
+          >
             <strong>{progress.label}</strong>
-            <span>{purchased} / {items.length}</span>
+            <span>
+              {purchased} / {items.length}
+            </span>
           </div>
         </header>
         {notice ? <p className="plan-notice">{notice}</p> : null}
@@ -110,6 +148,13 @@ export function ShoppingList({
           <p className="pantry-sync-status" aria-live="polite">
             {status}
           </p>
+        ) : null}
+        {items.length ? (
+          <SelectAllRow
+            total={items.length}
+            purchased={purchased}
+            onToggleAll={onToggleAll}
+          />
         ) : null}
         {planItems.length ? (
           <section className="shopping-list" aria-label="Para el plan">

@@ -7,6 +7,7 @@ import { AppShell } from '@/components/ui/AppShell'
 
 import { importTicketItems } from './actions'
 import { readTicketImage } from './ocr'
+import { readTicketPdf } from './pdf'
 import { parseTicketLines, type TicketLine } from './ticket'
 
 const UNIT_OPTIONS: { value: string; label: string }[] = [
@@ -62,6 +63,29 @@ export function TicketImport() {
     }
   }
 
+  async function handlePdf(file: File) {
+    if (pending) return
+    setPending(true)
+    setStatus('Leyendo el PDF en tu dispositivo…')
+    try {
+      const detected = parseTicketLines(
+        await readTicketPdf(file, (ratio) =>
+          setStatus(
+            `Leyendo el PDF en tu dispositivo… ${Math.round(ratio * 100)}%`,
+          ),
+        ),
+      )
+      setLines(detected.length ? detected : [EMPTY_LINE])
+      setStatus('')
+    } catch {
+      setStatus(
+        'No hemos podido leer el PDF. Prueba con otro archivo o pega el texto a mano.',
+      )
+    } finally {
+      setPending(false)
+    }
+  }
+
   function update(index: number, patch: Partial<TicketLine>) {
     setLines((current) =>
       (current ?? []).map((line, i) =>
@@ -94,9 +118,7 @@ export function TicketImport() {
 
   return (
     <AppShell current="compra" contentClassName="ticket-content">
-      <section
-        aria-labelledby="ticket-title"
-      >
+      <section aria-labelledby="ticket-title">
         <a className="shopping-back" href="/compra">
           ← Volver a la lista
         </a>
@@ -107,10 +129,23 @@ export function TicketImport() {
         {lines === null ? (
           <>
             <p className="shopping-review-lead">
-              Haz una foto del ticket o copia sus líneas, una por producto.
-              Podrás revisarlas y corregirlas antes de añadirlas. La foto se lee
-              en tu móvil y no se guarda.
+              Haz una foto, elige una imagen de tu galería, carga un PDF o copia
+              sus líneas. Podrás revisarlas y corregirlas antes de añadirlas. El
+              archivo se lee en tu móvil y no se guarda.
             </p>
+            <label className="shopping-back ticket-photo">
+              <input
+                type="file"
+                accept="image/*"
+                disabled={pending}
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (file) void handlePhoto(file)
+                  event.target.value = '' // permite reintentar la misma foto
+                }}
+              />
+              Elegir una foto de la galería
+            </label>
             <label className="shopping-back ticket-photo">
               <input
                 type="file"
@@ -120,10 +155,23 @@ export function TicketImport() {
                 onChange={(event) => {
                   const file = event.target.files?.[0]
                   if (file) void handlePhoto(file)
-                  event.target.value = '' // permite reintentar la misma foto
+                  event.target.value = ''
                 }}
               />
               Hacer una foto del ticket
+            </label>
+            <label className="shopping-back ticket-photo">
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                disabled={pending}
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (file) void handlePdf(file)
+                  event.target.value = ''
+                }}
+              />
+              Cargar un ticket en PDF
             </label>
             {status ? (
               <p className="pantry-sync-status" aria-live="polite">

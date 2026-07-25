@@ -22,7 +22,10 @@ type Props = {
   isVisualFixture?: boolean
 }
 
-export function PantryWorkspace({ initialItems, isVisualFixture = false }: Props) {
+export function PantryWorkspace({
+  initialItems,
+  isVisualFixture = false,
+}: Props) {
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)

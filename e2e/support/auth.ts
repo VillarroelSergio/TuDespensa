@@ -1,6 +1,6 @@
 /**
  * Shared login helpers for E2E specs running against Supabase local.
- * Requires local Supabase credentials in `.env.local` (loaded by run-e2e-auth.mjs).
+ * Requires local Supabase credentials in `.env.test.local` (loaded by run-e2e-auth.mjs).
  */
 import { createClient } from '@supabase/supabase-js'
 import type { BrowserContext, Page } from '@playwright/test'
