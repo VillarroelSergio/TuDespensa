@@ -34,7 +34,10 @@ export async function verifyNewBrowserCode(token: string) {
   const { data, error } = await supabase.auth.verifyOtp({
     email: currentUser.email,
     token,
-    type: 'email',
+    // Supabase stores the codes sent by this signed-in device flow in
+    // auth.users.recovery_token. Verifying them as `email` rejects every
+    // freshly issued code; `recovery` matches the token Supabase issued.
+    type: 'recovery',
   })
   if (error || !data.user) throw new Error('El código no es válido o ha caducado.')
 
