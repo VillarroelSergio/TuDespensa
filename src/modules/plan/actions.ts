@@ -16,6 +16,7 @@ import { addPlanItems } from '@/modules/shopping/actions'
 
 import { buildCookLines } from './cooking'
 import type { Consumption, CookLine, CookPantryItem } from './cooking'
+import { classifyFoodGroup } from './foodGroups'
 import { addDays, weekStart } from './presentation'
 import { missingIngredients, rankSuggestions } from './suggestions'
 import type { Suggestion } from './suggestions'
@@ -150,9 +151,9 @@ async function consolidateShopping(recipeId: string): Promise<number> {
 }
 
 /**
- * Asigna una receta a un hueco. Cubre elegir desde P2, ajustar raciones y
- * deshacer un borrado: los tres son la misma escritura sobre el mismo hueco.
- * Solo al elegir desde P2 se consolidan los faltantes en Compra.
+ * Asigna una receta a un hueco. Cubre elegir desde P2 y deshacer un borrado:
+ * las dos son la misma escritura sobre el mismo hueco. Solo al elegir desde
+ * P2 se consolidan los faltantes en Compra.
  */
 export async function assignMealAction(formData: FormData) {
   const slot = parseSlot(formData)
@@ -232,16 +233,28 @@ async function getSuggestionPantry(
   })
 }
 
+/** 3 sugerencias explicadas + 10 recomendadas adicionales para el buscador. */
+export type ChooseRecipeOptions = {
+  suggestions: Suggestion[]
+  recommended: Suggestion[]
+}
+
+const RECOMMENDED_COUNT = 10
+
 /**
  * Sugerencias explicables para un hueco: reúne biblioteca, despensa y semana, y
- * delega la puntuación en `rankSuggestions`, que es puro y determinista.
+ * delega la puntuación en `rankSuggestions`, que es puro y determinista. Además
+ * de las 3 sugerencias, devuelve 10 recomendadas más para el buscador («Buscar
+ * una receta»), complementarias a las sugerencias.
  */
-export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
+export async function getSuggestions(
+  mealDate: string,
+): Promise<ChooseRecipeOptions> {
   const supabase = await createSupabaseServerClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return []
+  if (!user) return { suggestions: [], recommended: [] }
 
   const startIso = weekStart(mealDate)
   const [
@@ -276,7 +289,7 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
   ])
   if (recipesRes.error) failure(recipesRes.error)
   const recipes = recipesRes.data ?? []
-  if (!recipes.length) return []
+  if (!recipes.length) return { suggestions: [], recommended: [] }
 
   const ingredientsByRecipe = new Map<string, string[]>()
   for (const row of ingredientsRes.data ?? []) {
@@ -308,8 +321,13 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
   const plannedDishTypes = plannedRecipeIds.map(
     (id) => (dishTypeById.get(id) ?? null) as RecipeDishType | null,
   )
+  // Misma lógica de equilibrio semanal que ve cada sugerencia: qué grupo de
+  // alimento (legumbre, carne roja...) ya lleva la semana mostrada.
+  const plannedFoodGroups = plannedRecipeIds.map((id) =>
+    classifyFoodGroup(ingredientsByRecipe.get(id) ?? []),
+  )
 
-  return rankSuggestions({
+  const rankInput = {
     candidates: recipes.map((recipe) => ({
       id: recipe.id,
       title: recipe.title,
@@ -323,7 +341,15 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
     pantry,
     plannedRecipeIds,
     plannedDishTypes,
-  })
+    plannedFoodGroups,
+  }
+  // Las 10 recomendadas son las siguientes en el mismo ranking, sin repetir
+  // las 3 sugerencias ya mostradas.
+  const ranked = rankSuggestions(rankInput, 3 + RECOMMENDED_COUNT)
+  return {
+    suggestions: ranked.slice(0, 3),
+    recommended: ranked.slice(3, 3 + RECOMMENDED_COUNT),
+  }
 }
 
 /** Comidas planificadas de la semana que empieza en `startIso` (lunes). */

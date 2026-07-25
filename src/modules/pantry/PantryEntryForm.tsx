@@ -61,6 +61,7 @@ export function PantryEntryForm({ onClose, onSave }: Props) {
         Producto
         <input
           autoFocus
+          disabled={pending}
           id="pantry-entry-name"
           maxLength={120}
           onChange={(event) => setFoodName(event.target.value)}
@@ -75,6 +76,7 @@ export function PantryEntryForm({ onClose, onSave }: Props) {
           {zoneOptions.map((option) => (
             <button
               className={zone === option.value ? 'is-selected' : undefined}
+              disabled={pending}
               key={option.value}
               onClick={() => setZone(option.value)}
               type="button"

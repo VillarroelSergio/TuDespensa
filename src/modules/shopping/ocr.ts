@@ -1,16 +1,45 @@
 // Fase 10, rebanada 2: lee el texto de una foto de ticket en el propio dispositivo.
-// La imagen (File) se procesa en el navegador con Tesseract (WASM) y no se sube a
-// ningún servidor ni se guarda: entra como File, sale como texto y se descarta.
-// El texto resultante alimenta el mismo parser/revisión de la rebanada 1.
+// La imagen se procesa en el navegador con Tesseract (WASM) y no se sube ni se
+// guarda: entra como File, sale como texto y se descarta.
 
-// ponytail: carga diferida de tesseract.js — pesa; solo se descarga si la persona
-// usa la foto. El worker/idioma vienen del CDN de la librería; la imagen NO sale.
+// Los tickets suelen fotografiarse sobre una mesa y con sombras o arrugas. Antes
+// de leerlos aumentamos el contraste y limitamos la resolución: el worker local
+// recibe texto más nítido sin aumentar innecesariamente el tiempo de lectura.
+async function prepareTicketImage(file: Blob): Promise<Blob> {
+  const bitmap = await createImageBitmap(file)
+  const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('Canvas no disponible')
+
+  context.fillStyle = '#fff'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  context.filter = 'grayscale(1) contrast(1.85) brightness(1.08)'
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  bitmap.close()
+
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (result) =>
+        result
+          ? resolve(result)
+          : reject(new Error('No se pudo preparar la imagen')),
+      'image/png',
+    ),
+  )
+}
+
+// Carga diferida: Tesseract solo se descarga cuando se usa una foto. El worker y
+// el idioma pueden descargarse, pero la imagen no abandona nunca el dispositivo.
 export async function readTicketImage(
-  file: File,
+  file: Blob,
   onProgress?: (ratio: number) => void,
 ): Promise<string> {
-  const { default: Tesseract } = await import('tesseract.js')
-  const { data } = await Tesseract.recognize(file, 'spa', {
+  const { createWorker, PSM } = await import('tesseract.js')
+  const image = await prepareTicketImage(file).catch(() => file)
+  const worker = await createWorker('spa', 1, {
     logger: onProgress
       ? (message) => {
           if (message.status === 'recognizing text')
@@ -18,5 +47,17 @@ export async function readTicketImage(
         }
       : undefined,
   })
-  return data.text
+
+  try {
+    // SINGLE_BLOCK conserva las filas del ticket; precio y nombre se interpretan
+    // después con reglas específicas y siempre pasan por revisión humana.
+    await worker.setParameters({
+      tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
+      preserve_interword_spaces: '1',
+    })
+    const { data } = await worker.recognize(image)
+    return data.text
+  } finally {
+    await worker.terminate()
+  }
 }

@@ -180,6 +180,36 @@ export interface Database {
           },
         ]
       }
+      trusted_browsers: {
+        Row: {
+          id: string
+          user_id: string
+          token_hash: string
+          created_at: string
+          last_seen_at: string
+          expires_at: string
+          revoked_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          token_hash: string
+          created_at?: string
+          last_seen_at?: string
+          expires_at: string
+          revoked_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          token_hash?: string
+          created_at?: string
+          last_seen_at?: string
+          expires_at?: string
+          revoked_at?: string | null
+        }
+        Relationships: []
+      }
       pantry_locations: {
         Row: {
           id: string
@@ -876,6 +906,10 @@ export interface Database {
       accept_household_invitation: {
         Args: { invitation_id: string }
         Returns: Json
+      }
+      middleware_context: {
+        Args: { browser_token: string | null }
+        Returns: { trusted: boolean; onboarding_status: string | null }[]
       }
       pantry_record_entry: {
         Args: {

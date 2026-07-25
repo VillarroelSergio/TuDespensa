@@ -1,5 +1,7 @@
+'use client'
+
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import { timeLabel } from '@/modules/recipes/presentation'
 import type { Recipe } from '@/modules/recipes/types'
@@ -26,12 +28,13 @@ function ChooseForm({
   children: ReactNode
 }) {
   return (
-    // Elegir confirma el hueco directamente; las raciones se ajustan después
-    // desde el menú contextual (UX Plan P2).
+    // Elegir confirma el hueco directamente (UX Plan P2).
     <form action={assignMealAction}>
       <input type="hidden" name="fecha" value={mealDate} />
       <input type="hidden" name="servicio" value={mealType} />
       <input type="hidden" name="receta" value={recipeId} />
+      {/* Toda receta añadida al plan es siempre para 2 raciones; no es editable. */}
+      <input type="hidden" name="raciones" value="2" />
       {/* Elegir desde P2 es lo único que consolida faltantes en Compra; ajustar
           raciones o deshacer un borrado no deben tocar la lista. */}
       <input type="hidden" name="consolidar" value="1" />
@@ -42,28 +45,61 @@ function ChooseForm({
   )
 }
 
+function SuggestionItem({
+  suggestion,
+  mealDate,
+  mealType,
+  className,
+}: {
+  suggestion: Suggestion
+  mealDate: string
+  mealType: MealType
+  className: string
+}) {
+  return (
+    <ChooseForm
+      className={className}
+      mealDate={mealDate}
+      mealType={mealType}
+      recipeId={suggestion.recipeId}
+    >
+      <span className="choose-suggestion__title">{suggestion.title}</span>
+      <span className="choose-suggestion__reason">{suggestion.reason}</span>
+      <span className="choose-suggestion__availability">
+        {availabilityLabel(suggestion.missing)}
+      </span>
+    </ChooseForm>
+  )
+}
+
 export function ChooseRecipeView({
   mealDate,
   mealType,
   query,
   recipes,
   suggestions,
+  recommended,
 }: {
   mealDate: string
   mealType: MealType
   query: string
   recipes: Recipe[]
   suggestions: Suggestion[]
+  recommended: Suggestion[]
 }) {
   const backHref = `/plan?semana=${weekStart(mealDate)}`
-  // Sin búsqueda no se listan todas las recetas (con 164 es un muro y un coste
-  // de render alto): solo salen las sugerencias y el buscador. La lista aparece
-  // al escribir.
-  const results = query
-    ? recipes.filter((recipe) =>
-        recipe.title.toLowerCase().includes(query.toLowerCase()),
-      )
-    : []
+  // Búsqueda en el propio cliente: como las recetas ya están en memoria, filtra
+  // al teclear sin ida y vuelta al servidor (antes recargaba la página por cada
+  // búsqueda). Sin escribir no se listan las 164 (coste de render alto): solo
+  // sugerencias + recomendadas.
+  const [term, setTerm] = useState(query)
+  const results = useMemo(() => {
+    const needle = term.trim().toLocaleLowerCase('es')
+    if (!needle) return []
+    return recipes.filter((recipe) =>
+      recipe.title.toLocaleLowerCase('es').includes(needle),
+    )
+  }, [recipes, term])
 
   return (
     <AppShell current="plan" contentClassName="choose-page">
@@ -81,59 +117,69 @@ export function ChooseRecipeView({
 
         {/* Las sugerencias solo aparecen sin búsqueda activa: al buscar, la
           intención ya es explícita y mandan los resultados. */}
-        {!query && suggestions.length > 0 ? (
+        {!term && suggestions.length > 0 ? (
           <ul className="choose-suggestions" aria-label="Sugerencias">
             {suggestions.map((suggestion) => (
               <li key={suggestion.recipeId}>
-                <ChooseForm
+                <SuggestionItem
                   className="choose-suggestion"
                   mealDate={mealDate}
                   mealType={mealType}
-                  recipeId={suggestion.recipeId}
-                >
-                  <span className="choose-suggestion__title">
-                    {suggestion.title}
-                  </span>
-                  <span className="choose-suggestion__reason">
-                    {suggestion.reason}
-                  </span>
-                  <span className="choose-suggestion__availability">
-                    {availabilityLabel(suggestion.missing)}
-                  </span>
-                </ChooseForm>
+                  suggestion={suggestion}
+                />
               </li>
             ))}
           </ul>
         ) : null}
 
-        <form className="choose-search" role="search" action="/plan/elegir">
-          <input type="hidden" name="fecha" value={mealDate} />
-          <input type="hidden" name="servicio" value={mealType} />
+        <div className="choose-search" role="search">
           <label className="choose-search__label" htmlFor="choose-q">
             Buscar una receta
           </label>
           <input
             id="choose-q"
-            name="q"
             type="search"
-            defaultValue={query}
+            value={term}
+            onChange={(event) => setTerm(event.target.value)}
             placeholder="Nombre de la receta"
           />
-          <button type="submit">Buscar</button>
-        </form>
+        </div>
+
+        {/* Recomendadas: complementan las 3 sugerencias con 10 recetas más que
+          encajan bien (comida o cena), visibles solo antes de buscar. */}
+        {!term && recommended.length > 0 ? (
+          <>
+            <p className="choose-kicker">También te puede interesar</p>
+            <ul
+              className="choose-suggestions choose-suggestions--secondary"
+              aria-label="Recomendadas"
+            >
+              {recommended.map((suggestion) => (
+                <li key={suggestion.recipeId}>
+                  <SuggestionItem
+                    className="choose-suggestion choose-suggestion--secondary"
+                    mealDate={mealDate}
+                    mealType={mealType}
+                    suggestion={suggestion}
+                  />
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
 
         {recipes.length === 0 ? (
           <p className="choose-empty">
             Todavía no tienes recetas guardadas.{' '}
             <Link href="/recetas">Añadir receta</Link>
           </p>
-        ) : !query ? (
+        ) : !term ? (
           <p className="choose-empty">
             Escribe el nombre de una receta para buscar entre tus{' '}
             {recipes.length} recetas.
           </p>
         ) : results.length === 0 ? (
-          <p className="choose-empty">Ninguna receta coincide con «{query}».</p>
+          <p className="choose-empty">Ninguna receta coincide con «{term}».</p>
         ) : (
           <ul className="choose-list">
             {results.map((recipe) => (

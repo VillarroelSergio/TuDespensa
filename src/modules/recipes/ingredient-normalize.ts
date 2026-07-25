@@ -34,6 +34,23 @@ const UNIT_ALIASES: Record<string, string> = {
   unidades: 'unit',
 }
 
+// El catálogo tiene nombres con UTF-8 doblemente codificado («calabacín» quedó
+// como «calabacÃ­n»): cada tilde se coló por un tránsito Latin-1→UTF-8 de más.
+// Es reversible: los códigos de esos caracteres caben en un byte, así que se
+// reinterpretan como Latin-1 y se vuelven a decodificar como UTF-8.
+function repairMojibake(text: string): string {
+  if (!/[ÃÂ]/.test(text)) return text
+  const codes = [...text].map((char) => char.charCodeAt(0))
+  if (codes.some((code) => code > 0xff)) return text
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(
+      Uint8Array.from(codes),
+    )
+  } catch {
+    return text
+  }
+}
+
 /** «1/2» → 0.5, «0,5» → 0.5, «2» → 2. Devuelve null si no es un número al inicio. */
 function parseLeadingNumber(token: string): number | null {
   const fraction = token.match(/^(\d+)\/(\d+)$/)
@@ -51,7 +68,7 @@ export function parseIngredient(
   unitCode: string | null = null,
 ): ParsedIngredient {
   // Quita viñeta inicial de las fichas del catálogo y espacios sobrantes.
-  const cleaned = rawName.replace(/^[*•\-\s]+/, '').trim()
+  const cleaned = repairMojibake(rawName.replace(/^[*•\-\s]+/, '').trim())
   const tokens = cleaned.split(/\s+/)
 
   let parsedQuantity: number | null = null

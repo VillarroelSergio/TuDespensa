@@ -1,13 +1,11 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 
 import { AppError } from '@/lib/errors/AppError'
-import { getPublicSupabaseEnvironment } from '@/lib/supabase/env'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import type { Database } from '@/types/database'
 
 export type PendingInvitation = {
   invitationId: string
@@ -51,21 +49,11 @@ async function sendAccessEmail(email: string): Promise<boolean> {
   const headerList = await headers()
   const host = headerList.get('host')
   const proto = headerList.get('x-forwarded-proto') ?? 'https'
-  const { url, anonKey } = getPublicSupabaseEnvironment()
-  const anon = createClient<Database>(url, anonKey, {
-    auth: {
-      flowType: 'implicit',
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  })
-  const { error } = await anon.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: host
-        ? `${proto}://${host}/auth/invitation-callback`
-        : undefined,
-    },
+  const admin = createSupabaseAdminClient()
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: host
+      ? `${proto}://${host}/auth/callback?next=/auth/update-password`
+      : undefined,
   })
   return !error
 }
@@ -139,21 +127,18 @@ export async function getHouseholdManagement(): Promise<HouseholdManagement | nu
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const [
-    { data: household },
-    { data: members },
-    { data: invitations },
-  ] = await Promise.all([
-    supabase.from('households').select('name').maybeSingle(),
-    supabase
-      .from('household_members')
-      .select('user_id,role')
-      .eq('status', 'active'),
-    supabase
-      .from('household_invitations')
-      .select('id,email,status,accepted_by')
-      .in('status', ['pending', 'accepted']),
-  ])
+  const [{ data: household }, { data: members }, { data: invitations }] =
+    await Promise.all([
+      supabase.from('households').select('name').maybeSingle(),
+      supabase
+        .from('household_members')
+        .select('user_id,role')
+        .eq('status', 'active'),
+      supabase
+        .from('household_invitations')
+        .select('id,email,status,accepted_by')
+        .in('status', ['pending', 'accepted']),
+    ])
 
   if (!household) return null
   const isOwner =

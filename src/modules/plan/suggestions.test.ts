@@ -115,6 +115,44 @@ describe('rankSuggestions', () => {
     ).toBe(false)
   })
 
+  it('penaliza un grupo de alimento repetido 2+ veces esta semana', () => {
+    const lentejas = candidate({
+      id: 'lentejas',
+      title: 'Lentejas con verduras',
+      ingredients: ['lentejas', 'zanahoria'],
+      totalMinutes: 90,
+    })
+    const [suggestion] = rankSuggestions(
+      input({
+        candidates: [lentejas],
+        plannedFoodGroups: ['legumbre', 'legumbre'],
+      }),
+    )
+    expect(
+      suggestion!.factors.some(
+        (factor) => factor.points < 0 && /legumbres/.test(factor.label),
+      ),
+    ).toBe(true)
+  })
+
+  it('premia y explica un grupo aún no presente esta semana', () => {
+    const pescado = candidate({
+      id: 'pescado',
+      title: 'Merluza al horno',
+      ingredients: ['merluza', 'patata'],
+      totalMinutes: 90,
+    })
+    const [suggestion] = rankSuggestions(
+      input({
+        candidates: [pescado],
+        plannedFoodGroups: ['carne_roja'],
+        // dishType 'main' ya presente: aísla el motivo de equilibrio del de variedad.
+        plannedDishTypes: ['main'],
+      }),
+    )
+    expect(suggestion!.reason).toBe('Esta semana aún no has tomado pescado')
+  })
+
   it('suma favorito, puntuación y mediterránea como factores visibles', () => {
     const [suggestion] = rankSuggestions(
       input({

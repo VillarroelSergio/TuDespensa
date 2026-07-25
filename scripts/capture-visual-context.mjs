@@ -98,7 +98,9 @@ if (!(await applicationIsReady())) {
 }
 
 try {
-  await mkdir(outputDir, { recursive: true })
+  for (const viewport of viewports) {
+    await mkdir(resolve(outputDir, viewport.name), { recursive: true })
+  }
   await waitForApplication()
   const browser = await chromium.launch()
 
@@ -106,7 +108,7 @@ try {
     for (const viewport of viewports) {
       const page = await browser.newPage({ viewport })
       for (const view of views) {
-        const name = `${view.name}${view.fixture === 'everyday' ? '-everyday' : ''}-${viewport.name}`
+        const name = `${view.name}${view.fixture === 'everyday' ? '-everyday' : ''}`
         const url = new URL(view.path, baseUrl)
         if (view.fixture) url.searchParams.set('fixture', view.fixture)
         await page.goto(url.toString(), { waitUntil: 'domcontentloaded' })
@@ -119,13 +121,14 @@ try {
           typeof body.ariaSnapshot === 'function'
             ? await body.ariaSnapshot()
             : await body.innerText()
+        const viewportDir = resolve(outputDir, viewport.name)
         await writeFile(
-          resolve(outputDir, `${name}.snapshot.txt`),
+          resolve(viewportDir, `${name}.snapshot.txt`),
           snapshot,
           'utf8',
         )
         await page.screenshot({
-          path: resolve(outputDir, `${name}.png`),
+          path: resolve(viewportDir, `${name}.png`),
           fullPage: true,
         })
         console.log(`✓ ${name}`)

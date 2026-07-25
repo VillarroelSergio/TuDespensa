@@ -71,6 +71,13 @@ Convertir el plan y las necesidades manuales en una lista única, compartida y v
 4. La tienda, fecha y total son metadatos opcionales y editables; nunca bloquean la confirmación.
 5. **Confirmar productos en despensa** abre el mismo resumen de cambios de C2 y aplica únicamente las líneas incluidas.
 
+### Estado de implementación en piloto
+
+- Se puede hacer una foto, elegir una imagen de la galería o cargar un PDF desde el móvil.
+- Los archivos se procesan localmente y no se conservan: para PDF se extrae primero el texto embebido y, si el documento es escaneado, se convierten sus páginas para aplicar el mismo OCR local.
+- El parser elimina importes, impuestos, descuentos y totales; mantiene cantidades y pesos cuando el formato permite reconocerlos. Toda línea sigue siendo editable antes de confirmar.
+- Recortar o girar manualmente una imagen queda diferido: el realce local y la revisión editable cubren el flujo actual.
+
 ### Reglas
 
 - El OCR y el parseo proponen productos, pero no marcan ni incorporan nada a Despensa sin confirmación explícita.

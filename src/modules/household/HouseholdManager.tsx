@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { revokeTrustedBrowsers } from '@/modules/auth/device-verification'
 import {
   inviteMember,
   resendInvitation,
@@ -75,6 +76,19 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
         setStatus('Hemos retirado la invitación.')
       } catch {
         setStatus('No pudimos retirar la invitación. Inténtalo de nuevo.')
+      }
+    })
+  }
+
+  function revokeBrowsers() {
+    startTransition(async () => {
+      try {
+        await revokeTrustedBrowsers()
+        setStatus('Hemos retirado la confianza de tus navegadores.')
+        router.replace('/login')
+        router.refresh()
+      } catch {
+        setStatus('No hemos podido retirar los navegadores confiables.')
       }
     })
   }
@@ -163,6 +177,14 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
       ) : canInvite ? (
         <p className="center">Aún no has invitado a nadie.</p>
       ) : null}
+
+      <section className="household-security">
+        <p className="label">Seguridad</p>
+        <p>Retira la confianza si has usado un dispositivo ajeno o has perdido uno.</p>
+        <button type="button" className="secondary-button" onClick={revokeBrowsers} disabled={pending}>
+          Cerrar la confianza de mis navegadores
+        </button>
+      </section>
 
       <p aria-live="polite">{status}</p>
     </section>

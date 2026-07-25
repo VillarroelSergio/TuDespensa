@@ -7,6 +7,7 @@ import type { Database } from '@/types/database'
 
 const appPaths = ['/despensa', '/compra', '/recetas', '/plan', '/hogar']
 const protectedPaths = ['/onboarding', ...appPaths]
+const deviceVerificationPath = '/auth/verify-device'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -42,14 +43,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   if (!user) return response
   // Un solo viaje a Supabase (crítico: el middleware corre en el edge y no se
-  // puede fijar a Europa): la pertenencia y el estado de onboarding se traen
-  // con un join embebido en vez de dos consultas encadenadas.
-  const { data: membership } = await supabase
-    .from('household_members')
-    .select('households(onboarding_status)')
-    .eq('status', 'active')
-    .maybeSingle()
-  const completed = membership?.households?.onboarding_status === 'completed'
+  // puede fijar a Europa): la confianza del navegador y el estado de
+  // onboarding se resuelven en una única RPC en vez de dos consultas
+  // encadenadas.
+  const browserToken = request.cookies.get('midespensa_trusted_browser')?.value
+  const { data: context } = await supabase.rpc('middleware_context', {
+    browser_token: browserToken ?? null,
+  })
+  const row = Array.isArray(context) ? context[0] : context
+  // E2E ejercita sesión y RLS reales (ver el bypass de arriba), pero su login
+  // por enlace mágico no puede marcar el navegador como de confianza: esa
+  // función ya tiene su propia cobertura unitaria (device-verification.test.ts).
+  const skipDeviceCheck = process.env.NEXT_PUBLIC_E2E_AUTH_ENABLED === 'true'
+  if (
+    !skipDeviceCheck &&
+    pathname !== deviceVerificationPath &&
+    pathname !== '/auth/update-password' &&
+    !row?.trusted
+  )
+    return NextResponse.redirect(new URL(deviceVerificationPath, request.url))
+  const completed = row?.onboarding_status === 'completed'
   if (
     completed &&
     (pathname === '/login' || pathname.startsWith('/onboarding'))

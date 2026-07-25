@@ -55,4 +55,20 @@ describe('parseIngredient', () => {
       unitCode: 'kg',
     })
   })
+
+  it('repara el UTF-8 doblemente codificado del catálogo', () => {
+    // «í» (UTF-8: C3 AD) reinterpretado como Latin-1 y recodificado a UTF-8
+    // queda como U+00C3 U+00AD: «Ã» + guion suave invisible.
+    const mojibakeI = String.fromCharCode(0xc3, 0xad)
+    expect(parseIngredient(`* 1 calabac${mojibakeI}n grande`)).toEqual({
+      name: 'calabacín grande',
+      quantity: 1,
+      unitCode: 'unit',
+    })
+    expect(parseIngredient(`jud${mojibakeI}as verdes`)).toEqual({
+      name: 'judías verdes',
+      quantity: null,
+      unitCode: null,
+    })
+  })
 })

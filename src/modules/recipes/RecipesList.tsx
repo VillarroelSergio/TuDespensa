@@ -54,10 +54,23 @@ export function RecipesList({
     [initialRecipes, term, favoritesOnly, category, dishType],
   )
   // Vuelve a la primera tanda cuando cambia el filtro: si no, un filtro estrecho
-  // podría dejar fuera resultados por el corte de la tanda anterior.
-  useEffect(() => {
+  // podría dejar fuera resultados por el corte de la tanda anterior. Se ajusta
+  // durante el render (no en un efecto) para evitar un repintado en cascada.
+  const [appliedFilters, setAppliedFilters] = useState([
+    term,
+    favoritesOnly,
+    category,
+    dishType,
+  ])
+  if (
+    appliedFilters[0] !== term ||
+    appliedFilters[1] !== favoritesOnly ||
+    appliedFilters[2] !== category ||
+    appliedFilters[3] !== dishType
+  ) {
+    setAppliedFilters([term, favoritesOnly, category, dishType])
     setVisibleCount(PAGE_SIZE)
-  }, [term, favoritesOnly, category, dishType])
+  }
   const visibleRecipes = recipes.slice(0, visibleCount)
 
   function submitManual(event: FormEvent<HTMLFormElement>) {

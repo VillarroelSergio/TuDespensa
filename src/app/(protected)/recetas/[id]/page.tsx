@@ -12,8 +12,9 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
     getPantryListItems(),
   ])
   if (!recipe) notFound()
-  const pantryItemNames = prioritizePantryItems(pantryItems)
-    .filter((item) => item.status !== 'out')
-    .map((item) => item.name)
-  return <RecipeDetailView recipe={recipe} pantryItemNames={pantryItemNames} />
+  const pantryAvailability = prioritizePantryItems(pantryItems).map((item) => ({
+    name: item.name,
+    status: item.status,
+  }))
+  return <RecipeDetailView recipe={recipe} pantryAvailability={pantryAvailability} />
 }

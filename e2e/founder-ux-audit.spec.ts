@@ -123,6 +123,12 @@ async function auditOverflow(page: Page, path: string, viewportName: string) {
     const found: string[] = []
     for (const el of document.querySelectorAll<HTMLElement>('*')) {
       if (isInDevOverlay(el)) continue
+      // El contenido de un <details> cerrado colapsa a una caja 0x0 en pantalla
+      // aunque su `display` propio no sea `none` (p. ej. una regla de autor
+      // como `display: grid` no anula el colapso de tamaño, solo el valor
+      // computado): no cuenta como desbordamiento visible para la persona.
+      const box = el.getBoundingClientRect()
+      if (box.width === 0 || box.height === 0) continue
       if (el.scrollWidth <= el.clientWidth + 1) continue
       const overflowX = getComputedStyle(el).overflowX
       // Cualquier valor salvo 'visible' (el navegador por defecto) contiene el
@@ -159,6 +165,13 @@ async function auditTouchTargets(
     const control = controls.nth(i)
     if (!(await control.isVisible())) continue
     if (await control.evaluate(isInDevOverlay)) continue
+    // El título de una comida planificada es un enlace de texto en línea dentro
+    // de una fila compacta (WCAG 2.5.8 exime los enlaces en línea del tamaño
+    // mínimo); la misma acción de cambiarla está disponible desde "Opciones".
+    if (
+      await control.evaluate((el) => el.closest('.plan-slot__recipe') !== null)
+    )
+      continue
     const box = await control.boundingBox()
     if (!box) continue
     // Ignora controles sin superficie real (icono de layout aún en transición, área 0).

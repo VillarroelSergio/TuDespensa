@@ -43,14 +43,24 @@ export function formatIngredient(ingredient: RecipeIngredient): string {
   return amount ? `${amount} · ${ingredient.name}` : ingredient.name
 }
 
+export type IngredientAvailability = 'owned' | 'low' | 'missing'
+
+export type PantryAvailabilityItem = { name: string; status: 'out' | 'low' | 'available' }
+
 // Mismo criterio que Plan y «cocinar»: comparar por subcadena normalizada, no
 // solo exacto+singular. Con el nombre ya limpio («cebolla» en vez de «1/4
-// cebolla») esto detecta «Cebolla» / «Cebollas» de la despensa.
-export function isIngredientInPantry(
+// cebolla») esto detecta «Cebolla» / «Cebollas» de la despensa. Un producto
+// «out» cuenta como si no estuviera (igual que antes); «low» se distingue
+// para el semáforo en vez de mezclarse con «lo tienes de sobra».
+export function ingredientAvailability(
   ingredientName: string,
-  pantryNames: string[],
-): boolean {
-  return pantryNames.some((food) => matches(ingredientName, food))
+  pantryItems: PantryAvailabilityItem[],
+): IngredientAvailability {
+  const found = pantryItems.find(
+    (item) => item.status !== 'out' && matches(ingredientName, item.name),
+  )
+  if (!found) return 'missing'
+  return found.status === 'low' ? 'low' : 'owned'
 }
 
 const DISH_TYPE_LABELS: Record<RecipeDishType, string> = {
