@@ -103,6 +103,11 @@ describe('verifyNewBrowserCode', () => {
     insert.mockResolvedValue({ error: null })
 
     await expect(verifyNewBrowserCode('123456')).resolves.toBeUndefined()
+    expect(verifyOtp).toHaveBeenCalledWith({
+      email: 'a@b.com',
+      token: '123456',
+      type: 'recovery',
+    })
     expect(insert).toHaveBeenCalledWith(
       expect.objectContaining({ user_id: 'u1' }),
     )
