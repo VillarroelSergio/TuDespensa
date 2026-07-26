@@ -27,6 +27,7 @@ vi.mock('@/lib/supabase/browser', () => ({
 vi.mock('./actions', () => ({
   inviteMember: vi.fn(),
   resendInvitation: vi.fn(),
+  resetPilotHousehold: vi.fn(),
   revokeInvitation: vi.fn(),
 }))
 vi.mock('@/modules/auth/device-verification', () => ({
@@ -64,6 +65,22 @@ describe('HouseholdManager', () => {
     expect(screen.getByText('Integrante')).toBeInTheDocument()
     expect(screen.getByText('Invitaciones pendientes')).toBeInTheDocument()
     expect(screen.getByText('pendiente@example.com')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Borrar hogar y cuentas de prueba' }),
+    ).toBeDisabled()
+  })
+
+  it('requires the explicit confirmation before enabling the pilot reset', () => {
+    render(<HouseholdManager data={baseData} />)
+
+    const button = screen.getByRole('button', {
+      name: 'Borrar hogar y cuentas de prueba',
+    })
+    fireEvent.change(screen.getByLabelText('Escribe BORRAR para continuar'), {
+      target: { value: 'BORRAR' },
+    })
+
+    expect(button).toBeEnabled()
   })
 
   it('revokes trusted browsers and redirects to login on success', async () => {

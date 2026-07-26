@@ -911,6 +911,10 @@ export interface Database {
         Args: { browser_token: string | null }
         Returns: { trusted: boolean; onboarding_status: string | null }[]
       }
+      reset_pilot_household: {
+        Args: { confirmation: string }
+        Returns: string[]
+      }
       pantry_record_entry: {
         Args: {
           zone: PantryZone

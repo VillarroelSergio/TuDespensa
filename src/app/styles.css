@@ -2705,3 +2705,37 @@ a:focus-visible {
   flex-direction: column;
   gap: 0.5rem;
 }
+.household-security,
+.household-reset {
+  display: grid;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgb(255 253 249 / 82%);
+  padding: 1rem;
+}
+.household-security p,
+.household-reset p {
+  margin: 0;
+}
+.household-reset {
+  border-color: var(--primary-soft-border);
+  background: linear-gradient(135deg, var(--primary-soft), rgb(255 253 249 / 92%));
+}
+.household-reset input {
+  max-width: 14rem;
+}
+.danger-button {
+  min-height: 44px;
+  border: 1px solid #8e3022;
+  border-radius: 0.75rem;
+  background: #8e3022;
+  color: #fff;
+  padding: 0.65rem 0.9rem;
+  font-weight: 750;
+}
+.danger-button:disabled {
+  border-color: var(--border);
+  background: var(--surface-2);
+  color: var(--muted-2);
+}
