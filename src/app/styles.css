@@ -2140,6 +2140,38 @@ a:focus-visible {
   background: var(--primary-soft);
   color: var(--primary-strong);
 }
+.sign-out {
+  color: var(--muted);
+}
+.sign-out .text-action {
+  min-height: 44px;
+}
+.sign-out p {
+  margin: 0.35rem 0 0;
+  color: var(--primary-strong);
+  font-size: 0.8rem;
+}
+.app-shell__sign-out {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.app-shell__sign-out-mobile {
+  display: none;
+}
+.onboarding-sign-out {
+  position: fixed;
+  z-index: 30;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+}
+.onboarding-sign-out .text-action {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgb(255 253 249 / 92%);
+  padding: 0.5rem 0.8rem;
+  box-shadow: var(--shadow);
+}
 .app-shell__nav-icon {
   display: grid;
   width: 1.25rem;
@@ -2546,6 +2578,20 @@ a:focus-visible {
     padding: 0.35rem;
     box-shadow: 0 0.9rem 2rem rgb(63 44 23 / 16%);
     backdrop-filter: blur(18px);
+  }
+  .app-shell__sign-out-mobile {
+    position: fixed;
+    z-index: 21;
+    top: max(1rem, env(safe-area-inset-top));
+    right: max(1rem, env(safe-area-inset-right));
+    display: block;
+  }
+  .app-shell__sign-out-mobile .text-action {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgb(255 253 249 / 92%);
+    padding: 0.5rem 0.8rem;
+    box-shadow: var(--shadow);
   }
   .app-shell__dock a {
     display: grid;

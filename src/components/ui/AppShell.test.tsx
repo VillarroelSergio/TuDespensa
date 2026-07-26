@@ -15,6 +15,7 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'Plan' })[0]).toHaveAttribute('aria-current', 'page')
+    expect(screen.getAllByRole('button', { name: 'Cerrar sesión' })).toHaveLength(2)
     expect(screen.getByRole('heading', { name: 'Plan' })).toBeInTheDocument()
   })
 })
