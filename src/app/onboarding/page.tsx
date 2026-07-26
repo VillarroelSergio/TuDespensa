@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { BrandLockup } from '@/components/ui/BrandLockup'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
@@ -60,6 +60,7 @@ const emptyItems: Record<OnboardingZone, Food[]> = {
 }
 
 function OnboardingContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const isVisualFixture =
     process.env.NODE_ENV === 'development' &&
@@ -252,7 +253,8 @@ function OnboardingContent() {
     try {
       await confirmBaseline()
       localStorage.removeItem('midespensa-onboarding-draft')
-      setStep(6)
+      router.replace('/despensa')
+      router.refresh()
     } catch {
       setStatus('No se puede confirmar hasta sincronizar los cambios.')
     } finally {
