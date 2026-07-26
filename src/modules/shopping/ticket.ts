@@ -36,6 +36,13 @@ const UNIT_ALIASES: Record<string, TicketLine['unitCode']> = {
 function stripNoise(line: string): string {
   return (
     line
+      // OCR suele convertir € en "e"/"es" y puede separar el precio del
+      // indicador de IVA. El precio solo se elimina cuando está al final y va
+      // precedido de una cifra con formato monetario o de tres dígitos.
+      .replace(
+        /\s+(?:\d{1,3}(?:[.,]\d{2})|\d{3})\s*(?:€|e|es|eur)\s*(?:\d{1,2}\s*(?:€|e|es)?)?\s*$/i,
+        '',
+      )
       // El importe puede ser negativo (línea de descuento: "Desc. -2,25 €").
       .replace(/\s*-?\d+(?:[.,]\d{2})\s*(?:€|eur)\s*\d*\s*$/i, '')
       // Ticket digital: "Producto 2 1,25 2,50". Quitamos los importes para
@@ -46,18 +53,19 @@ function stripNoise(line: string): string {
       )
       .replace(/^\s*\d{6,}\s+/, '') // código de artículo al inicio
       .replace(/\s+/g, ' ')
+      .replace(/[,\s]+$/, '')
       .trim()
   )
 }
 
 const IGNORABLE_LINES =
-  /^(?:desc\.?|a\s+pagar|total|subtotal|iva|cambio|efectivo|tarjeta|art[ií]culos?|descripci[oó]n|producto|cantidad|precio|importe|fecha|tienda|nif|ticket)$/i
+  /^(?:desc\.?|a\s+pagar|total|subtotal|iva|cambio|efectivo|tarjeta|art[ií]culos?|descripci[oó]n|producto|cantidad|precio|importe|fecha|tienda|nif|ticket|compra\s+en\b.*|factura\s+simplificada\b.*|\d{1,2}\/\d{1,2}\/\d{4}\b.*|n[º°o?]?\s*de\s+(?:tienda|caja|empleado)\b.*|1d:\s*[a-z0-9-]+)$/i
 
 type DetectedAmount = Pick<TicketLine, 'quantity' | 'unitCode'>
 
 function detectLeadingAmount(line: string): DetectedAmount | null {
   const weight = line.match(
-    /^(\d+(?:[.,]\d+)?)\s*(kg|g|l|ml)\s*[x×*]\s*\d+(?:[.,]\d+)?\s*(?:€|eur)(?:\s*\/\s*(?:kg|g|l|ml))?\s*$/i,
+    /^(\d+(?:[.,]\d+)?)\s*(kg|g|l|ml)\s*[x×*]\s*\d+(?:[.,]\d+)?\s*(?:€|e|es|eur)?(?:\s*\/\s*(?:kg|g|l|ml))?\s*$/i,
   )
   if (weight) {
     const unitCode = UNIT_ALIASES[weight[2]?.toLowerCase() ?? '']
@@ -67,10 +75,17 @@ function detectLeadingAmount(line: string): DetectedAmount | null {
   }
 
   const units = line.match(
-    /^(\d+(?:[.,]\d+)?)\s*[x×*]\s*\d+(?:[.,]\d+)?\s*(?:€|eur)\s*$/i,
+    /^(\d+(?:[.,]\d+)?)\s*[x×*]\s*\d+(?:[.,]\d+)?\s*(?:€|e|es|eur|%\s*€)?\s*$/i,
   )
-  return units
-    ? { quantity: Number(units[1]?.replace(',', '.')), unitCode: 'unit' }
+  if (units) {
+    return { quantity: Number(units[1]?.replace(',', '.')), unitCode: 'unit' }
+  }
+
+  // Si el OCR ha roto el precio (por ejemplo "0,%"), la multiplicación sigue
+  // siendo suficiente para recuperar las unidades de la línea siguiente.
+  const damagedUnits = line.match(/^(\d+(?:[.,]\d+)?)\s*[x×*]\s+/i)
+  return damagedUnits
+    ? { quantity: Number(damagedUnits[1]?.replace(',', '.')), unitCode: 'unit' }
     : null
 }
 
@@ -94,6 +109,10 @@ function extractQuantity(line: string): {
   const unitCode = rawUnit
     ? (UNIT_ALIASES[rawUnit.toLowerCase()] ?? null)
     : 'unit'
+  // Un número largo sin unidad suele ser una referencia o un tamaño leído
+  // junto al producto (p. ej. "MOZZARELLA, 1256"), no 1.256 unidades.
+  if (!rawUnit && rawNumber.length > 2)
+    return { name: line, quantity: null, unitCode: null }
   // Unidad no reconocida (p. ej. "Tomate frito") → era parte del nombre, no cantidad.
   if (rawUnit && !unitCode)
     return { name: line, quantity: null, unitCode: null }
@@ -126,10 +145,9 @@ export function parseTicketLines(text: string): TicketLine[] {
     }
 
     const parsed = extractQuantity(product)
-    const withPending =
-      parsed.quantity === null && pendingAmount
-        ? { ...parsed, ...pendingAmount }
-        : parsed
+    const withPending = pendingAmount
+      ? { name: product, ...pendingAmount }
+      : parsed
     lines.push({
       name: withPending.name.slice(0, 120),
       quantity: withPending.quantity,

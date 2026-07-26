@@ -79,6 +79,7 @@ La tarea `Definir el modelo de dominio y datos` está cerrada en Notion y su res
 - [[MVP-FUNCTIONAL-BRIEF]]
 - [[DOMAIN-DATA-MODEL]]
 - [[TECHNICAL-ARCHITECTURE]]
+- [[PILOT-AUTHENTICATION]]
 - [[adr/README]]
 
 ## Flujo que debe diseñarse

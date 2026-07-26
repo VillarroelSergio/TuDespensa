@@ -11,7 +11,7 @@ import {
 } from '@/modules/pantry/presentation'
 import type { PantryZone } from '@/modules/pantry/types'
 
-import { confirmPurchase } from './actions'
+import { confirmPurchase, setPurchaseQuantities } from './actions'
 import { checkoutActionLabel } from './presentation'
 import type { CheckoutLine } from './types'
 
@@ -26,6 +26,9 @@ export function CheckoutReview({
   const [status, setStatus] = useState('')
   const [pending, setPending] = useState(false)
   const [zoneChoices, setZoneChoices] = useState<Record<string, PantryZone>>({})
+  const [quantities, setQuantities] = useState<Record<string, number>>(() =>
+    Object.fromEntries(initialLines.map((line) => [line.itemId, 1])),
+  )
   // Evita que el eco realtime de nuestra propia confirmación dispare un
   // refresh mientras ya estamos navegando fuera de esta página.
   const confirming = useRef(false)
@@ -39,7 +42,12 @@ export function CheckoutReview({
   const linesNeedingZone = initialLines.filter(
     (line) => line.action === 'add' && line.suggestedZone === null,
   )
-  const canConfirm = linesNeedingZone.every((line) => zoneChoices[line.itemId])
+  const canConfirm =
+    linesNeedingZone.every((line) => zoneChoices[line.itemId]) &&
+    initialLines.every((line) => {
+      const quantity = quantities[line.itemId]
+      return Number.isFinite(quantity) && quantity > 0
+    })
 
   // Un cambio remoto en la lista (otro integrante) recarga la revisión en vivo,
   // sin ocultar lo que ya se ve.
@@ -54,10 +62,19 @@ export function CheckoutReview({
     setStatus('')
     confirming.current = true
     try {
-      const { confirmed } = await confirmPurchase(
+      const updated = await setPurchaseQuantities(
         initialLines.map((line) => ({
           itemId: line.itemId,
           version: line.version,
+          quantity: quantities[line.itemId]!,
+        })),
+      )
+      const { confirmed } = await confirmPurchase(
+        initialLines.map((line) => ({
+          itemId: line.itemId,
+          version:
+            updated.items.find((item) => item.item_id === line.itemId)?.version ??
+            line.version,
           zone: zoneChoices[line.itemId],
         })),
       )
@@ -104,6 +121,23 @@ export function CheckoutReview({
                     <span aria-hidden="true" className="shopping-review-icon" />
                     <span>{line.name}</span>
                     <small>{checkoutActionLabel(line)}</small>
+                    <label className="shopping-checkout-quantity">
+                      <span>Unidades</span>
+                      <input
+                        aria-label={`Unidades compradas de ${line.name}`}
+                        min="0.01"
+                        step="0.01"
+                        type="number"
+                        value={quantities[line.itemId] ?? 1}
+                        onChange={(event) =>
+                          setQuantities((current) => ({
+                            ...current,
+                            [line.itemId]: Number(event.target.value),
+                          }))
+                        }
+                      />
+                      <span aria-hidden="true">uds.</span>
+                    </label>
                     {needsZone ? (
                       <div
                         className="pantry-detail__chips"
