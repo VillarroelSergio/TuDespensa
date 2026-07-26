@@ -35,8 +35,10 @@ export default function LoginPage() {
       return
     }
     if (mode === 'register') {
-      const { error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: `${location.origin}/auth/callback` } })
-      setMessage(error ? 'No hemos podido crear la cuenta.' : 'Revisa tu correo para confirmar tu cuenta.')
+      const { data, error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: `${location.origin}/auth/callback` } })
+      if (error) { setMessage('No hemos podido crear la cuenta.'); return }
+      if (data.session) { router.replace('/onboarding'); router.refresh(); return }
+      setMessage('Revisa tu correo para confirmar tu cuenta.')
       return
     }
     const { error } = await client.auth.signInWithPassword({ email, password })
