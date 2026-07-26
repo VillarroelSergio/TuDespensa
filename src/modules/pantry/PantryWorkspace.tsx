@@ -137,6 +137,30 @@ export function PantryWorkspace({
     }
   }
 
+  async function handleAdjust(item: PresentedPantryItem, delta: number) {
+    if (pendingId) return
+    const quantity = Math.max(0, (item.quantity ?? 0) + delta)
+    setPendingId(item.id)
+    setStatus('')
+    try {
+      await adjustPantryItem({
+        itemId: item.id,
+        version: item.version,
+        trackingMode: item.trackingMode,
+        approximateState: null,
+        quantity,
+        unitCode: item.unitCode,
+      })
+      setStatus(`${item.name}: cantidad actualizada.`)
+      refresh()
+    } catch {
+      setStatus('No hemos podido actualizar la cantidad. Hemos actualizado la lista.')
+      refresh()
+    } finally {
+      setPendingId(null)
+    }
+  }
+
   async function handleRemove(item: PresentedPantryItem) {
     if (pendingId) return
     setPendingId(item.id)
@@ -182,6 +206,7 @@ export function PantryWorkspace({
       <PantryList
         initialItems={items}
         onSetPresence={pendingId ? undefined : handlePresence}
+        onAdjust={pendingId ? undefined : handleAdjust}
         onRemove={pendingId ? undefined : handleRemove}
         onUndo={undo ? handleUndo : undefined}
         onAddToShopping={pendingId ? undefined : handleAddToShopping}
