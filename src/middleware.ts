@@ -41,14 +41,23 @@ export async function middleware(request: NextRequest) {
   if (protectedPaths.some((path) => pathname.startsWith(path)) && !user)
     return NextResponse.redirect(new URL('/login', request.url))
   if (!user) return response
-  // El middleware solo protege la sesión y el estado de onboarding. La
-  // verificación adicional del navegador queda desactivada temporalmente para
-  // que el acceso dependa únicamente de correo y contraseña.
-  const { data: context } = await supabase.rpc('middleware_context', {
-    browser_token: null,
-  })
-  const row = Array.isArray(context) ? context[0] : context
-  const completed = row?.onboarding_status === 'completed'
+  // No dependemos de middleware_context: esa RPC no está desplegada en el
+  // proyecto de producción. Consultamos el hogar activo de la sesión actual,
+  // igual que el resto del flujo de onboarding.
+  const { data: membership } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .maybeSingle()
+  const { data: household } = membership
+    ? await supabase
+        .from('households')
+        .select('onboarding_status')
+        .eq('id', membership.household_id)
+        .maybeSingle()
+    : { data: null }
+  const completed = household?.onboarding_status === 'completed'
   if (
     completed &&
     (pathname === '/login' || pathname.startsWith('/onboarding'))
