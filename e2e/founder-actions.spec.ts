@@ -8,9 +8,12 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 import {
   adminClient,
   baseUrl as resolveBaseUrl,
+  createSyntheticAccount,
   deleteSyntheticUser,
-  loginViaMagicLink,
+  loginWithPassword,
 } from './support/auth'
+
+const password = 'Synthetic-Pw-Actions1'
 
 function uniqueEmail(zone: string): string {
   return `accion-${zone}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.test`
@@ -133,7 +136,8 @@ test.describe('pantry', () => {
   test.beforeEach(async ({ browser }) => {
     email = uniqueEmail('pantry')
     context = await browser.newContext()
-    page = await loginViaMagicLink(context, resolveBaseUrl(), email)
+    await createSyntheticAccount(admin, email, password)
+    page = await loginWithPassword(context, resolveBaseUrl(), email, password)
     await completeEmptyOnboarding(page)
     await page.goto(`${resolveBaseUrl()}/despensa`)
   })
@@ -213,7 +217,8 @@ test.describe('shopping', () => {
   test.beforeEach(async ({ browser }) => {
     email = uniqueEmail('shopping')
     context = await browser.newContext()
-    page = await loginViaMagicLink(context, resolveBaseUrl(), email)
+    await createSyntheticAccount(admin, email, password)
+    page = await loginWithPassword(context, resolveBaseUrl(), email, password)
     await completeEmptyOnboarding(page)
     await page.goto(`${resolveBaseUrl()}/compra`)
   })
@@ -319,7 +324,8 @@ test.describe('recipes', () => {
     email = uniqueEmail('recipes')
     base = resolveBaseUrl()
     context = await browser.newContext()
-    page = await loginViaMagicLink(context, base, email)
+    await createSyntheticAccount(admin, email, password)
+    page = await loginWithPassword(context, base, email, password)
     await completeEmptyOnboarding(page)
     await page.goto(`${base}/recetas`)
   })
@@ -478,7 +484,8 @@ test.describe('plan', () => {
     email = uniqueEmail('plan')
     base = resolveBaseUrl()
     context = await browser.newContext()
-    page = await loginViaMagicLink(context, base, email)
+    await createSyntheticAccount(admin, email, password)
+    page = await loginWithPassword(context, base, email, password)
     await completeEmptyOnboarding(page)
     await page.goto(`${base}/plan`)
   })

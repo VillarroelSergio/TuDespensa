@@ -191,6 +191,10 @@ export async function getPantryListItems(): Promise<PantryListItem[]> {
   const { data: membership, error: membershipError } = await supabase
     .from('household_members')
     .select('household_id')
+    // Sin filtrar por usuario esto devuelve TODOS los miembros del hogar (RLS
+    // permite que se vean entre sí), así que con dos personas `maybeSingle`
+    // fallaba con "multiple rows returned" y la despensa dejaba de cargar.
+    .eq('user_id', user.id)
     .eq('status', 'active')
     .maybeSingle()
   if (membershipError) failure(membershipError)

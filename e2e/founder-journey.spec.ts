@@ -1,15 +1,16 @@
 /**
  * Recorrido de valor completo del hogar fundador contra Supabase local:
- * enlace mágico → línea base → receta → plan → compra → cocina → ticket.
- * Cada etapa comprueba el resultado visible y el estado persistido.
+ * acceso con contraseña → línea base → receta → plan → compra → cocina →
+ * ticket. Cada etapa comprueba el resultado visible y el estado persistido.
  * Run with: npm run test:e2e:founder
  */
 import { expect, test } from '@playwright/test'
 import {
   adminClient,
   baseUrl as resolveBaseUrl,
+  createSyntheticAccount,
   deleteSyntheticUser,
-  loginViaMagicLink,
+  loginWithPassword,
 } from './support/auth'
 
 test('el hogar fundador recorre el valor completo de MiDespensa', async ({
@@ -19,12 +20,14 @@ test('el hogar fundador recorre el valor completo de MiDespensa', async ({
   const baseUrl = resolveBaseUrl()
   const admin = adminClient()
   const email = `founder-e2e-${Date.now()}@example.test`
+  const password = 'Synthetic-Pw-Founder1'
   const recipeTitle = `Receta fundadora ${Date.now()}`
 
   const context = await browser.newContext()
   try {
-    // Acceso: enlace mágico → onboarding.
-    const page = await loginViaMagicLink(context, baseUrl, email)
+    // Acceso: contraseña → onboarding.
+    await createSyntheticAccount(admin, email, password)
+    const page = await loginWithPassword(context, baseUrl, email, password)
 
     // Línea base: crear hogar y declarar presencia por zona.
     await expect(

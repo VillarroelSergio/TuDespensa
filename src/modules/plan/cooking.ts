@@ -32,6 +32,9 @@ export type CookLine = {
   trackingMode: 'approximate' | 'units' | 'measure'
   quantity: number | null
   unitCode: string | null
+  /** Cantidad y unidad reales almacenadas; la interfaz usa siempre uds. */
+  storageQuantity?: number | null
+  storageUnitCode?: string | null
   approximateState: string | null
   /** Cantidad a descontar prefijada; null si no se pudo calcular (unidades u origen). */
   proposedDiscount: number | null
@@ -66,20 +69,14 @@ export function cookReviewSummary(lines: CookLine[]) {
   }
 }
 
-// Base común de cada unidad (g/ml), como los helpers `private.unit_*` de la BD.
-const UNIT_FACTOR: Record<string, number> = {
+// La revisión trabaja con una unidad canónica: 1 kg/l = 1 uds.
+// La unidad original se conserva para escribir de nuevo en la despensa.
+const CANONICAL_FACTOR: Record<string, number> = {
   unit: 1,
-  g: 1,
-  kg: 1000,
-  ml: 1,
-  l: 1000,
-}
-const UNIT_FAMILY: Record<string, string> = {
-  unit: 'units',
-  g: 'mass',
-  kg: 'mass',
-  ml: 'volume',
-  l: 'volume',
+  g: 0.001,
+  kg: 1,
+  ml: 0.001,
+  l: 1,
 }
 
 const APPROX_ORDER = ['plenty', 'some', 'low', 'out'] as const
@@ -89,15 +86,15 @@ function round(value: number): number {
   return Math.round(value * 1000) / 1000
 }
 
-/** Convierte `qty` de `from` a `to` solo si miden lo mismo; si no, null. */
-function convert(qty: number, from: string, to: string): number | null {
-  const fromFamily = UNIT_FAMILY[from]
-  const toFamily = UNIT_FAMILY[to]
-  const fromFactor = UNIT_FACTOR[from]
-  const toFactor = UNIT_FACTOR[to]
-  if (!fromFamily || fromFamily !== toFamily || !fromFactor || !toFactor)
-    return null
-  return round((qty * fromFactor) / toFactor)
+/** Convierte una cantidad a la unidad canónica de revisión. */
+function toCanonical(qty: number, unit: string): number | null {
+  const factor = CANONICAL_FACTOR[unit]
+  return factor === undefined ? null : round(qty * factor)
+}
+
+function fromCanonical(qty: number, unit: string): number | null {
+  const factor = CANONICAL_FACTOR[unit]
+  return factor === undefined || factor === 0 ? null : round(qty / factor)
 }
 
 /** Un nivel menos: la sugerencia por defecto para un producto aproximado. */
@@ -137,15 +134,19 @@ export function buildCookLines(
       ingredient.quantity !== null &&
       ingredient.unitCode
     ) {
-      const converted = convert(
-        ingredient.quantity,
-        ingredient.unitCode,
-        item.unitCode,
-      )
+      const converted = toCanonical(ingredient.quantity, ingredient.unitCode)
+      const available = toCanonical(item.quantity, item.unitCode)
       // No se descuenta más de lo que hay: el resto se resolverá al reponer.
-      if (converted !== null)
-        proposedDiscount = Math.min(item.quantity, converted)
+      if (converted !== null && available !== null)
+        proposedDiscount = Math.min(available, converted)
     }
+
+    const canonicalQuantity =
+      item.trackingMode === 'approximate' ||
+      item.quantity === null ||
+      !item.unitCode
+        ? item.quantity
+        : toCanonical(item.quantity, item.unitCode)
 
     return [
       {
@@ -153,8 +154,11 @@ export function buildCookLines(
         name: item.name,
         version: item.version,
         trackingMode: item.trackingMode,
-        quantity: item.quantity,
-        unitCode: item.unitCode,
+        quantity: canonicalQuantity,
+        unitCode:
+          item.trackingMode === 'approximate' ? item.unitCode : 'unit',
+        storageQuantity: item.quantity,
+        storageUnitCode: item.unitCode,
         approximateState: item.approximateState,
         proposedDiscount,
         proposedState:
@@ -168,13 +172,30 @@ export function buildCookLines(
 
 /** measure/units: descuenta la cantidad corregida, sin bajar de cero. */
 function discountConsumption(line: CookLine, discount: number): Consumption {
+  if (line.storageQuantity === undefined && line.storageUnitCode === undefined) {
+    return {
+      item_id: line.itemId,
+      version: line.version,
+      tracking_mode: line.trackingMode,
+      approximate_state: null,
+      quantity: Math.max(0, round((line.quantity ?? 0) - discount)),
+      unit_code: line.unitCode,
+    }
+  }
+
+  const storageUnit = line.storageUnitCode ?? 'unit'
+  const currentCanonical =
+    line.quantity ?? toCanonical(line.storageQuantity ?? 0, storageUnit) ?? 0
+  const remainingCanonical = Math.max(0, round(currentCanonical - discount))
   return {
     item_id: line.itemId,
     version: line.version,
     tracking_mode: line.trackingMode,
     approximate_state: null,
-    quantity: Math.max(0, round((line.quantity ?? 0) - discount)),
-    unit_code: line.unitCode,
+    quantity:
+      fromCanonical(remainingCanonical, storageUnit) ??
+      Math.max(0, round((line.storageQuantity ?? 0) - discount)),
+    unit_code: storageUnit,
   }
 }
 

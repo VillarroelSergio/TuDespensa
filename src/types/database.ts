@@ -140,33 +140,39 @@ export interface Database {
         Row: {
           id: string
           household_id: string
-          email: string
+          email: string | null
           invited_by: string
+          code_hash: string | null
           status: HouseholdInvitationStatus
           created_at: string
           updated_at: string
+          expires_at: string
           accepted_at: string | null
           accepted_by: string | null
         }
         Insert: {
           id?: string
           household_id: string
-          email: string
+          email?: string | null
           invited_by: string
+          code_hash?: string | null
           status?: HouseholdInvitationStatus
           created_at?: string
           updated_at?: string
+          expires_at?: string
           accepted_at?: string | null
           accepted_by?: string | null
         }
         Update: {
           id?: string
           household_id?: string
-          email?: string
+          email?: string | null
           invited_by?: string
+          code_hash?: string | null
           status?: HouseholdInvitationStatus
           created_at?: string
           updated_at?: string
+          expires_at?: string
           accepted_at?: string | null
           accepted_by?: string | null
         }
@@ -179,36 +185,6 @@ export interface Database {
             referencedColumns: ['id']
           },
         ]
-      }
-      trusted_browsers: {
-        Row: {
-          id: string
-          user_id: string
-          token_hash: string
-          created_at: string
-          last_seen_at: string
-          expires_at: string
-          revoked_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          token_hash: string
-          created_at?: string
-          last_seen_at?: string
-          expires_at: string
-          revoked_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          token_hash?: string
-          created_at?: string
-          last_seen_at?: string
-          expires_at?: string
-          revoked_at?: string | null
-        }
-        Relationships: []
       }
       pantry_locations: {
         Row: {
@@ -891,25 +867,29 @@ export interface Database {
         Args: { idempotency_key: string }
         Returns: Json
       }
-      invite_household_member: {
-        Args: { target_email: string }
+      create_household_invitation: {
+        Args: { code_hash: string }
         Returns: Json
+      }
+      redeem_invitation_for_new_member: {
+        Args: { code_hash: string; new_user_id: string }
+        Returns: Json
+      }
+      redeem_invitation: {
+        Args: { code_hash: string }
+        Returns: Json
+      }
+      pilot_needs_invitation: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      pilot_household_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       revoke_household_invitation: {
         Args: { invitation_id: string }
         Returns: Json
-      }
-      get_my_pending_invitation: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      accept_household_invitation: {
-        Args: { invitation_id: string }
-        Returns: Json
-      }
-      middleware_context: {
-        Args: { browser_token: string | null }
-        Returns: { trusted: boolean; onboarding_status: string | null }[]
       }
       reset_pilot_household: {
         Args: { confirmation: string }

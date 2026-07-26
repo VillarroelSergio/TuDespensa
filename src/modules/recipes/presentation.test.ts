@@ -53,43 +53,19 @@ describe('recipes presentation', () => {
 
   it('filters by favorite and by category', () => {
     const rows = [
-      recipe({
-        id: 'a',
-        title: 'Arroz',
-        isFavorite: true,
-        categories: ['Mediterránea'],
-      }),
-      recipe({
-        id: 'b',
-        title: 'Bizcocho',
-        isFavorite: false,
-        categories: ['Postre'],
-      }),
+      recipe({ id: 'a', title: 'Arroz', isFavorite: true, categories: ['Mediterranea'] }),
+      recipe({ id: 'b', title: 'Bizcocho', isFavorite: false, categories: ['Postre'] }),
     ]
-    expect(
-      filterRecipes(rows, '', { favoritesOnly: true }).map((row) => row.id),
-    ).toEqual(['a'])
-    expect(
-      filterRecipes(rows, '', { category: 'Postre' }).map((row) => row.id),
-    ).toEqual(['b'])
+    expect(filterRecipes(rows, '', { favoritesOnly: true }).map((row) => row.id)).toEqual(['a'])
+    expect(filterRecipes(rows, '', { category: 'Postre' }).map((row) => row.id)).toEqual(['b'])
   })
 
-  it('formats an ingredient with and without amount', () => {
+  it('formats ingredient amounts as canonical units', () => {
     expect(
-      formatIngredient({
-        position: 0,
-        name: 'Harina',
-        quantity: 200,
-        unitCode: 'g',
-      }),
-    ).toBe('200 g · Harina')
+      formatIngredient({ position: 0, name: 'Harina', quantity: 200, unitCode: 'g' }),
+    ).toBe('0.2 uds. · Harina')
     expect(
-      formatIngredient({
-        position: 1,
-        name: 'Sal',
-        quantity: null,
-        unitCode: null,
-      }),
+      formatIngredient({ position: 1, name: 'Sal', quantity: null, unitCode: null }),
     ).toBe('Sal')
   })
 })

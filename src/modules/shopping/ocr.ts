@@ -7,7 +7,10 @@
 // recibe texto más nítido sin aumentar innecesariamente el tiempo de lectura.
 async function prepareTicketImage(file: Blob): Promise<Blob> {
   const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height))
+  // Las fotos de móvil suelen ser verticales; 2400 px reducía demasiado la
+  // tipografía del ticket. Conservamos más detalle sin entregar originales
+  // enormes al worker.
+  const scale = Math.min(1, 3200 / Math.max(bitmap.width, bitmap.height))
   const canvas = document.createElement('canvas')
   canvas.width = Math.max(1, Math.round(bitmap.width * scale))
   canvas.height = Math.max(1, Math.round(bitmap.height * scale))
@@ -49,11 +52,14 @@ export async function readTicketImage(
   })
 
   try {
-    // SINGLE_BLOCK conserva las filas del ticket; precio y nombre se interpretan
-    // después con reglas específicas y siempre pasan por revisión humana.
+    // La columna y los importes se interpretan después con reglas específicas y
+    // siempre pasan por revisión humana.
     await worker.setParameters({
-      tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
+      // Un ticket es una columna estrecha con muchas filas. SINGLE_COLUMN
+      // separa mejor los productos y evita mezclar la columna de importes.
+      tessedit_pageseg_mode: PSM.SINGLE_COLUMN,
       preserve_interword_spaces: '1',
+      user_defined_dpi: '300',
     })
     const { data } = await worker.recognize(image)
     return data.text

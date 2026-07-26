@@ -1,18 +1,14 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 
 import { AppError } from '@/lib/errors/AppError'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-
-export type PendingInvitation = {
-  invitationId: string
-  householdId: string
-  householdName: string
-  invitedByName: string
-}
+import {
+  generateInvitationCode,
+  hashInvitationCode,
+} from '@/modules/auth/invitation-code'
 
 export type HouseholdManagement = {
   isOwner: boolean
@@ -23,7 +19,7 @@ export type HouseholdManagement = {
     label: string
     role: 'owner' | 'member'
   }[]
-  pendingInvitations: { id: string; email: string }[]
+  pendingInvitations: { id: string; expiresAt: string }[]
 }
 
 function failure(error: { code?: string; message: string }): never {
@@ -40,44 +36,51 @@ function failure(error: { code?: string; message: string }): never {
   throw new AppError(code, error.message)
 }
 
-// Reenvía el acceso reutilizando el enlace mágico del login: crea la cuenta si
-// no existe y envía el correo. Como esta solicitud nace en el servidor, el
-// navegador invitado no tiene el verificador de PKCE: se usa un callback propio
-// con flujo implícito que transfiere la sesión a las cookies SSR. No toca la
-// sesión del propietario (cliente anónimo sin persistencia).
-async function sendAccessEmail(email: string): Promise<boolean> {
-  const headerList = await headers()
-  const host = headerList.get('host')
-  const proto = headerList.get('x-forwarded-proto') ?? 'https'
-  const admin = createSupabaseAdminClient()
-  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: host
-      ? `${proto}://${host}/auth/callback?next=/auth/update-password`
-      : undefined,
-  })
-  return !error
-}
-
-export async function inviteMember(
-  email: string,
-): Promise<{ email: string; householdName: string; emailSent: boolean }> {
+// Genera (o renueva) el código de invitación del hogar. El código en claro
+// EXISTE SOLO AQUÍ, en el valor de retorno: se muestra una vez a la
+// propietaria y nunca se guarda ni se registra en ningún sitio. Solo su hash
+// llega a la base de datos. Usa el cliente de sesión, no el admin: la RPC ya
+// exige que quien llama sea la propietaria, así que RLS y los permisos por
+// columna siguen siendo la defensa real.
+export async function createInvitationCode(): Promise<{
+  code: string
+  expiresAt: string
+}> {
   const supabase = await createSupabaseServerClient()
-  const { data, error } = await supabase.rpc('invite_household_member', {
-    target_email: email,
+  const code = generateInvitationCode()
+  const codeHash = hashInvitationCode(code)
+  // generateInvitationCode() siempre produce un código con forma válida, así
+  // que esto nunca debería ser null; es una defensa en profundidad, no una
+  // rama alcanzable en la práctica.
+  if (codeHash === null) {
+    throw new AppError('UNEXPECTED', 'Invitation code generation failed')
+  }
+  const { data, error } = await supabase.rpc('create_household_invitation', {
+    code_hash: codeHash,
   })
   if (error) failure(error)
-  const result = data as { email: string; household_name: string }
-  const emailSent = await sendAccessEmail(result.email)
+  const result = data as { invitation_id: string; expires_at: string }
   revalidatePath('/hogar')
-  return {
-    email: result.email,
-    householdName: result.household_name,
-    emailSent,
-  }
+  return { code, expiresAt: result.expires_at }
 }
 
-export async function resendInvitation(email: string): Promise<boolean> {
-  return sendAccessEmail(email.toLowerCase().trim())
+// Canjea un código de invitación para la sesión ya autenticada que llama
+// (una cuenta que ya existe pero todavía no es miembro de ningún hogar). Si
+// el código no tiene forma válida ni se llega a consultar la base de datos.
+export async function redeemInvitationCode(
+  code: string,
+): Promise<{ ok: boolean }> {
+  const codeHash = hashInvitationCode(code)
+  if (codeHash === null) return { ok: false }
+
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.rpc('redeem_invitation', {
+    code_hash: codeHash,
+  })
+  if (error) return { ok: false }
+
+  revalidatePath('/', 'layout')
+  return { ok: true }
 }
 
 export async function revokeInvitation(invitationId: string): Promise<void> {
@@ -89,9 +92,7 @@ export async function revokeInvitation(invitationId: string): Promise<void> {
   revalidatePath('/hogar')
 }
 
-export async function resetPilotHousehold(
-  confirmation: string,
-): Promise<void> {
+export async function resetPilotHousehold(confirmation: string): Promise<void> {
   if (confirmation !== 'BORRAR') {
     throw new AppError('INVALID_INPUT', 'Confirmation is required')
   }
@@ -115,37 +116,6 @@ export async function resetPilotHousehold(
   }
 }
 
-export async function acceptInvitation(
-  invitationId: string,
-): Promise<{ householdId: string }> {
-  const supabase = await createSupabaseServerClient()
-  const { data, error } = await supabase.rpc('accept_household_invitation', {
-    invitation_id: invitationId,
-  })
-  if (error) failure(error)
-  const result = data as { household_id: string }
-  revalidatePath('/', 'layout')
-  return { householdId: result.household_id }
-}
-
-export async function getMyPendingInvitation(): Promise<PendingInvitation | null> {
-  const supabase = await createSupabaseServerClient()
-  const { data, error } = await supabase.rpc('get_my_pending_invitation')
-  if (error || !data) return null
-  const row = data as {
-    invitation_id: string
-    household_id: string
-    household_name: string
-    invited_by_name: string
-  }
-  return {
-    invitationId: row.invitation_id,
-    householdId: row.household_id,
-    householdName: row.household_name,
-    invitedByName: row.invited_by_name,
-  }
-}
-
 export async function getHouseholdManagement(): Promise<HouseholdManagement | null> {
   const supabase = await createSupabaseServerClient()
   const {
@@ -160,30 +130,26 @@ export async function getHouseholdManagement(): Promise<HouseholdManagement | nu
         .from('household_members')
         .select('user_id,role')
         .eq('status', 'active'),
+      // email, invited_by y code_hash ya no son legibles por `authenticated`
+      // (permisos por columna, ver migración 20260726150000): pedirlos
+      // rompería esta consulta. Ninguno de los dos hace falta para mostrar la
+      // gestión del hogar.
       supabase
         .from('household_invitations')
-        .select('id,email,status,accepted_by')
-        .in('status', ['pending', 'accepted']),
+        .select('id,status,expires_at')
+        .eq('status', 'pending'),
     ])
 
   if (!household) return null
   const isOwner =
     (members ?? []).find((member) => member.user_id === user.id)?.role ===
     'owner'
-  const acceptedEmailByUserId = new Map(
-    (invitations ?? [])
-      .filter(
-        (invitation) =>
-          invitation.status === 'accepted' && invitation.accepted_by,
-      )
-      .map((invitation) => [invitation.accepted_by!, invitation.email]),
-  )
+  // Ya no hay correo disponible para identificar a la otra persona, y
+  // tampoco es un dato que necesitemos mostrar: basta con distinguir "Tú" del
+  // resto.
   const activeMembers = (members ?? []).map((member) => ({
     id: member.user_id,
-    label:
-      member.user_id === user.id
-        ? 'Tú'
-        : (acceptedEmailByUserId.get(member.user_id) ?? 'Integrante del hogar'),
+    label: member.user_id === user.id ? 'Tú' : 'Integrante del hogar',
     role: member.role,
   }))
 
@@ -192,11 +158,9 @@ export async function getHouseholdManagement(): Promise<HouseholdManagement | nu
     householdName: household.name,
     activeMemberCount: activeMembers.length,
     activeMembers,
-    pendingInvitations: (invitations ?? [])
-      .filter((invitation) => invitation.status === 'pending')
-      .map((invitation) => ({
-        id: invitation.id,
-        email: invitation.email,
-      })),
+    pendingInvitations: (invitations ?? []).map((invitation) => ({
+      id: invitation.id,
+      expiresAt: invitation.expires_at,
+    })),
   }
 }

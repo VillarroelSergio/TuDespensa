@@ -22,31 +22,27 @@ vi.mock('@/lib/supabase/browser', () => ({
       subscribe: () => ({}),
     }),
     removeChannel: vi.fn(),
+    auth: { signOut: vi.fn() },
   }),
 }))
 vi.mock('./actions', () => ({
-  inviteMember: vi.fn(),
-  resendInvitation: vi.fn(),
+  createInvitationCode: vi.fn(),
   resetPilotHousehold: vi.fn(),
   revokeInvitation: vi.fn(),
 }))
-vi.mock('@/modules/auth/device-verification', () => ({
-  revokeTrustedBrowsers: vi.fn(),
-}))
 
-import { revokeTrustedBrowsers } from '@/modules/auth/device-verification'
+import { createInvitationCode } from './actions'
 
 import { HouseholdManager } from './HouseholdManager'
 
 const baseData = {
   isOwner: true,
   householdName: 'Casa de pruebas',
-  activeMemberCount: 2,
-  activeMembers: [
-    { id: 'owner', label: 'Tú', role: 'owner' as const },
-    { id: 'member', label: 'invitada@example.com', role: 'member' as const },
+  activeMemberCount: 1,
+  activeMembers: [{ id: 'owner', label: 'Tú', role: 'owner' as const }],
+  pendingInvitations: [
+    { id: 'pending', expiresAt: '2026-08-02T00:00:00.000Z' },
   ],
-  pendingInvitations: [{ id: 'pending', email: 'pendiente@example.com' }],
 }
 
 describe('HouseholdManager', () => {
@@ -60,11 +56,9 @@ describe('HouseholdManager', () => {
 
     expect(screen.getByText('Cuentas con acceso')).toBeInTheDocument()
     expect(screen.getByText('Tú')).toBeInTheDocument()
-    expect(screen.getByText('invitada@example.com')).toBeInTheDocument()
     expect(screen.getByText('Propietaria')).toBeInTheDocument()
-    expect(screen.getByText('Integrante')).toBeInTheDocument()
     expect(screen.getByText('Invitaciones pendientes')).toBeInTheDocument()
-    expect(screen.getByText('pendiente@example.com')).toBeInTheDocument()
+    expect(screen.getByText(/Código pendiente · caduca el/)).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Borrar hogar y cuentas de prueba' }),
     ).toBeDisabled()
@@ -83,33 +77,49 @@ describe('HouseholdManager', () => {
     expect(button).toBeEnabled()
   })
 
-  it('revokes trusted browsers and redirects to login on success', async () => {
-    vi.mocked(revokeTrustedBrowsers).mockResolvedValue(undefined)
+  it('generates an invitation code and shows it on screen', async () => {
+    vi.mocked(createInvitationCode).mockResolvedValue({
+      code: 'ABCDE-F2345',
+      expiresAt: '2026-08-02T00:00:00.000Z',
+    })
     render(<HouseholdManager data={baseData} />)
 
-    fireEvent.click(screen.getByText('Cerrar la confianza de mis navegadores'))
-
-    await waitFor(() => expect(revokeTrustedBrowsers).toHaveBeenCalled())
-    await waitFor(() =>
-      expect(
-        screen.getByText('Hemos retirado la confianza de tus navegadores.'),
-      ).toBeInTheDocument(),
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Generar código de invitación' }),
     )
-    expect(replace).toHaveBeenCalledWith('/login')
-    expect(refresh).toHaveBeenCalled()
+
+    await waitFor(() =>
+      expect(screen.getByText('ABCDE-F2345')).toBeInTheDocument(),
+    )
+    expect(
+      screen.getByText(/Dale este código a la otra persona/),
+    ).toBeInTheDocument()
   })
 
-  it('shows an error message when revoking trusted browsers fails', async () => {
-    vi.mocked(revokeTrustedBrowsers).mockRejectedValue(new Error('boom'))
-    render(<HouseholdManager data={baseData} />)
-
-    fireEvent.click(screen.getByText('Cerrar la confianza de mis navegadores'))
-
-    await waitFor(() =>
-      expect(
-        screen.getByText('No hemos podido retirar los navegadores confiables.'),
-      ).toBeInTheDocument(),
+  it('disables generating a code when the household is already full', () => {
+    render(
+      <HouseholdManager
+        data={{
+          ...baseData,
+          activeMemberCount: 2,
+          activeMembers: [
+            { id: 'owner', label: 'Tú', role: 'owner' as const },
+            {
+              id: 'member',
+              label: 'Integrante del hogar',
+              role: 'member' as const,
+            },
+          ],
+        }}
+      />,
     )
-    expect(replace).not.toHaveBeenCalled()
+
+    const button = screen.getByRole('button', {
+      name: 'Generar código de invitación',
+    })
+    expect(button).toHaveAttribute('aria-disabled', 'true')
+
+    fireEvent.click(button)
+    expect(createInvitationCode).not.toHaveBeenCalled()
   })
 })

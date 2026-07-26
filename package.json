@@ -30,6 +30,7 @@
     "test:e2e:founder": "node scripts/run-e2e-auth.mjs e2e/founder-journey.spec.ts",
     "test:e2e:actions": "node scripts/run-e2e-auth.mjs e2e/founder-actions.spec.ts",
     "test:e2e:realtime": "node scripts/run-e2e-auth.mjs e2e/founder-realtime.spec.ts",
+    "test:e2e:invitation": "node scripts/run-e2e-auth.mjs e2e/pilot-invitation.spec.ts",
     "test:e2e:ux": "node scripts/run-e2e-ux.mjs",
     "test:e2e:responsive": "playwright test e2e/responsive-navigation.spec.ts",
     "snapshot:ui": "node scripts/capture-visual-context.mjs"

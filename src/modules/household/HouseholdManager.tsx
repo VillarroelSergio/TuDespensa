@@ -2,23 +2,33 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
-import { revokeTrustedBrowsers } from '@/modules/auth/device-verification'
 import {
-  inviteMember,
-  resendInvitation,
+  createInvitationCode,
   resetPilotHousehold,
   revokeInvitation,
   type HouseholdManagement,
 } from './actions'
 
+function formatExpiry(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
 export function HouseholdManager({ data }: { data: HouseholdManagement }) {
   const router = useRouter()
-  const [email, setEmail] = useState('')
   const [resetConfirmation, setResetConfirmation] = useState('')
   const [status, setStatus] = useState('')
+  const [generatedCode, setGeneratedCode] = useState<{
+    code: string
+    expiresAt: string
+  } | null>(null)
   const [pending, startTransition] = useTransition()
   const hasFreeSpot = data.activeMemberCount < 2
   const canInvite = data.isOwner && hasFreeSpot
@@ -39,35 +49,16 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
     }
   }, [router])
 
-  function invite(event: React.FormEvent) {
-    event.preventDefault()
-    const value = email.trim()
-    if (!value) return
+  function generateCode() {
     startTransition(async () => {
       try {
-        const result = await inviteMember(value)
-        setEmail('')
-        setStatus(
-          result.emailSent
-            ? `Invitación enviada a ${result.email}. Pídele que abra el enlace de su correo e inicie sesión.`
-            : `Hemos guardado la invitación para ${result.email}, pero no pudimos enviar el correo. Usa «Reenviar».`,
-        )
+        const result = await createInvitationCode()
+        setGeneratedCode(result)
+        setStatus('')
       } catch {
-        setStatus(
-          'No hemos podido invitar a ese correo. Revisa que sea válido y que aún haya sitio en el hogar.',
-        )
+        setGeneratedCode(null)
+        setStatus('No hemos podido generar el código. Inténtalo de nuevo.')
       }
-    })
-  }
-
-  function resend(value: string) {
-    startTransition(async () => {
-      const sent = await resendInvitation(value)
-      setStatus(
-        sent
-          ? `Hemos reenviado el acceso a ${value}.`
-          : `No pudimos reenviar el correo a ${value}. Inténtalo de nuevo.`,
-      )
     })
   }
 
@@ -75,22 +66,10 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
     startTransition(async () => {
       try {
         await revokeInvitation(id)
-        setStatus('Hemos retirado la invitación.')
+        setGeneratedCode(null)
+        setStatus('Hemos retirado el código de invitación.')
       } catch {
-        setStatus('No pudimos retirar la invitación. Inténtalo de nuevo.')
-      }
-    })
-  }
-
-  function revokeBrowsers() {
-    startTransition(async () => {
-      try {
-        await revokeTrustedBrowsers()
-        setStatus('Hemos retirado la confianza de tus navegadores.')
-        router.replace('/login')
-        router.refresh()
-      } catch {
-        setStatus('No hemos podido retirar los navegadores confiables.')
+        setStatus('No pudimos retirar el código. Inténtalo de nuevo.')
       }
     })
   }
@@ -135,29 +114,45 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
         </ul>
       </>
 
+      <section className="household-security">
+        <p className="label">Tu cuenta</p>
+        <Link className="text-action" href="/auth/update-password">
+          Cambiar mi contraseña
+        </Link>
+      </section>
+
       {data.isOwner ? (
-        <form onSubmit={invite} className="household-invite">
-          <label htmlFor="invite-email">Invitar por correo</label>
-          <input
-            id="invite-email"
-            type="email"
-            value={email}
-            placeholder="correo@ejemplo.com"
-            onChange={(event) => setEmail(event.target.value)}
-            disabled={!hasFreeSpot || pending}
-          />
+        <div className="household-invite">
+          <p className="label">Invitar a otra persona</p>
+          {generatedCode ? (
+            <div className="household-invite-code" aria-live="polite">
+              <p className="household-invite-code__value">
+                {generatedCode.code}
+              </p>
+              <p>
+                Dale este código a la otra persona. Lo necesita para crear su
+                cuenta. Caduca el {formatExpiry(generatedCode.expiresAt)}.
+              </p>
+              <p>
+                Este código solo se muestra ahora: si se pierde, basta con
+                generar otro (el anterior queda invalidado).
+              </p>
+            </div>
+          ) : null}
           <PrimaryButton
-            onClick={invite}
+            onClick={generateCode}
             disabled={pending}
             disabledReason={
-              hasFreeSpot
-                ? undefined
-                : 'El hogar ya tiene dos personas con acceso.'
+              !data.isOwner
+                ? 'Solo quien creó el hogar puede invitar a otra persona.'
+                : hasFreeSpot
+                  ? undefined
+                  : 'El hogar ya tiene dos personas con acceso.'
             }
           >
-            Enviar invitación
+            Generar código de invitación
           </PrimaryButton>
-        </form>
+        </div>
       ) : (
         <p>Solo quien creó el hogar puede invitar a otra persona.</p>
       )}
@@ -168,24 +163,19 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
           <ul className="household-invitations">
             {data.pendingInvitations.map((invitation) => (
               <li key={invitation.id}>
-                <span>{invitation.email}</span>
+                <span>
+                  Código pendiente · caduca el{' '}
+                  {formatExpiry(invitation.expiresAt)}
+                </span>
                 {data.isOwner ? (
                   <span className="household-invitations__actions">
-                    <button
-                      type="button"
-                      className="text-action"
-                      onClick={() => resend(invitation.email)}
-                      disabled={pending}
-                    >
-                      Reenviar
-                    </button>
                     <button
                       type="button"
                       className="text-action"
                       onClick={() => revoke(invitation.id)}
                       disabled={pending}
                     >
-                      Retirar acceso
+                      Retirar
                     </button>
                   </span>
                 ) : null}
@@ -197,21 +187,13 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
         <p className="center">Aún no has invitado a nadie.</p>
       ) : null}
 
-      <section className="household-security">
-        <p className="label">Seguridad</p>
-        <p>Retira la confianza si has usado un dispositivo ajeno o has perdido uno.</p>
-        <button type="button" className="secondary-button" onClick={revokeBrowsers} disabled={pending}>
-          Cerrar la confianza de mis navegadores
-        </button>
-      </section>
-
       {data.isOwner ? (
         <section className="household-reset">
           <p className="label">Reiniciar pruebas</p>
           <p>
             Borra este hogar, sus datos y las {data.activeMemberCount}{' '}
-            {data.activeMemberCount === 1 ? 'cuenta activa' : 'cuentas activas'}.
-            Después podrás registrar cuentas nuevas desde cero.
+            {data.activeMemberCount === 1 ? 'cuenta activa' : 'cuentas activas'}
+            . Después podrás registrar cuentas nuevas desde cero.
           </p>
           <label htmlFor="pilot-reset-confirmation">
             Escribe BORRAR para continuar

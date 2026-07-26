@@ -88,9 +88,7 @@ function CookRow({
               onChange({ discount: Number(event.target.value) })
             }
           />
-          {line.unitCode ? (
-            <span aria-hidden="true">{line.unitCode}</span>
-          ) : null}
+          <span aria-hidden="true">uds.</span>
         </label>
       )}
     </div>

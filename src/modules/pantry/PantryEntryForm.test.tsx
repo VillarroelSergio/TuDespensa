@@ -3,12 +3,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PantryEntryForm } from './PantryEntryForm'
 
-// Este proyecto no activa `globals: true` en vitest, así que el auto-cleanup
-// de testing-library no se dispara solo entre tests del mismo fichero.
 afterEach(cleanup)
 
 describe('PantryEntryForm', () => {
-  it('adds a product as present without asking for its current state', async () => {
+  it('adds a product as units by default', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined)
     render(<PantryEntryForm onClose={vi.fn()} onSave={onSave} />)
 
@@ -21,10 +19,10 @@ describe('PantryEntryForm', () => {
       expect.objectContaining({
         foodName: 'Yogures',
         zone: 'pantry',
-        trackingMode: 'approximate',
-        approximateState: 'some',
-        quantity: null,
-        unitCode: null,
+        trackingMode: 'units',
+        approximateState: null,
+        quantity: 1,
+        unitCode: 'unit',
       }),
     )
   })
@@ -44,14 +42,13 @@ describe('PantryEntryForm', () => {
     )
   })
 
-  it('stores a countable product with its exact units', async () => {
+  it('stores the entered unit count', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined)
     render(<PantryEntryForm onClose={vi.fn()} onSave={onSave} />)
 
     fireEvent.change(screen.getByLabelText('Producto'), {
       target: { value: 'Tomates' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Unidades' }))
     fireEvent.change(screen.getByLabelText('Cantidad'), {
       target: { value: '10' },
     })
