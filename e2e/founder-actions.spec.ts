@@ -115,7 +115,7 @@ async function createRecipe(
   await page.waitForURL(/\/recetas\/[0-9a-f-]+$/)
 }
 
-/** Añade un producto por presencia desde `/despensa` (formulario propio del componente). */
+/** Añade un producto desde `/despensa` (formulario propio del componente; unidades por defecto). */
 async function addPantryItem(page: Page, name: string, zoneLabel?: string) {
   await page.getByRole('button', { name: '+ Añadir producto' }).click()
   await page.getByRole('textbox', { name: 'Producto' }).fill(name)
@@ -147,13 +147,19 @@ test.describe('pantry', () => {
     await deleteSyntheticUser(admin, email)
   })
 
-  test('añade un producto por presencia en la zona elegida, sin cantidades', async () => {
+  test('añade un producto en la zona elegida con la cantidad por defecto', async () => {
     await expect(page.getByRole('heading', { name: 'Despensa' })).toBeVisible()
-    await addPantryItem(page, 'Tomates', 'Frigorífico')
+    await page.getByRole('button', { name: '+ Añadir producto' }).click()
+    // El alta siempre es en unidades desde esta fase: el campo Cantidad ya
+    // trae "1" por defecto y no hace falta tocarlo para dar de alta.
+    await expect(page.getByLabel('Cantidad')).toHaveValue('1')
+    await page.getByRole('textbox', { name: 'Producto' }).fill('Tomates')
+    await page.getByRole('button', { name: 'Frigorífico' }).click()
+    await page.getByRole('button', { name: 'Añadir a despensa' }).click()
+    await expect(page.getByRole('textbox', { name: 'Producto' })).toBeHidden()
     await expect(
       page.getByRole('button', { name: 'Marcar Tomates como terminado' }),
     ).toBeVisible()
-    // La alta por presencia no pide cantidad: el formulario nunca la ofrece.
     const fridge = page.getByRole('region', { name: 'Inventario: Frigorífico' })
     await expect(fridge.getByText('Tomates')).toBeVisible()
     await page.reload()
