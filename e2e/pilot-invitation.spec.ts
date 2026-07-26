@@ -63,7 +63,7 @@ async function completeEmptyOnboarding(page: Page) {
   await page.waitForURL('**/despensa')
 }
 
-/** Añade un producto por presencia desde `/despensa` (formulario propio del componente). */
+/** Añade un producto desde `/despensa` (formulario propio del componente; unidades por defecto). */
 async function addPantryItem(page: Page, name: string) {
   await page.getByRole('button', { name: '+ Añadir producto' }).click()
   await page.getByRole('textbox', { name: 'Producto' }).fill(name)

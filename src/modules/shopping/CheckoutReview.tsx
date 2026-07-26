@@ -45,7 +45,7 @@ export function CheckoutReview({
   const canConfirm =
     linesNeedingZone.every((line) => zoneChoices[line.itemId]) &&
     initialLines.every((line) => {
-      const quantity = quantities[line.itemId]
+      const quantity = quantities[line.itemId] ?? 0
       return Number.isFinite(quantity) && quantity > 0
     })
 
