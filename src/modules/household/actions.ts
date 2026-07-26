@@ -89,6 +89,32 @@ export async function revokeInvitation(invitationId: string): Promise<void> {
   revalidatePath('/hogar')
 }
 
+export async function resetPilotHousehold(
+  confirmation: string,
+): Promise<void> {
+  if (confirmation !== 'BORRAR') {
+    throw new AppError('INVALID_INPUT', 'Confirmation is required')
+  }
+
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new AppError('FORBIDDEN', 'Authentication is required')
+
+  const { data, error } = await supabase.rpc('reset_pilot_household', {
+    confirmation,
+  })
+  if (error) failure(error)
+
+  const memberIds = data ?? []
+  const admin = createSupabaseAdminClient()
+  for (const memberId of memberIds) {
+    const { error: deleteError } = await admin.auth.admin.deleteUser(memberId)
+    if (deleteError) failure(deleteError)
+  }
+}
+
 export async function acceptInvitation(
   invitationId: string,
 ): Promise<{ householdId: string }> {

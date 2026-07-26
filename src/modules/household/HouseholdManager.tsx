@@ -9,6 +9,7 @@ import { revokeTrustedBrowsers } from '@/modules/auth/device-verification'
 import {
   inviteMember,
   resendInvitation,
+  resetPilotHousehold,
   revokeInvitation,
   type HouseholdManagement,
 } from './actions'
@@ -16,6 +17,7 @@ import {
 export function HouseholdManager({ data }: { data: HouseholdManagement }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
+  const [resetConfirmation, setResetConfirmation] = useState('')
   const [status, setStatus] = useState('')
   const [pending, startTransition] = useTransition()
   const hasFreeSpot = data.activeMemberCount < 2
@@ -89,6 +91,23 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
         router.refresh()
       } catch {
         setStatus('No hemos podido retirar los navegadores confiables.')
+      }
+    })
+  }
+
+  function resetPilot() {
+    if (resetConfirmation !== 'BORRAR') {
+      setStatus('Escribe BORRAR para confirmar el reinicio.')
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        await resetPilotHousehold(resetConfirmation)
+        await createSupabaseBrowserClient().auth.signOut()
+        window.location.replace('/login')
+      } catch {
+        setStatus('No hemos podido reiniciar el piloto. Inténtalo de nuevo.')
       }
     })
   }
@@ -185,6 +204,35 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
           Cerrar la confianza de mis navegadores
         </button>
       </section>
+
+      {data.isOwner ? (
+        <section className="household-reset">
+          <p className="label">Reiniciar pruebas</p>
+          <p>
+            Borra este hogar, sus datos y las {data.activeMemberCount}{' '}
+            {data.activeMemberCount === 1 ? 'cuenta activa' : 'cuentas activas'}.
+            Después podrás registrar cuentas nuevas desde cero.
+          </p>
+          <label htmlFor="pilot-reset-confirmation">
+            Escribe BORRAR para continuar
+          </label>
+          <input
+            id="pilot-reset-confirmation"
+            value={resetConfirmation}
+            onChange={(event) => setResetConfirmation(event.target.value)}
+            autoComplete="off"
+            disabled={pending}
+          />
+          <button
+            type="button"
+            className="danger-button"
+            onClick={resetPilot}
+            disabled={pending || resetConfirmation !== 'BORRAR'}
+          >
+            Borrar hogar y cuentas de prueba
+          </button>
+        </section>
+      ) : null}
 
       <p aria-live="polite">{status}</p>
     </section>
