@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { BrandLockup } from '@/components/ui/BrandLockup'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SearchAddCombobox } from '@/components/ui/SearchAddCombobox'
+import { SignOutButton } from '@/components/ui/SignOutButton'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import {
   addPantryFood,
@@ -476,8 +477,11 @@ function OnboardingContent() {
 
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={null}>
-      <OnboardingContent />
-    </Suspense>
+    <>
+      <SignOutButton className="onboarding-sign-out" />
+      <Suspense fallback={null}>
+        <OnboardingContent />
+      </Suspense>
+    </>
   )
 }

@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+import { SignOutButton } from './SignOutButton'
+
 const destinations = [
   { id: 'plan', href: '/plan', label: 'Plan', icon: '⌂' },
   { id: 'recetas', href: '/recetas', label: 'Recetas', icon: '⌘' },
@@ -57,6 +59,7 @@ export function AppShell({
           <span>MiDespensa</span>
         </Link>
         <AppNavigation className="app-shell__rail-nav" current={current} />
+        <SignOutButton className="app-shell__sign-out" />
       </aside>
       <section className={`app-shell__content ${contentClassName}`}>
         {children}
@@ -66,6 +69,7 @@ export function AppShell({
         current={current}
         label="Navegación principal móvil"
       />
+      <SignOutButton className="app-shell__sign-out-mobile" />
     </main>
   )
 }
