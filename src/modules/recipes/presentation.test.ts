@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
+import { buildCatalogEntries } from '@/modules/plan/suggestions'
+
 import {
   dishTypeLabel,
   filterRecipes,
   formatIngredient,
+  ingredientAvailability,
   timeLabel,
 } from './presentation'
 import type { Recipe } from './types'
@@ -58,6 +61,24 @@ describe('recipes presentation', () => {
     ]
     expect(filterRecipes(rows, '', { favoritesOnly: true }).map((row) => row.id)).toEqual(['a'])
     expect(filterRecipes(rows, '', { category: 'Postre' }).map((row) => row.id)).toEqual(['b'])
+  })
+
+  it('ingredientAvailability empareja por catálogo cuando el texto no se parece', () => {
+    const catalog = buildCatalogEntries([
+      { canonicalName: 'Pan', terms: ['Pan'] },
+    ])
+    expect(
+      ingredientAvailability(
+        'pan del día anterior',
+        [{ name: 'Pan', status: 'available' }],
+        catalog,
+      ),
+    ).toBe('owned')
+    expect(
+      ingredientAvailability('pan del día anterior', [
+        { name: 'Pan', status: 'out' },
+      ]),
+    ).toBe('missing')
   })
 
   it('formats ingredient amounts as canonical units', () => {

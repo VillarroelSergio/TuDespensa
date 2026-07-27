@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   availabilityLabel,
+  buildCatalogEntries,
+  matches,
   missingIngredients,
   rankSuggestions,
   type SuggestionCandidate,
@@ -176,6 +178,34 @@ describe('availabilityLabel', () => {
     expect(availabilityLabel(['jamón', 'pan'])).toBe(
       'Necesitas comprar: jamón, pan',
     )
+  })
+})
+
+describe('matches', () => {
+  it('ya no confunde una palabra suelta con parte de otra palabra', () => {
+    // Antes "pan" encajaba dentro de "empanadillas" por ser subcadena.
+    expect(matches('pan', 'Empanadillas')).toBe(false)
+    expect(matches('pan del día anterior', 'Pan')).toBe(true)
+  })
+
+  it('sigue tolerando el plural simple', () => {
+    expect(matches('tomate', 'Tomates pera')).toBe(true)
+    expect(matches('jamón', 'Jamon serrano')).toBe(true)
+  })
+
+  it('con catálogo, empareja alimentos cuyo texto no se parece', () => {
+    const catalog = buildCatalogEntries([
+      { canonicalName: 'Pan', terms: ['Pan', 'Pan de molde'] },
+    ])
+    expect(matches('pan del día anterior', 'Pan de molde', catalog)).toBe(true)
+  })
+
+  it('con catálogo, no empareja alimentos distintos aunque el texto se solape', () => {
+    const catalog = buildCatalogEntries([
+      { canonicalName: 'Pan', terms: ['Pan'] },
+      { canonicalName: 'Pan rallado', terms: ['Pan rallado'] },
+    ])
+    expect(matches('pan del día anterior', 'Pan rallado', catalog)).toBe(false)
   })
 })
 

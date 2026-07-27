@@ -31,6 +31,18 @@ describe('parseTicketLines', () => {
     ])
   })
 
+  it('quita el guion separador de "Producto — N unidades"', () => {
+    expect(parseTicketLines('Leche entera Milbona — 6 unidades')).toEqual([
+      { name: 'Leche entera Milbona', quantity: 6, unitCode: 'unit' },
+    ])
+    expect(parseTicketLines('Coca-Cola Zero — 1 unidad')).toEqual([
+      { name: 'Coca-Cola Zero', quantity: 1, unitCode: 'unit' },
+    ])
+    expect(parseTicketLines('Queso de Burgos 0 % — 1 unidad')).toEqual([
+      { name: 'Queso de Burgos 0 %', quantity: 1, unitCode: 'unit' },
+    ])
+  })
+
   it('una palabra final que no es unidad se queda en el nombre', () => {
     // "frito" no es unidad: "Tomate frito" es el producto, sin cantidad.
     expect(parseTicketLines('Tomate frito')).toEqual([

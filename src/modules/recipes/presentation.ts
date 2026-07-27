@@ -1,4 +1,4 @@
-import { matches } from '@/modules/plan/suggestions'
+import { matches, type CatalogEntry } from '@/modules/plan/suggestions'
 
 import type {
   Recipe,
@@ -77,9 +77,11 @@ export type PantryAvailabilityItem = { name: string; status: 'out' | 'low' | 'av
 export function ingredientAvailability(
   ingredientName: string,
   pantryItems: PantryAvailabilityItem[],
+  catalog: CatalogEntry[] = [],
 ): IngredientAvailability {
   const found = pantryItems.find(
-    (item) => item.status !== 'out' && matches(ingredientName, item.name),
+    (item) =>
+      item.status !== 'out' && matches(ingredientName, item.name, catalog),
   )
   if (!found) return 'missing'
   return found.status === 'low' ? 'low' : 'owned'

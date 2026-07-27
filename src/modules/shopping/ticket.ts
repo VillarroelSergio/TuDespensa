@@ -103,7 +103,12 @@ function extractQuantity(line: string): {
   const rawName = match[1] ?? ''
   const rawNumber = match[2] ?? ''
   const rawUnit = match[3]
-  const name = rawName.trim()
+  // El guion separador ("Producto — 3 unidades") queda pegado al nombre
+  // porque no es un espacio; se quita aparte del resto del recorte.
+  const name = rawName
+    .trim()
+    .replace(/[-—]+\s*$/, '')
+    .trim()
   if (!name) return { name: '', quantity: null, unitCode: null } // solo cantidad, sin producto: se descarta
   const quantity = Number(rawNumber.replace(',', '.'))
   const unitCode = rawUnit

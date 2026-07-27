@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+import type { CatalogEntry } from '@/modules/plan/suggestions'
+
 import {
   dishTypeLabel,
   formatIngredient,
@@ -19,9 +21,11 @@ const AVAILABILITY_LABEL = {
 export function RecipeDetailView({
   recipe,
   pantryAvailability,
+  catalog = [],
 }: {
   recipe: RecipeDetail
   pantryAvailability: PantryAvailabilityItem[]
+  catalog?: CatalogEntry[]
 }) {
   const meta = [
     recipe.servings ? `${recipe.servings} raciones` : null,
@@ -76,6 +80,7 @@ export function RecipeDetailView({
               const availability = ingredientAvailability(
                 ingredient.name,
                 pantryAvailability,
+                catalog,
               )
               return (
                 <li className="recipe-detail__ingredient" key={ingredient.position}>

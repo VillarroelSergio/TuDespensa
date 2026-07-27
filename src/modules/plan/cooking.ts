@@ -1,4 +1,4 @@
-import { matches } from './suggestions'
+import { matches, type CatalogEntry } from './suggestions'
 
 /**
  * Núcleo puro de Fase 8: empareja los ingredientes de una receta con lo que hay
@@ -117,12 +117,13 @@ function stepDown(state: string | null): string {
 export function buildCookLines(
   ingredients: CookIngredient[],
   pantry: CookPantryItem[],
+  catalog: CatalogEntry[] = [],
 ): CookLine[] {
   return pantry.flatMap((item) => {
     // ponytail: primer ingrediente que empareja. Un producto que empareja con dos
     // ingredientes se descuenta una vez; la persona corrige si hace falta.
     const ingredient = ingredients.find((entry) =>
-      matches(entry.name, item.name),
+      matches(entry.name, item.name, catalog),
     )
     if (!ingredient) return []
 

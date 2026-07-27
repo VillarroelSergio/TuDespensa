@@ -14,6 +14,7 @@ import { parseIngredient } from '@/modules/recipes/ingredient-normalize'
 
 import { addPlanItems } from '@/modules/shopping/actions'
 
+import { getCatalogEntries } from './catalog'
 import { buildCookLines } from './cooking'
 import type { Consumption, CookLine, CookPantryItem } from './cooking'
 import { classifyFoodGroup } from './foodGroups'
@@ -112,12 +113,13 @@ const SHOPPING_FAILED = -1
  */
 async function consolidateShopping(recipeId: string): Promise<number> {
   const supabase = await createSupabaseServerClient()
-  const [ingredientsRes, pantry] = await Promise.all([
+  const [ingredientsRes, pantry, catalog] = await Promise.all([
     supabase
       .from('recipe_ingredients')
       .select('name,quantity,unit_code')
       .eq('recipe_id', recipeId),
     getSuggestionPantry(supabase),
+    getCatalogEntries(supabase),
   ])
   // Nombre y cantidad limpios: «1/4 cebolla» → «cebolla», 0.25 uds. La Compra
   // solo maneja artículos completos, así que las unidades contables se redondean
@@ -137,6 +139,7 @@ async function consolidateShopping(recipeId: string): Promise<number> {
     missingIngredients(
       rows.map((row) => row.name),
       pantry,
+      catalog,
     ),
   )
   const items = rows.filter((row) => missing.has(row.name))
@@ -265,6 +268,7 @@ export async function getSuggestions(
     catsRes,
     plannedRes,
     pantry,
+    catalog,
   ] = await Promise.all([
     // Solo recetas listas: una captura `pending` todavía no se puede cocinar.
     supabase
@@ -286,6 +290,7 @@ export async function getSuggestions(
       .gte('meal_date', startIso)
       .lte('meal_date', addDays(startIso, 6)),
     getSuggestionPantry(supabase),
+    getCatalogEntries(supabase),
   ])
   if (recipesRes.error) failure(recipesRes.error)
   const recipes = recipesRes.data ?? []
@@ -342,6 +347,7 @@ export async function getSuggestions(
     plannedRecipeIds,
     plannedDishTypes,
     plannedFoodGroups,
+    catalog,
   }
   // Las 10 recomendadas son las siguientes en el mismo ranking, sin repetir
   // las 3 sugerencias ya mostradas.
@@ -435,7 +441,7 @@ export async function getCookPreview(
   if (mealError) failure(mealError)
   if (!meal) return null
 
-  const [recipeRes, ingredientsRes, pantry] = await Promise.all([
+  const [recipeRes, ingredientsRes, pantry, catalog] = await Promise.all([
     supabase
       .from('recipes')
       .select('title')
@@ -446,6 +452,7 @@ export async function getCookPreview(
       .select('name,quantity,unit_code')
       .eq('recipe_id', meal.recipe_id),
     getCookPantry(supabase),
+    getCatalogEntries(supabase),
   ])
   if (recipeRes.error) failure(recipeRes.error)
 
@@ -463,6 +470,7 @@ export async function getCookPreview(
         ),
       ),
       pantry,
+      catalog,
     ),
   }
 }
