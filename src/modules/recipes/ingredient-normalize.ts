@@ -92,7 +92,14 @@ export function parseIngredient(
     }
   }
 
-  const name = tokens.slice(consumed).join(' ').trim() || cleaned
+  // El catálogo guarda algunas filas con la preposición de enlace pegada al
+  // nombre («100 g de tomate triturado» → cantidad/unidad ya en sus columnas,
+  // pero el nombre se quedó como «de tomate triturado»). Se quita solo al
+  // principio: no toca «taquitos de jamón», donde el «de» es parte del nombre.
+  const name = (tokens.slice(consumed).join(' ').trim() || cleaned).replace(
+    /^(de|del|de la|de los|de las)\s+/i,
+    '',
+  )
 
   // Los campos explícitos de la fila mandan sobre lo deducido del texto.
   return {

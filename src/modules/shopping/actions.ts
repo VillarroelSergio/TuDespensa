@@ -196,6 +196,7 @@ type CheckoutRow = {
   name: string
   action: 'add' | 'restore'
   suggested_zone: PantryZone | null
+  quantity: number | null
 }
 
 // Revisión C2: qué le pasará a la despensa a cada producto comprado.
@@ -216,6 +217,7 @@ export async function getCheckoutPreview(): Promise<CheckoutLine[]> {
     name: row.name,
     action: row.action,
     suggestedZone: row.suggested_zone ?? null,
+    quantity: row.quantity ?? null,
   }))
 }
 

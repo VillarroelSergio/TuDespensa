@@ -56,6 +56,25 @@ describe('parseIngredient', () => {
     })
   })
 
+  it('quita la preposición de enlace pegada al nombre, solo al principio', () => {
+    expect(parseIngredient('de tomate triturado', 100, 'g')).toEqual({
+      name: 'tomate triturado',
+      quantity: 100,
+      unitCode: 'g',
+    })
+    expect(parseIngredient('de lenteja pardina', 180, 'g')).toEqual({
+      name: 'lenteja pardina',
+      quantity: 180,
+      unitCode: 'g',
+    })
+    // El «de» de en medio del nombre no se toca.
+    expect(parseIngredient('de taquitos de jamón', 50, 'g')).toEqual({
+      name: 'taquitos de jamón',
+      quantity: 50,
+      unitCode: 'g',
+    })
+  })
+
   it('repara el UTF-8 doblemente codificado del catálogo', () => {
     // «í» (UTF-8: C3 AD) reinterpretado como Latin-1 y recodificado a UTF-8
     // queda como U+00C3 U+00AD: «Ã» + guion suave invisible.

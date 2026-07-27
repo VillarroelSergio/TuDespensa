@@ -322,6 +322,7 @@ const checkout: CheckoutLine[] = [
     name: 'Espinacas',
     action: 'add',
     suggestedZone: 'fridge',
+    quantity: 1,
   },
   {
     itemId: 'fixture-shopping-pan',
@@ -329,6 +330,7 @@ const checkout: CheckoutLine[] = [
     name: 'Pan integral',
     action: 'add',
     suggestedZone: 'pantry',
+    quantity: 2,
   },
   {
     itemId: 'fixture-shopping-yogur',
@@ -336,6 +338,7 @@ const checkout: CheckoutLine[] = [
     name: 'Yogur griego',
     action: 'restore',
     suggestedZone: null,
+    quantity: null,
   },
 ]
 

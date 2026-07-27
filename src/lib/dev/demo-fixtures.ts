@@ -203,6 +203,7 @@ export const demoCheckoutLines: CheckoutLine[] = [
     name: 'Leche',
     action: 'add',
     suggestedZone: 'fridge',
+    quantity: 6,
   },
   {
     itemId: 'demo-s-6',
@@ -210,6 +211,7 @@ export const demoCheckoutLines: CheckoutLine[] = [
     name: 'Aceite de oliva',
     action: 'restore',
     suggestedZone: null,
+    quantity: null,
   },
 ]
 

@@ -27,7 +27,9 @@ export function CheckoutReview({
   const [pending, setPending] = useState(false)
   const [zoneChoices, setZoneChoices] = useState<Record<string, PantryZone>>({})
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
-    Object.fromEntries(initialLines.map((line) => [line.itemId, 1])),
+    Object.fromEntries(
+      initialLines.map((line) => [line.itemId, line.quantity ?? 1]),
+    ),
   )
   // Evita que el eco realtime de nuestra propia confirmación dispare un
   // refresh mientras ya estamos navegando fuera de esta página.
@@ -73,8 +75,8 @@ export function CheckoutReview({
         initialLines.map((line) => ({
           itemId: line.itemId,
           version:
-            updated.items.find((item) => item.item_id === line.itemId)?.version ??
-            line.version,
+            updated.items.find((item) => item.item_id === line.itemId)
+              ?.version ?? line.version,
           zone: zoneChoices[line.itemId],
         })),
       )
