@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation'
 import { AppShell } from '@/components/ui/AppShell'
 
 import { importTicketItems } from './actions'
-import { readTicketImage } from './ocr'
-import { readTicketPdf } from './pdf'
 import { parseTicketLines, type TicketLine } from './ticket'
 
 const UNIT_OPTIONS: { value: string; label: string }[] = [
@@ -21,9 +19,8 @@ const UNIT_OPTIONS: { value: string; label: string }[] = [
 
 const EMPTY_LINE: TicketLine = { name: '', quantity: null, unitCode: null }
 
-// Fase 10: hacer una foto del ticket (OCR en el dispositivo) o pegar su texto →
-// revisar y corregir cada línea → añadir a Compra. La persona confirma lo
-// detectado antes de que nada toque la lista; la imagen no se sube ni se guarda.
+// Fase 10: pegar el texto del ticket → revisar y corregir cada línea → añadir a
+// Compra. La persona confirma lo detectado antes de que nada toque la lista.
 export function TicketImport() {
   const router = useRouter()
   const [text, setText] = useState('')
@@ -36,54 +33,6 @@ export function TicketImport() {
     // Aunque no detecte nada, dejamos una fila vacía para escribir a mano.
     setLines(detected.length ? detected : [EMPTY_LINE])
     setStatus('')
-  }
-
-  // Rebanada 2: leer una foto en el propio dispositivo. La imagen no se sube ni se
-  // guarda; se convierte en texto y se descarta. El texto pasa por el mismo repaso.
-  async function handlePhoto(file: File) {
-    if (pending) return
-    setPending(true)
-    setStatus('Leyendo la foto en tu dispositivo…')
-    try {
-      const detected = parseTicketLines(
-        await readTicketImage(file, (ratio) =>
-          setStatus(
-            `Leyendo la foto en tu dispositivo… ${Math.round(ratio * 100)}%`,
-          ),
-        ),
-      )
-      setLines(detected.length ? detected : [EMPTY_LINE])
-      setStatus('')
-    } catch {
-      setStatus(
-        'No hemos podido leer la foto. Prueba con más luz o pega el texto a mano.',
-      )
-    } finally {
-      setPending(false)
-    }
-  }
-
-  async function handlePdf(file: File) {
-    if (pending) return
-    setPending(true)
-    setStatus('Leyendo el PDF en tu dispositivo…')
-    try {
-      const detected = parseTicketLines(
-        await readTicketPdf(file, (ratio) =>
-          setStatus(
-            `Leyendo el PDF en tu dispositivo… ${Math.round(ratio * 100)}%`,
-          ),
-        ),
-      )
-      setLines(detected.length ? detected : [EMPTY_LINE])
-      setStatus('')
-    } catch {
-      setStatus(
-        'No hemos podido leer el PDF. Prueba con otro archivo o pega el texto a mano.',
-      )
-    } finally {
-      setPending(false)
-    }
   }
 
   function update(index: number, patch: Partial<TicketLine>) {
@@ -129,55 +78,9 @@ export function TicketImport() {
         {lines === null ? (
           <>
             <p className="shopping-review-lead">
-              Haz una foto, elige una imagen de tu galería, carga un PDF o copia
-              sus líneas. Podrás revisarlas y corregirlas antes de añadirlas. El
-              archivo se lee en tu móvil y no se guarda.
+              Copia las líneas del ticket, una por producto. Podrás revisarlas y
+              corregirlas antes de añadirlas.
             </p>
-            <label className="shopping-back ticket-photo">
-              <input
-                type="file"
-                accept="image/*"
-                disabled={pending}
-                onChange={(event) => {
-                  const file = event.target.files?.[0]
-                  if (file) void handlePhoto(file)
-                  event.target.value = '' // permite reintentar la misma foto
-                }}
-              />
-              Elegir una foto de la galería
-            </label>
-            <label className="shopping-back ticket-photo">
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                disabled={pending}
-                onChange={(event) => {
-                  const file = event.target.files?.[0]
-                  if (file) void handlePhoto(file)
-                  event.target.value = ''
-                }}
-              />
-              Hacer una foto del ticket
-            </label>
-            <label className="shopping-back ticket-photo">
-              <input
-                type="file"
-                accept="application/pdf,.pdf"
-                disabled={pending}
-                onChange={(event) => {
-                  const file = event.target.files?.[0]
-                  if (file) void handlePdf(file)
-                  event.target.value = ''
-                }}
-              />
-              Cargar un ticket en PDF
-            </label>
-            {status ? (
-              <p className="pantry-sync-status" aria-live="polite">
-                {status}
-              </p>
-            ) : null}
             <label className="sr-only" htmlFor="ticket-text">
               Texto del ticket
             </label>

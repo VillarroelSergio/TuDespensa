@@ -25,3 +25,4 @@ Thumbs.db
 
 # Generated codebase graph artifacts
 /graphify-out/
+/graphify-out
