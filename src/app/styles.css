@@ -1022,12 +1022,23 @@ footer {
     min-height: 0;
     padding: 1.25rem;
   }
+  .pantry-row {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+    padding: 0.625rem 1rem;
+  }
   .pantry-row__detail {
     grid-template-columns: 0.625rem minmax(0, 1fr) auto;
+    flex: 1 1 100%;
   }
   .pantry-row__status {
     grid-column: 2 / -1;
     margin-top: -0.5rem;
+  }
+  .pantry-stepper,
+  .pantry-quick-action,
+  .shopping-row__delete {
+    flex-shrink: 0;
   }
   .pantry-bottom-nav {
     position: fixed;
