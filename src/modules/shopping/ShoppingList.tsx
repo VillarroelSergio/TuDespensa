@@ -59,7 +59,9 @@ function Row({
         <span>{item.name}</span>
         {quantity || item.source === 'pantry' ? (
           <span className="shopping-row__meta">
-            {quantity ? <small className="shopping-qty">{quantity}</small> : null}
+            {quantity ? (
+              <small className="shopping-qty">{quantity}</small>
+            ) : null}
             {item.source === 'pantry' ? <small>Desde despensa</small> : null}
           </span>
         ) : null}

@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation'
 
 import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 
-import { addShoppingItem, deleteShoppingItem, toggleShoppingItem } from './actions'
+import {
+  addShoppingItem,
+  deleteShoppingItem,
+  toggleShoppingItem,
+} from './actions'
 import { ShoppingList } from './ShoppingList'
 import type { ShoppingItem } from './types'
 
@@ -90,7 +94,9 @@ export function ShoppingWorkspace({
   }
 
   function handleToggleAll(purchased: boolean) {
-    const targets = visibleItems.filter((item) => item.isPurchased !== purchased)
+    const targets = visibleItems.filter(
+      (item) => item.isPurchased !== purchased,
+    )
     if (!targets.length) return
     setStatus('')
     startTransition(async () => {

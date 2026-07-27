@@ -22,3 +22,6 @@ Thumbs.db
 
 .vercel
 .codex-cache
+
+# Generated codebase graph artifacts
+/graphify-out/

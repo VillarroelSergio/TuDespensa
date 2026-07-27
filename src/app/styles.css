@@ -2770,6 +2770,14 @@ a:focus-visible {
   font-size: 0.875rem;
   white-space: nowrap;
 }
+.household-access-you {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: #33b266;
+}
 .household-invite {
   display: flex;
   flex-direction: column;

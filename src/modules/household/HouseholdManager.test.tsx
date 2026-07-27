@@ -26,12 +26,13 @@ vi.mock('@/lib/supabase/browser', () => ({
   }),
 }))
 vi.mock('./actions', () => ({
+  claimHouseholdPerson: vi.fn(),
   createInvitationCode: vi.fn(),
   resetPilotHousehold: vi.fn(),
   revokeInvitation: vi.fn(),
 }))
 
-import { createInvitationCode } from './actions'
+import { claimHouseholdPerson, createInvitationCode } from './actions'
 
 import { HouseholdManager } from './HouseholdManager'
 
@@ -39,10 +40,14 @@ const baseData = {
   isOwner: true,
   householdName: 'Casa de pruebas',
   activeMemberCount: 1,
-  activeMembers: [{ id: 'owner', label: 'Tú', role: 'owner' as const }],
+  activeMembers: [
+    { id: 'owner', label: 'Tú', role: 'owner' as const, isSelf: true },
+  ],
   pendingInvitations: [
     { id: 'pending', expiresAt: '2026-08-02T00:00:00.000Z' },
   ],
+  needsNameClaim: false,
+  unclaimedPeople: [],
 }
 
 describe('HouseholdManager', () => {
@@ -103,11 +108,12 @@ describe('HouseholdManager', () => {
           ...baseData,
           activeMemberCount: 2,
           activeMembers: [
-            { id: 'owner', label: 'Tú', role: 'owner' as const },
+            { id: 'owner', label: 'Tú', role: 'owner' as const, isSelf: true },
             {
               id: 'member',
               label: 'Integrante del hogar',
               role: 'member' as const,
+              isSelf: false,
             },
           ],
         }}
@@ -121,5 +127,26 @@ describe('HouseholdManager', () => {
 
     fireEvent.click(button)
     expect(createInvitationCode).not.toHaveBeenCalled()
+  })
+
+  it('lets an unclaimed account pick its name from the onboarding list', async () => {
+    vi.mocked(claimHouseholdPerson).mockResolvedValue(undefined)
+    render(
+      <HouseholdManager
+        data={{
+          ...baseData,
+          needsNameClaim: true,
+          unclaimedPeople: [{ id: 'person-1', name: 'María' }],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'María' }))
+
+    await waitFor(() =>
+      expect(claimHouseholdPerson).toHaveBeenCalledWith({
+        personId: 'person-1',
+      }),
+    )
   })
 })

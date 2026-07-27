@@ -131,15 +131,6 @@ function PantryRow({
           Se terminó
         </button>
       ) : null}
-      {onRemove && item.status === 'out' ? (
-        <button
-          className="pantry-quick-action"
-          onClick={() => onRemove(item)}
-          type="button"
-        >
-          Quitar de despensa
-        </button>
-      ) : null}
       {onMarkLow &&
       item.status === 'available' &&
       item.trackingMode !== 'approximate' ? (
@@ -150,6 +141,16 @@ function PantryRow({
           aria-label={`Marcar ${item.name} como queda poco`}
         >
           Queda poco
+        </button>
+      ) : null}
+      {onRemove ? (
+        <button
+          aria-label={`Eliminar ${item.name}`}
+          className="shopping-row__delete"
+          onClick={() => onRemove(item)}
+          type="button"
+        >
+          ×
         </button>
       ) : null}
     </div>
