@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import {
+  claimHouseholdPerson,
   createInvitationCode,
   resetPilotHousehold,
   revokeInvitation,
@@ -30,6 +31,7 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
     expiresAt: string
   } | null>(null)
   const [pending, startTransition] = useTransition()
+  const [claimName, setClaimName] = useState('')
   const hasFreeSpot = data.activeMemberCount < 2
   const canInvite = data.isOwner && hasFreeSpot
 
@@ -74,6 +76,18 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
     })
   }
 
+  function claimPerson(input: { personId: string } | { name: string }) {
+    startTransition(async () => {
+      try {
+        await claimHouseholdPerson(input)
+        setClaimName('')
+        setStatus('')
+      } catch {
+        setStatus('No hemos podido guardar tu nombre. Inténtalo de nuevo.')
+      }
+    })
+  }
+
   function resetPilot() {
     if (resetConfirmation !== 'BORRAR') {
       setStatus('Escribe BORRAR para confirmar el reinicio.')
@@ -105,7 +119,19 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
         <ul className="household-people">
           {data.activeMembers.map((member) => (
             <li key={member.id}>
-              <span>{member.label}</span>
+              <span>
+                {member.isSelf ? (
+                  <span
+                    className="household-access-you"
+                    aria-hidden="true"
+                    title="Esta sesión"
+                  />
+                ) : null}
+                {member.label}
+                {member.isSelf ? (
+                  <span className="sr-only"> (esta sesión)</span>
+                ) : null}
+              </span>
               <span className="household-access-role">
                 {member.role === 'owner' ? 'Propietaria' : 'Integrante'}
               </span>
@@ -113,6 +139,49 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
           ))}
         </ul>
       </>
+
+      {data.needsNameClaim ? (
+        <section className="household-security">
+          <p className="label">¿Cómo te llamas?</p>
+          {data.unclaimedPeople.length ? (
+            <p>Elige tu nombre de la lista, o escribe el tuyo si no está.</p>
+          ) : (
+            <p>Escribe tu nombre para que el resto del hogar te reconozca.</p>
+          )}
+          {data.unclaimedPeople.length ? (
+            <div className="pantry-detail__chips">
+              {data.unclaimedPeople.map((person) => (
+                <button
+                  key={person.id}
+                  type="button"
+                  disabled={pending}
+                  onClick={() => claimPerson({ personId: person.id })}
+                >
+                  {person.name}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <label htmlFor="claim-name" className="sr-only">
+            Tu nombre
+          </label>
+          <input
+            id="claim-name"
+            value={claimName}
+            onChange={(event) => setClaimName(event.target.value)}
+            placeholder="Nombre o apodo"
+            disabled={pending}
+          />
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={pending || !claimName.trim()}
+            onClick={() => claimPerson({ name: claimName.trim() })}
+          >
+            Guardar mi nombre
+          </button>
+        </section>
+      ) : null}
 
       <section className="household-security">
         <p className="label">Tu cuenta</p>

@@ -3,8 +3,10 @@
 import { revalidatePath } from 'next/cache'
 
 import { AppError } from '@/lib/errors/AppError'
+import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { parseIdempotencyKey } from '@/lib/validation/onboarding'
 import {
   generateInvitationCode,
   hashInvitationCode,
@@ -18,8 +20,11 @@ export type HouseholdManagement = {
     id: string
     label: string
     role: 'owner' | 'member'
+    isSelf: boolean
   }[]
   pendingInvitations: { id: string; expiresAt: string }[]
+  needsNameClaim: boolean
+  unclaimedPeople: { id: string; name: string }[]
 }
 
 function failure(error: { code?: string; message: string }): never {
@@ -123,7 +128,7 @@ export async function getHouseholdManagement(): Promise<HouseholdManagement | nu
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const [{ data: household }, { data: members }, { data: invitations }] =
+  const [{ data: household }, { data: members }, { data: invitations }, { data: people }] =
     await Promise.all([
       supabase.from('households').select('name').maybeSingle(),
       supabase
@@ -138,20 +143,33 @@ export async function getHouseholdManagement(): Promise<HouseholdManagement | nu
         .from('household_invitations')
         .select('id,status,expires_at')
         .eq('status', 'pending'),
+      // RLS ya limita esto al hogar activo de quien llama.
+      supabase.from('household_people').select('id,name,linked_user_id'),
     ])
 
   if (!household) return null
   const isOwner =
     (members ?? []).find((member) => member.user_id === user.id)?.role ===
     'owner'
-  // Ya no hay correo disponible para identificar a la otra persona, y
-  // tampoco es un dato que necesitemos mostrar: basta con distinguir "Tú" del
-  // resto.
-  const activeMembers = (members ?? []).map((member) => ({
-    id: member.user_id,
-    label: member.user_id === user.id ? 'Tú' : 'Integrante del hogar',
-    role: member.role,
-  }))
+  const nameByUserId = new Map(
+    (people ?? [])
+      .filter((person) => person.linked_user_id !== null)
+      .map((person) => [person.linked_user_id as string, person.name]),
+  )
+  const activeMembers = (members ?? []).map((member) => {
+    const isSelf = member.user_id === user.id
+    return {
+      id: member.user_id,
+      label:
+        nameByUserId.get(member.user_id) ??
+        (isSelf ? 'Tú' : 'Integrante del hogar'),
+      role: member.role,
+      isSelf,
+    }
+  })
+  const unclaimedPeople = (people ?? [])
+    .filter((person) => person.linked_user_id === null)
+    .map((person) => ({ id: person.id, name: person.name }))
 
   return {
     isOwner,
@@ -162,5 +180,26 @@ export async function getHouseholdManagement(): Promise<HouseholdManagement | nu
       id: invitation.id,
       expiresAt: invitation.expires_at,
     })),
+    needsNameClaim: !nameByUserId.has(user.id),
+    unclaimedPeople,
   }
+}
+
+// La cuenta indica cuál de los nombres dados de alta en el onboarding es
+// ella, o escribe el suyo si no está en la lista. Así "Mi hogar" puede
+// mostrar el nombre real de cada cuenta.
+export async function claimHouseholdPerson(
+  input: { personId: string } | { name: string },
+  key?: string,
+): Promise<void> {
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.rpc('claim_household_person', {
+    person_id: 'personId' in input ? input.personId : null,
+    person_name: 'name' in input ? input.name : null,
+    idempotency_key: parseIdempotencyKey(
+      key ?? createIdempotencyKey('claim_household_person'),
+    ),
+  })
+  if (error) failure(error)
+  revalidatePath('/hogar')
 }

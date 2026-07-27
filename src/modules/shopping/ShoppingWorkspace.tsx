@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation'
 
 import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 
-import { addShoppingItem, toggleShoppingItem } from './actions'
+import {
+  addShoppingItem,
+  deleteShoppingItem,
+  toggleShoppingItem,
+} from './actions'
 import { ShoppingList } from './ShoppingList'
 import type { ShoppingItem } from './types'
 
@@ -30,6 +34,11 @@ export function ShoppingWorkspace({
       current.map((item) =>
         item.id === id ? { ...item, isPurchased: !item.isPurchased } : item,
       ),
+  )
+  const [visibleItems, applyDelete] = useOptimistic(
+    items,
+    (current: ShoppingItem[], id: string) =>
+      current.filter((item) => item.id !== id),
   )
 
   useRealtimeRefresh('shopping-refresh', ['shopping_items'], {
@@ -68,8 +77,26 @@ export function ShoppingWorkspace({
     })
   }
 
+  function handleDelete(item: ShoppingItem) {
+    setStatus('')
+    startTransition(async () => {
+      applyDelete(item.id)
+      try {
+        await deleteShoppingItem(item.id, item.version)
+        setStatus(`${item.name}: eliminado de la compra.`)
+      } catch {
+        setStatus(
+          'No hemos podido eliminar el producto. Hemos actualizado la lista.',
+        )
+        router.refresh()
+      }
+    })
+  }
+
   function handleToggleAll(purchased: boolean) {
-    const targets = items.filter((item) => item.isPurchased !== purchased)
+    const targets = visibleItems.filter(
+      (item) => item.isPurchased !== purchased,
+    )
     if (!targets.length) return
     setStatus('')
     startTransition(async () => {
@@ -94,13 +121,14 @@ export function ShoppingWorkspace({
 
   return (
     <ShoppingList
-      initialItems={items}
+      initialItems={visibleItems}
       pending={adding}
       status={status}
       notice={notice}
       onAdd={handleAdd}
       onToggle={handleToggle}
       onToggleAll={handleToggleAll}
+      onDelete={handleDelete}
     />
   )
 }

@@ -116,6 +116,20 @@ export async function toggleShoppingItem(
   )
 }
 
+export async function deleteShoppingItem(
+  itemId: string,
+  version: number,
+  key?: string,
+) {
+  return rpc<{ item_id: string; removed: boolean }>('shopping_remove_item', {
+    item_id: itemId,
+    version,
+    idempotency_key: parseIdempotencyKey(
+      key ?? createIdempotencyKey('shopping_remove_item'),
+    ),
+  })
+}
+
 export async function getShoppingItems(): Promise<ShoppingItem[]> {
   const supabase = await createSupabaseServerClient()
   const {

@@ -120,18 +120,21 @@ export interface Database {
           id: string
           household_id: string
           name: string
+          linked_user_id: string | null
           created_at: string
         }
         Insert: {
           id?: string
           household_id: string
           name: string
+          linked_user_id?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           household_id?: string
           name?: string
+          linked_user_id?: string | null
           created_at?: string
         }
         Relationships: []
@@ -213,6 +216,7 @@ export interface Database {
           household_id: string
           name: string
           catalog_food_id: string | null
+          default_zone: string | null
           created_at: string
         }
         Insert: {
@@ -220,6 +224,7 @@ export interface Database {
           household_id: string
           name: string
           catalog_food_id?: string | null
+          default_zone?: string | null
           created_at?: string
         }
         Update: {
@@ -227,6 +232,7 @@ export interface Database {
           household_id?: string
           name?: string
           catalog_food_id?: string | null
+          default_zone?: string | null
           created_at?: string
         }
         Relationships: []
@@ -869,6 +875,14 @@ export interface Database {
       }
       create_household_invitation: {
         Args: { code_hash: string }
+        Returns: Json
+      }
+      claim_household_person: {
+        Args: { person_id: string | null; person_name: string | null; idempotency_key: string }
+        Returns: Json
+      }
+      pantry_delete_item: {
+        Args: { item_id: string; version: number; idempotency_key: string }
         Returns: Json
       }
       redeem_invitation_for_new_member: {

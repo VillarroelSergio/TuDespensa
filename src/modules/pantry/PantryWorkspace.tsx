@@ -8,8 +8,8 @@ import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 import {
   adjustPantryItem,
   correctPantryItem,
+  deletePantryItem,
   recordPantryEntry,
-  removeFinishedPantryItem,
 } from './actions'
 import { addShoppingItem } from '@/modules/shopping/actions'
 import { PantryEntryForm } from './PantryEntryForm'
@@ -154,7 +154,9 @@ export function PantryWorkspace({
       setStatus(`${item.name}: cantidad actualizada.`)
       refresh()
     } catch {
-      setStatus('No hemos podido actualizar la cantidad. Hemos actualizado la lista.')
+      setStatus(
+        'No hemos podido actualizar la cantidad. Hemos actualizado la lista.',
+      )
       refresh()
     } finally {
       setPendingId(null)
@@ -166,7 +168,7 @@ export function PantryWorkspace({
     setPendingId(item.id)
     setStatus('')
     try {
-      await removeFinishedPantryItem(item.id, item.version)
+      await deletePantryItem(item.id, item.version)
       setStatus(`${item.name}: eliminado de la despensa.`)
       refresh()
     } catch {

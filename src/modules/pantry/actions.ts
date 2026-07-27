@@ -135,16 +135,16 @@ export async function markPantryOut(
     ),
   })
 }
-export async function removeFinishedPantryItem(
+export async function deletePantryItem(
   itemId: string,
   version: number,
   key?: string,
 ) {
-  return rpc('pantry_remove_finished_item', {
+  return rpc('pantry_delete_item', {
     item_id: itemId,
     version,
     idempotency_key: parseIdempotencyKey(
-      key ?? createIdempotencyKey('pantry_remove_finished_item'),
+      key ?? createIdempotencyKey('pantry_delete_item'),
     ),
   })
 }

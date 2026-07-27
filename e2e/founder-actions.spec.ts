@@ -251,6 +251,18 @@ test.describe('shopping', () => {
     await expect(page.getByRole('checkbox', { name: 'Pan' })).not.toBeChecked()
   })
 
+  test('eliminar un producto lo quita de la lista y persiste tras recargar', async () => {
+    await page.getByLabel('Añadir a la compra').fill('Miel')
+    await page.getByRole('button', { name: 'Añadir' }).click()
+    await expect(page.getByRole('checkbox', { name: 'Miel' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Eliminar Miel' }).click()
+    await expect(page.getByRole('checkbox', { name: 'Miel' })).toHaveCount(0)
+
+    await page.reload()
+    await expect(page.getByRole('checkbox', { name: 'Miel' })).toHaveCount(0)
+  })
+
   test('revisar la compra conserva las marcas al volver y confirma una sola vez', async () => {
     await page.getByLabel('Añadir a la compra').fill('Arroz')
     await page.getByRole('button', { name: 'Añadir' }).click()
