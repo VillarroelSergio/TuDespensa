@@ -37,30 +37,43 @@ function Row({
   item,
   pending,
   onToggle,
+  onDelete,
 }: {
   item: ShoppingItem
   pending: boolean
   onToggle: (item: ShoppingItem) => void
+  onDelete: (item: ShoppingItem) => void
 }) {
   const quantity = formatQuantity(item.quantity, item.unitCode)
   return (
-    <label
+    <div
       className={`shopping-row${item.isPurchased ? ' shopping-row--purchased' : ''}`}
     >
-      <input
-        checked={item.isPurchased}
+      <label className="shopping-row__label">
+        <input
+          checked={item.isPurchased}
+          disabled={pending}
+          onChange={() => onToggle(item)}
+          type="checkbox"
+        />
+        <span>{item.name}</span>
+        {quantity || item.source === 'pantry' ? (
+          <span className="shopping-row__meta">
+            {quantity ? <small className="shopping-qty">{quantity}</small> : null}
+            {item.source === 'pantry' ? <small>Desde despensa</small> : null}
+          </span>
+        ) : null}
+      </label>
+      <button
+        aria-label={`Eliminar ${item.name}`}
+        className="shopping-row__delete"
         disabled={pending}
-        onChange={() => onToggle(item)}
-        type="checkbox"
-      />
-      <span>{item.name}</span>
-      {quantity || item.source === 'pantry' ? (
-        <span className="shopping-row__meta">
-          {quantity ? <small className="shopping-qty">{quantity}</small> : null}
-          {item.source === 'pantry' ? <small>Desde despensa</small> : null}
-        </span>
-      ) : null}
-    </label>
+        onClick={() => onDelete(item)}
+        type="button"
+      >
+        ×
+      </button>
+    </div>
   )
 }
 
@@ -72,6 +85,7 @@ export function ShoppingList({
   onAdd,
   onToggle,
   onToggleAll,
+  onDelete,
 }: {
   initialItems: ShoppingItem[]
   pending: boolean
@@ -80,6 +94,7 @@ export function ShoppingList({
   onAdd: (name: string) => void
   onToggle: (item: ShoppingItem) => void
   onToggleAll: (purchased: boolean) => void
+  onDelete: (item: ShoppingItem) => void
 }) {
   const [name, setName] = useState('')
   const items = useMemo(
@@ -165,6 +180,7 @@ export function ShoppingList({
                 item={item}
                 pending={pending}
                 onToggle={onToggle}
+                onDelete={onDelete}
               />
             ))}
           </section>
@@ -179,6 +195,7 @@ export function ShoppingList({
               item={item}
               pending={pending}
               onToggle={onToggle}
+              onDelete={onDelete}
             />
           ))}
           {!items.length ? (
