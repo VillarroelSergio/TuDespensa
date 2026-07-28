@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 import { assignMealAction, moveMealAction, removeMealAction } from './actions'
 import { slotLabel } from './presentation'
@@ -13,6 +13,7 @@ function chooseHref(meal: PlannedMeal) {
 
 export function PlanSlotActions({ meal }: { meal: PlannedMeal }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false)
   const slotId = `${meal.mealDate}-${meal.mealType}`
   const headingId = `acciones-${slotId}`
   const hidden = (
@@ -45,7 +46,27 @@ export function PlanSlotActions({ meal }: { meal: PlannedMeal }) {
             <label htmlFor={`mover-${slotId}`}>Mover a</label>
             <div className="plan-actions-dialog__move-fields"><input id={`mover-${slotId}`} name="fecha" type="date" defaultValue={meal.mealDate} /><select name="servicio" defaultValue={meal.mealType} aria-label="Servicio de destino"><option value="lunch">Comida</option><option value="dinner">Cena</option></select><button type="submit">Mover</button></div>
           </form>
-          <form className="plan-actions-dialog__remove" action={removeMealAction}>{hidden}<input type="hidden" name="raciones" value={meal.servings ?? ''} /><p>Quitar esta receta del plan.</p><button type="submit">Eliminar del plan</button></form>
+          <form className="plan-actions-dialog__remove" action={removeMealAction}>
+            {hidden}
+            <input type="hidden" name="raciones" value={meal.servings ?? ''} />
+            <p>
+              {confirmingRemoval
+                ? 'Esta acción quitará la receta del plan.'
+                : 'Quitar esta receta del plan.'}
+            </p>
+            {confirmingRemoval ? (
+              <div className="plan-actions-dialog__remove-actions">
+                <button type="button" onClick={() => setConfirmingRemoval(false)}>
+                  Cancelar
+                </button>
+                <button type="submit">Sí, eliminar</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setConfirmingRemoval(true)}>
+                Eliminar del plan
+              </button>
+            )}
+          </form>
         </div>
       </dialog>
     </>

@@ -142,7 +142,7 @@ export function ChooseRecipeView({
                 }) === 0
               return (
                 <a
-                  aria-current={active ? 'true' : undefined}
+                  aria-current={active ? 'page' : undefined}
                   className={`choose-filter${active ? ' is-active' : ''}`}
                   href={chooseHref(active ? '' : filter.value)}
                   key={filter.value}

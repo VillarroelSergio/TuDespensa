@@ -1543,80 +1543,6 @@ footer {
     flex: 1;
   }
 }
-.plan-menu {
-  margin-top: 0.125rem;
-}
-.plan-menu > summary {
-  cursor: pointer;
-  color: var(--primary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  list-style: none;
-}
-.plan-menu > summary::-webkit-details-marker {
-  display: none;
-}
-.plan-menu__body {
-  display: grid;
-  gap: 0.5rem;
-  margin-top: 0.375rem;
-  border-top: 1px solid var(--border);
-  padding-top: 0.5rem;
-}
-.plan-menu__body a {
-  color: var(--primary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-.plan-menu__form {
-  display: grid;
-  gap: 0.25rem;
-}
-.plan-menu__form label {
-  color: var(--muted-2);
-  font-size: 0.6875rem;
-  font-weight: 700;
-}
-.plan-menu__form input,
-.plan-menu__form select {
-  min-height: 36px;
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  background: #fff;
-  padding: 0 0.5rem;
-  font-size: 0.8125rem;
-}
-.plan-menu__form button {
-  min-height: 36px;
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  background: #fff;
-  color: var(--ink);
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-.plan-menu__danger > summary {
-  cursor: pointer;
-  color: #b3261e;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-.plan-menu__danger p {
-  margin: 0.375rem 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-.plan-menu__danger button {
-  min-height: 36px;
-  width: 100%;
-  border: 1px solid #b3261e;
-  border-radius: 0.375rem;
-  background: #fff;
-  color: #b3261e;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
 .plan-action-trigger {
   min-height: 44px;
   border: 0;
@@ -1741,6 +1667,15 @@ footer {
 .plan-actions-dialog__remove button {
   border-color: #b3261e;
   color: #b3261e;
+}
+.plan-actions-dialog__remove-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.plan-actions-dialog__remove-actions button:first-child {
+  border-color: var(--border);
+  color: var(--ink);
 }
 @media (min-width: 768px) {
   .plan-actions-dialog {
@@ -2070,8 +2005,7 @@ footer {
 }
 
 /* Fase 8: revisión de cocina y estado de comida completada. */
-.plan-slot__cooked,
-.plan-menu__cook {
+.plan-slot__cooked {
   color: #33805a !important;
   font-size: 0.6875rem;
   font-weight: 700;

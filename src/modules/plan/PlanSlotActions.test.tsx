@@ -42,5 +42,11 @@ describe('PlanSlotActions', () => {
     expect(
       screen.getByRole('link', { name: 'Cambiar receta' }),
     ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Sí, eliminar' }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar del plan' }))
+    expect(screen.getByRole('button', { name: 'Sí, eliminar' })).toBeInTheDocument()
   })
 })
