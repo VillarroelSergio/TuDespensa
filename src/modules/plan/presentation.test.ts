@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  addMealLabel,
   addWeeks,
   buildWeek,
   dayLabel,
@@ -95,6 +96,17 @@ describe('slotLabel', () => {
   it('nombra el hueco con día y servicio en minúscula', () => {
     expect(slotLabel('2026-07-21', 'lunch')).toBe('martes, comida')
     expect(slotLabel('2026-07-26', 'dinner')).toBe('domingo, cena')
+  })
+})
+
+describe('addMealLabel', () => {
+  it('describe el hueco exacto al que se va a añadir una receta', () => {
+    expect(addMealLabel('2026-07-21', 'lunch')).toBe(
+      'Añadir comida del martes',
+    )
+    expect(addMealLabel('2026-07-26', 'dinner')).toBe(
+      'Añadir cena del domingo',
+    )
   })
 })
 
