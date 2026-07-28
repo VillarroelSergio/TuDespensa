@@ -19,10 +19,11 @@ export default async function ChooseRecipePage({
     fecha?: string
     servicio?: string
     q?: string
+    categoria?: string
     fixture?: string
   }>
 }) {
-  const { fecha, servicio, q, fixture } = await searchParams
+  const { fecha, servicio, q, categoria, fixture } = await searchParams
   // Sin un hueco válido esta vista no significa nada: volvemos al plan.
   if (
     !fecha ||
@@ -44,6 +45,7 @@ export default async function ChooseRecipePage({
       mealDate={fecha}
       mealType={servicio as MealType}
       query={q?.trim() ?? ''}
+      category={categoria?.trim() ?? ''}
       recipes={recipes}
       suggestions={suggestions}
     />

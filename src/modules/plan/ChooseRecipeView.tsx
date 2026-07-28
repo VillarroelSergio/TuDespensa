@@ -1,7 +1,11 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-import { timeLabel } from '@/modules/recipes/presentation'
+import {
+  QUICK_MAIN_INGREDIENT_FILTERS,
+  filterRecipes,
+  timeLabel,
+} from '@/modules/recipes/presentation'
 import type { Recipe } from '@/modules/recipes/types'
 import { AppShell } from '@/components/ui/AppShell'
 
@@ -46,21 +50,30 @@ export function ChooseRecipeView({
   mealDate,
   mealType,
   query,
+  category,
   recipes,
   suggestions,
 }: {
   mealDate: string
   mealType: MealType
   query: string
+  category: string
   recipes: Recipe[]
   suggestions: Suggestion[]
 }) {
   const backHref = `/plan?semana=${weekStart(mealDate)}`
-  const results = query
-    ? recipes.filter((recipe) =>
-        recipe.title.toLowerCase().includes(query.toLowerCase()),
-      )
-    : recipes
+  const results = filterRecipes(recipes, query, {
+    category: category || undefined,
+  })
+  const chooseHref = (nextCategory = category) => {
+    const params = new URLSearchParams({
+      fecha: mealDate,
+      servicio: mealType,
+    })
+    if (query) params.set('q', query)
+    if (nextCategory) params.set('categoria', nextCategory)
+    return `/plan/elegir?${params.toString()}`
+  }
 
   return (
     <AppShell current="plan" contentClassName="choose-page">
@@ -106,6 +119,7 @@ export function ChooseRecipeView({
         <form className="choose-search" role="search" action="/plan/elegir">
           <input type="hidden" name="fecha" value={mealDate} />
           <input type="hidden" name="servicio" value={mealType} />
+          {category ? <input type="hidden" name="categoria" value={category} /> : null}
           <label className="choose-search__label" htmlFor="choose-q">
             Buscar una receta
           </label>
@@ -119,6 +133,27 @@ export function ChooseRecipeView({
           <button type="submit">Buscar</button>
         </form>
 
+        {recipes.length ? (
+          <nav className="choose-filters" aria-label="Filtrar por ingrediente principal">
+            {QUICK_MAIN_INGREDIENT_FILTERS.map((filter) => {
+              const active =
+                category.localeCompare(filter.value, 'es', {
+                  sensitivity: 'base',
+                }) === 0
+              return (
+                <a
+                  aria-current={active ? 'true' : undefined}
+                  className={`choose-filter${active ? ' is-active' : ''}`}
+                  href={chooseHref(active ? '' : filter.value)}
+                  key={filter.value}
+                >
+                  {filter.label}
+                </a>
+              )
+            })}
+          </nav>
+        ) : null}
+
         {recipes.length === 0 ? (
           <p className="choose-empty">
             Todavía no tienes recetas guardadas.{' '}
@@ -126,8 +161,8 @@ export function ChooseRecipeView({
           </p>
         ) : results.length === 0 ? (
           <p className="choose-empty">
-            Ninguna receta coincide con «{query}».{' '}
-            <a href={`/plan/elegir?fecha=${mealDate}&servicio=${mealType}`}>
+            Ninguna receta coincide con {category ? `el filtro ${category}` : `«${query}»`}.{' '}
+            <a href={chooseHref('')}>
               Ver todas las recetas
             </a>
           </p>
