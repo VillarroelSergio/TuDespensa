@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  MAIN_INGREDIENT_OPTIONS,
   QUICK_MAIN_INGREDIENT_FILTERS,
   dishTypeLabel,
   filterRecipes,
@@ -76,6 +77,16 @@ describe('recipes presentation', () => {
   })
 
   it('offers the agreed main-ingredient taxonomy and filters it without case sensitivity', () => {
+    expect(MAIN_INGREDIENT_OPTIONS.map((option) => option.value)).toEqual([
+      'Pasta',
+      'Verduras',
+      'Legumbres',
+      'Arroz y cereales',
+      'Huevo',
+      'Aves',
+      'Carne',
+      'Pescado',
+    ])
     expect(QUICK_MAIN_INGREDIENT_FILTERS.map((filter) => filter.value)).toEqual([
       'Pasta',
       'Verduras',
