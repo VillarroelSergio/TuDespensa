@@ -154,6 +154,13 @@ export function ChooseRecipeView({
           </nav>
         ) : null}
 
+        {recipes.length > 0 ? (
+          <p className="choose-results" role="status">
+            {results.length} {results.length === 1 ? 'receta disponible' : 'recetas disponibles'}
+            {category ? ` · ${category}` : ''}
+          </p>
+        ) : null}
+
         {recipes.length === 0 ? (
           <p className="choose-empty">
             Todavía no tienes recetas guardadas.{' '}
@@ -179,6 +186,9 @@ export function ChooseRecipeView({
                   <span className="choose-recipe__title">{recipe.title}</span>
                   <span className="choose-recipe__meta">
                     {timeLabel(recipe.totalMinutes)}
+                  </span>
+                  <span className="choose-recipe__action" aria-hidden="true">
+                    Elegir →
                   </span>
                 </ChooseForm>
               </li>

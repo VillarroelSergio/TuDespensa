@@ -1852,11 +1852,14 @@ footer {
 }
 .choose-filters {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
 }
 .choose-filter {
+  flex: 0 0 auto;
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -1878,6 +1881,11 @@ footer {
   margin: 1.5rem 0;
   color: var(--muted);
   font-size: 0.875rem;
+}
+.choose-results {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
 }
 .choose-empty a {
   color: var(--primary);
@@ -1904,6 +1912,12 @@ footer {
   padding: 0.75rem;
   text-align: left;
 }
+.choose-recipe__action {
+  margin-left: auto;
+  color: var(--primary);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
 .choose-recipe__title {
   color: var(--ink);
   font-size: 0.9375rem;
@@ -1912,6 +1926,12 @@ footer {
 .choose-recipe__meta {
   color: var(--muted);
   font-size: 0.8125rem;
+}
+@media (min-width: 768px) {
+  .choose-filters {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
 }
 
 /* ── Warm redesign: depth, states, motion ───────────────────────────── */
