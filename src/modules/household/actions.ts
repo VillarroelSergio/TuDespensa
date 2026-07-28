@@ -11,6 +11,7 @@ import {
   generateInvitationCode,
   hashInvitationCode,
 } from '@/modules/auth/invitation-code'
+import type { HouseholdBackup } from './backup'
 
 export type HouseholdManagement = {
   isOwner: boolean
@@ -25,6 +26,38 @@ export type HouseholdManagement = {
   pendingInvitations: { id: string; expiresAt: string }[]
   needsNameClaim: boolean
   unclaimedPeople: { id: string; name: string }[]
+}
+
+function backupFailure(error: { message: string } | null): never {
+  throw new AppError(
+    'UNEXPECTED',
+    error?.message ?? 'No hemos podido preparar la copia de seguridad',
+  )
+}
+
+// La sesiÃ³n autenticada llama a una única RPC de solo lectura. La función
+// comprueba primero la pertenencia activa al hogar y después construye la
+// instantánea completa en un único punto consistente de la base de datos.
+export async function exportHouseholdBackup(): Promise<HouseholdBackup> {
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase.rpc(
+    'household_export_backup' as never,
+  )
+  if (error || !data) backupFailure(error)
+  return data as HouseholdBackup
+}
+
+export async function restoreHouseholdBackup(
+  backup: HouseholdBackup,
+  confirmation: string,
+): Promise<void> {
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.rpc('household_restore_backup' as never, {
+    snapshot: backup,
+    confirmation,
+  } as never)
+  if (error) failure(error)
+  revalidatePath('/', 'layout')
 }
 
 function failure(error: { code?: string; message: string }): never {

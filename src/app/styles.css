@@ -453,6 +453,10 @@ footer {
 .pantry-row:hover {
   background: var(--surface-2);
 }
+.pantry-row__detail--button {
+  font: inherit;
+  cursor: pointer;
+}
 .pantry-row__dot {
   width: 0.625rem;
   height: 0.625rem;
@@ -2826,6 +2830,8 @@ a:focus-visible {
   font-size: 0.875rem;
 }
 .household-security,
+.household-backup,
+.household-restore,
 .household-reset {
   display: grid;
   gap: 0.5rem;
@@ -2835,8 +2841,15 @@ a:focus-visible {
   padding: 1rem;
 }
 .household-security p,
+.household-backup p,
+.household-restore p,
 .household-reset p {
   margin: 0;
+}
+
+.household-backup__notice {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 .household-reset {
   border-color: var(--primary-soft-border);

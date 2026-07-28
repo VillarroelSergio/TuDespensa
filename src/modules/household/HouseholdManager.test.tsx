@@ -28,11 +28,19 @@ vi.mock('@/lib/supabase/browser', () => ({
 vi.mock('./actions', () => ({
   claimHouseholdPerson: vi.fn(),
   createInvitationCode: vi.fn(),
+  exportHouseholdBackup: vi.fn(),
   resetPilotHousehold: vi.fn(),
+  restoreHouseholdBackup: vi.fn(),
   revokeInvitation: vi.fn(),
 }))
+vi.mock('./backup', () => ({ downloadBackup: vi.fn(), parseBackup: vi.fn() }))
 
-import { claimHouseholdPerson, createInvitationCode } from './actions'
+import {
+  claimHouseholdPerson,
+  createInvitationCode,
+  exportHouseholdBackup,
+} from './actions'
+import { downloadBackup } from './backup'
 
 import { HouseholdManager } from './HouseholdManager'
 
@@ -99,6 +107,25 @@ describe('HouseholdManager', () => {
     expect(
       screen.getByText(/Dale este código a la otra persona/),
     ).toBeInTheDocument()
+  })
+
+  it('downloads a private backup without changing the household', async () => {
+    vi.mocked(exportHouseholdBackup).mockResolvedValue({
+      format: 'midespensa-backup',
+      version: 1,
+      generatedAt: '2026-07-28T10:30:00.000Z',
+      household: { name: 'Casa de pruebas' },
+      counts: { recipes: 3, shoppingItems: 2, pantryItems: 8 },
+      data: {},
+    })
+    render(<HouseholdManager data={baseData} />)
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Descargar copia de seguridad' }),
+    )
+
+    await waitFor(() => expect(downloadBackup).toHaveBeenCalled())
+    expect(screen.getByText(/Copia descargada: 3 recetas/)).toBeInTheDocument()
   })
 
   it('disables generating a code when the household is already full', () => {

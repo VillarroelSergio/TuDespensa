@@ -10,10 +10,12 @@ import {
   correctPantryItem,
   deletePantryItem,
   recordPantryEntry,
+  updatePantryItem,
 } from './actions'
 import { addShoppingItem } from '@/modules/shopping/actions'
 import { PantryEntryForm } from './PantryEntryForm'
 import { PantryList } from './PantryList'
+import { PANTRY_ZONE_META } from './presentation'
 import type { PantryListItem, PresentedPantryItem } from './presentation'
 import type { PantryMutationInput, PantryZone } from './types'
 
@@ -30,6 +32,9 @@ export function PantryWorkspace({
   const [status, setStatus] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [isAdding, setIsAdding] = useState(false)
+  const [editingItem, setEditingItem] = useState<PresentedPantryItem | null>(
+    null,
+  )
   const [undo, setUndo] = useState<PresentedPantryItem | null>(null)
   const [, startTransition] = useTransition()
   const refresh = useCallback(() => router.refresh(), [router])
@@ -179,6 +184,62 @@ export function PantryWorkspace({
     }
   }
 
+  async function handleUpdate(
+    item: PresentedPantryItem,
+    input: {
+      zone: PantryZone
+      foodName: string
+      trackingMode: PantryMutationInput['trackingMode']
+      approximateState: PantryMutationInput['approximateState']
+      quantity: PantryMutationInput['quantity']
+      unitCode: PantryMutationInput['unitCode']
+    },
+  ) {
+    const currentZone = item.zone ?? 'pantry'
+    if (input.zone !== currentZone) {
+      const conflict = items.find(
+        (candidate) =>
+          candidate.id !== item.id &&
+          candidate.foodId === item.foodId &&
+          (candidate.zone ?? 'pantry') === input.zone,
+      )
+      if (conflict) {
+        const zoneLabel = PANTRY_ZONE_META[input.zone].label
+        const confirmed = window.confirm(
+          `Ya tienes «${item.name}» en ${zoneLabel}. Se fusionarán en un único producto. ¿Continuar?`,
+        )
+        if (!confirmed) return
+      }
+    }
+    setPendingId(item.id)
+    setStatus('')
+    try {
+      await updatePantryItem({
+        itemId: item.id,
+        foodId: item.foodId,
+        version: item.version,
+        name: input.foodName,
+        currentName: item.name,
+        zone: input.zone,
+        currentZone,
+        trackingMode: input.trackingMode,
+        approximateState: input.approximateState,
+        quantity: input.quantity,
+        currentQuantity: item.quantity,
+        unitCode: input.unitCode,
+      })
+      setStatus(`${input.foodName}: cambios guardados.`)
+      setEditingItem(null)
+      refresh()
+    } catch {
+      setStatus(
+        'No hemos podido guardar los cambios. Conservamos el formulario para que puedas reintentarlo.',
+      )
+    } finally {
+      setPendingId(null)
+    }
+  }
+
   async function handleCreate(input: {
     zone: PantryZone
     foodName: string
@@ -212,8 +273,17 @@ export function PantryWorkspace({
         onRemove={pendingId ? undefined : handleRemove}
         onUndo={undo ? handleUndo : undefined}
         onAddToShopping={pendingId ? undefined : handleAddToShopping}
+        onSelect={
+          pendingId
+            ? undefined
+            : (item) => {
+                setIsAdding(false)
+                setEditingItem(item)
+              }
+        }
         undoItemName={undo?.name}
         onAdd={() => {
+          setEditingItem(null)
           setIsAdding(true)
         }}
         detail={
@@ -221,6 +291,12 @@ export function PantryWorkspace({
             <PantryEntryForm
               onClose={() => setIsAdding(false)}
               onSave={handleCreate}
+            />
+          ) : editingItem ? (
+            <PantryEntryForm
+              item={editingItem}
+              onClose={() => setEditingItem(null)}
+              onSave={(input) => handleUpdate(editingItem, input)}
             />
           ) : null
         }

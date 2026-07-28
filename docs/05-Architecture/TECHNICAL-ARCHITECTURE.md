@@ -135,11 +135,14 @@ El plan gratuito de Supabase no debe considerarse una copia de seguridad gestion
 
 - exportación cifrada semanal de PostgreSQL y antes de cada migración destructiva;
 - cuatro copias rotativas guardadas fuera del proyecto Supabase;
+- desde **Hogar**, descarga manual de una instantánea JSON del propio hogar con Recetas, Compra y Despensa, incluidos los datos relacionales e historial de Despensa; no modifica el hogar y se guarda fuera de MiDespensa en una ubicación segura;
 - inventario separado de imágenes del Storage;
 - prueba de restauración trimestral en un entorno vacío;
 - procedimiento escrito para recrear esquema, restaurar datos y validar las dos cuentas.
 
 Si se necesita recuperación automática, mayor disponibilidad o menor intervención manual, el primer gasto recomendado es subir Supabase a un plan con copias gestionadas; no añadir más infraestructura propia.
+
+La descarga manual permite al hogar conservar una copia inmediata de sus datos de uso cotidiano. Complementa, pero no reemplaza, la exportación operativa cifrada de PostgreSQL: el archivo contiene datos privados. La propietaria puede cargar una copia del **mismo hogar** desde `Hogar`, tras descargar automáticamente la instantánea actual y confirmar explícitamente `RESTAURAR`; la restauración es conservadora, repone o actualiza las filas presentes en la copia y nunca borra las creadas después.
 
 ## 10. Rendimiento, accesibilidad y operación
 

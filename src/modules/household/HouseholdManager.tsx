@@ -9,10 +9,13 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import {
   claimHouseholdPerson,
   createInvitationCode,
+  exportHouseholdBackup,
   resetPilotHousehold,
+  restoreHouseholdBackup,
   revokeInvitation,
   type HouseholdManagement,
 } from './actions'
+import { downloadBackup, parseBackup, type HouseholdBackup } from './backup'
 
 function formatExpiry(iso: string): string {
   return new Date(iso).toLocaleDateString('es-ES', {
@@ -32,6 +35,8 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
   } | null>(null)
   const [pending, startTransition] = useTransition()
   const [claimName, setClaimName] = useState('')
+  const [backupToRestore, setBackupToRestore] = useState<HouseholdBackup | null>(null)
+  const [restoreConfirmation, setRestoreConfirmation] = useState('')
   const hasFreeSpot = data.activeMemberCount < 2
   const canInvite = data.isOwner && hasFreeSpot
 
@@ -101,6 +106,55 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
         window.location.replace('/login')
       } catch {
         setStatus('No hemos podido reiniciar el piloto. Inténtalo de nuevo.')
+      }
+    })
+  }
+
+  function createBackup() {
+    startTransition(async () => {
+      try {
+        const backup = await exportHouseholdBackup()
+        downloadBackup(backup)
+        setStatus(
+          `Copia descargada: ${backup.counts.recipes} recetas, ${backup.counts.shoppingItems} productos de Compra y ${backup.counts.pantryItems} productos de Despensa.`,
+        )
+      } catch {
+        setStatus('No hemos podido crear la copia. IntÃ©ntalo de nuevo.')
+      }
+    })
+  }
+
+  async function selectBackup(file: File | undefined) {
+    setBackupToRestore(null)
+    setRestoreConfirmation('')
+    if (!file) return
+    if (file.size > 20 * 1024 * 1024) {
+      setStatus('La copia es demasiado grande para cargarla desde el navegador.')
+      return
+    }
+    try {
+      const backup = parseBackup(JSON.parse(await file.text()))
+      if (!backup) throw new Error('invalid backup')
+      setBackupToRestore(backup)
+      setStatus('Copia preparada. Revisa el resumen y confirma la restauración.')
+    } catch {
+      setStatus('No reconocemos este archivo como una copia de MiDespensa.')
+    }
+  }
+
+  function restoreBackup() {
+    if (!backupToRestore || restoreConfirmation !== 'RESTAURAR') return
+    startTransition(async () => {
+      try {
+        // Antes de tocar nada dejamos una salida local del estado actual.
+        downloadBackup(await exportHouseholdBackup())
+        await restoreHouseholdBackup(backupToRestore, restoreConfirmation)
+        setRestoreConfirmation('')
+        setBackupToRestore(null)
+        setStatus('Hemos restaurado la copia. La pantalla se actualizará ahora.')
+        router.refresh()
+      } catch {
+        setStatus('No hemos podido restaurar la copia. Tus datos actuales no se han borrado.')
       }
     })
   }
@@ -189,6 +243,70 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
           Cambiar mi contraseña
         </Link>
       </section>
+
+      <section className="household-backup">
+        <p className="label">Copia de seguridad</p>
+        <p>
+          Descarga una copia completa de tus Recetas, Compra y Despensa. No
+          cambia nada en el hogar.
+        </p>
+        <p className="household-backup__notice">
+          El archivo contiene información privada del hogar. Guárdalo en una
+          carpeta segura, fuera de MiDespensa.
+        </p>
+        <PrimaryButton onClick={createBackup} disabled={pending}>
+          Descargar copia de seguridad
+        </PrimaryButton>
+      </section>
+
+      {data.isOwner ? (
+        <section className="household-restore">
+          <p className="label">Restaurar una copia</p>
+          <p>
+            Recupera los datos de una copia de este mismo hogar. Antes se
+            descargará automáticamente una copia del estado actual.
+          </p>
+          <p className="household-backup__notice">
+            La restauración actualiza los datos incluidos en la copia, pero no
+            borra productos o recetas añadidos después de ella.
+          </p>
+          <label htmlFor="backup-file">Elige una copia de MiDespensa</label>
+          <input
+            id="backup-file"
+            type="file"
+            accept="application/json,.json"
+            disabled={pending}
+            onChange={(event) => void selectBackup(event.target.files?.[0])}
+          />
+          {backupToRestore ? (
+            <>
+              <p>
+                Copia de {backupToRestore.household.name}: {backupToRestore.counts.recipes}{' '}
+                recetas, {backupToRestore.counts.shoppingItems} productos de Compra y{' '}
+                {backupToRestore.counts.pantryItems} productos de Despensa.
+              </p>
+              <label htmlFor="backup-restore-confirmation">
+                Escribe RESTAURAR para continuar
+              </label>
+              <input
+                id="backup-restore-confirmation"
+                value={restoreConfirmation}
+                onChange={(event) => setRestoreConfirmation(event.target.value)}
+                autoComplete="off"
+                disabled={pending}
+              />
+              <button
+                type="button"
+                className="secondary-button"
+                disabled={pending || restoreConfirmation !== 'RESTAURAR'}
+                onClick={restoreBackup}
+              >
+                Restaurar esta copia
+              </button>
+            </>
+          ) : null}
+        </section>
+      ) : null}
 
       {data.isOwner ? (
         <div className="household-invite">

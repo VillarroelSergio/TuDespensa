@@ -23,6 +23,7 @@ type Props = {
   onRemove?: (item: PresentedPantryItem) => void
   onUndo?: () => void
   onAddToShopping?: (item: PresentedPantryItem) => void
+  onSelect?: (item: PresentedPantryItem) => void
   undoItemName?: string
   detail?: ReactNode
   status?: string
@@ -34,6 +35,7 @@ function PantryRow({
   onAdjust,
   onSetPresence,
   onRemove,
+  onSelect,
   showLegacyPresenceControls = false,
 }: {
   item: PresentedPantryItem
@@ -44,6 +46,7 @@ function PantryRow({
     state: 'available' | 'low' | 'out',
   ) => void
   onRemove?: (item: PresentedPantryItem) => void
+  onSelect?: (item: PresentedPantryItem) => void
   showLegacyPresenceControls?: boolean
 }) {
   return (
@@ -51,13 +54,28 @@ function PantryRow({
       className={`pantry-row pantry-row--${item.status}`}
       style={{ backgroundColor: '#fff' }}
     >
-      <div className="pantry-row__detail">
-        <span className="pantry-row__dot" aria-hidden="true" />
-        <span className="pantry-row__name">{item.name}</span>
-        {item.quantityLabel ? (
-          <span className="pantry-row__quantity">{item.quantityLabel}</span>
-        ) : null}
-      </div>
+      {onSelect ? (
+        <button
+          className="pantry-row__detail pantry-row__detail--button"
+          onClick={() => onSelect(item)}
+          type="button"
+          aria-label={`Editar ${item.name}`}
+        >
+          <span className="pantry-row__dot" aria-hidden="true" />
+          <span className="pantry-row__name">{item.name}</span>
+          {item.quantityLabel ? (
+            <span className="pantry-row__quantity">{item.quantityLabel}</span>
+          ) : null}
+        </button>
+      ) : (
+        <div className="pantry-row__detail">
+          <span className="pantry-row__dot" aria-hidden="true" />
+          <span className="pantry-row__name">{item.name}</span>
+          {item.quantityLabel ? (
+            <span className="pantry-row__quantity">{item.quantityLabel}</span>
+          ) : null}
+        </div>
+      )}
       {item.trackingMode === 'units' && item.quantity !== null && onAdjust ? (
         <div className="pantry-stepper" aria-label={`Ajustar ${item.name}`}>
           <button
@@ -180,6 +198,7 @@ export function PantryList({
   status,
   onUndo,
   onAddToShopping,
+  onSelect,
   undoItemName,
 }: Props) {
   const [query, setQuery] = useState('')
@@ -255,6 +274,7 @@ export function PantryList({
                           onMarkLow={onMarkLow}
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
+                          onSelect={onSelect}
                         />
                       ))}
                     </div>
@@ -273,6 +293,7 @@ export function PantryList({
                           onMarkLow={onMarkLow}
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
+                          onSelect={onSelect}
                         />
                       ))}
                     </div>
@@ -286,6 +307,7 @@ export function PantryList({
                           key={item.id}
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
+                          onSelect={onSelect}
                         />
                       ))}
                     </div>
