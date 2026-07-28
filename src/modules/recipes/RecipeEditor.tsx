@@ -7,6 +7,7 @@ import { saveRecipe, setCategories } from './actions'
 import {
   CATEGORY_DIMENSION_OPTIONS,
   DISH_TYPE_OPTIONS,
+  MAIN_INGREDIENT_OPTIONS,
   UNIT_OPTIONS,
 } from './presentation'
 import type {
@@ -368,21 +369,44 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
                 <label className="sr-only" htmlFor={`cat-name-${index}`}>
                   Nombre
                 </label>
-                <input
-                  id={`cat-name-${index}`}
-                  value={category.name}
-                  onChange={(event) =>
-                    setCategoriesState((rows) =>
-                      rows.map((row, position) =>
-                        position === index
-                          ? { ...row, name: event.target.value }
-                          : row,
-                      ),
-                    )
-                  }
-                  maxLength={60}
-                  placeholder="Nombre"
-                />
+                {category.dimension === 'main_ingredient' ? (
+                  <select
+                    id={`cat-name-${index}`}
+                    value={category.name}
+                    onChange={(event) =>
+                      setCategoriesState((rows) =>
+                        rows.map((row, position) =>
+                          position === index
+                            ? { ...row, name: event.target.value }
+                            : row,
+                        ),
+                      )
+                    }
+                  >
+                    <option value="">Ingrediente principal</option>
+                    {MAIN_INGREDIENT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    id={`cat-name-${index}`}
+                    value={category.name}
+                    onChange={(event) =>
+                      setCategoriesState((rows) =>
+                        rows.map((row, position) =>
+                          position === index
+                            ? { ...row, name: event.target.value }
+                            : row,
+                        ),
+                      )
+                    }
+                    maxLength={60}
+                    placeholder="Nombre"
+                  />
+                )}
                 <button
                   type="button"
                   className="recipe-row-remove"

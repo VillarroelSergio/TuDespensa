@@ -5,6 +5,7 @@ import { FormEvent, useMemo, useState } from 'react'
 
 import { AppShell } from '@/components/ui/AppShell'
 import {
+  QUICK_MAIN_INGREDIENT_FILTERS,
   availableCategories,
   dishTypeLabel,
   filterRecipes,
@@ -47,6 +48,8 @@ export function RecipesList({
       }),
     [initialRecipes, term, favoritesOnly, category],
   )
+  const quickCategoryActive = (value: string) =>
+    category.localeCompare(value, 'es', { sensitivity: 'base' }) === 0
 
   function submitManual(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -96,6 +99,25 @@ export function RecipesList({
           >
             ★ Favoritas
           </button>
+          {QUICK_MAIN_INGREDIENT_FILTERS.map((filter) => (
+            <button
+              aria-pressed={quickCategoryActive(filter.value)}
+              className={`recipes-filter${quickCategoryActive(filter.value) ? ' is-active' : ''}`}
+              key={filter.value}
+              onClick={() =>
+                setCategory((current) =>
+                  current.localeCompare(filter.value, 'es', {
+                    sensitivity: 'base',
+                  }) === 0
+                    ? ''
+                    : filter.value,
+                )
+              }
+              type="button"
+            >
+              {filter.label}
+            </button>
+          ))}
           {categories.length ? (
             <>
               <label className="sr-only" htmlFor="recipes-category">

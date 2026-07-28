@@ -21,6 +21,26 @@ export const CATEGORY_DIMENSION_OPTIONS = Object.entries(
   CATEGORY_DIMENSION_LABELS,
 ).map(([value, label]) => ({ value: value as RecipeCategoryDimension, label }))
 
+/** Vocabulario curado para el único ingrediente protagonista de una receta. */
+export const MAIN_INGREDIENT_OPTIONS = [
+  { value: 'Pasta', label: 'Pasta' },
+  { value: 'Verduras', label: 'Verduras' },
+  { value: 'Legumbres', label: 'Legumbres' },
+  { value: 'Arroz y cereales', label: 'Arroz y cereales' },
+  { value: 'Huevo', label: 'Huevo' },
+  { value: 'Aves', label: 'Aves' },
+  { value: 'Carne', label: 'Carne' },
+  { value: 'Pescado', label: 'Pescado' },
+] as const
+
+/** Atajos para decidir qué cocinar; se reutilizan también al añadir al Plan. */
+export const QUICK_MAIN_INGREDIENT_FILTERS = MAIN_INGREDIENT_OPTIONS.filter(
+  (option) =>
+    ['Pasta', 'Verduras', 'Legumbres', 'Carne', 'Pescado'].includes(
+      option.value,
+    ),
+)
+
 // ponytail: unidades hardcodeadas; es un enum cerrado con CHECK en BD (unit,g,kg,ml,l).
 export const UNIT_OPTIONS = [
   { value: 'unit', label: 'uds.' },
@@ -47,6 +67,10 @@ function normalizeFoodName(name: string): string {
     .toLocaleLowerCase('es')
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
+}
+
+function sameCategory(left: string, right: string): boolean {
+  return normalizeFoodName(left) === normalizeFoodName(right)
 }
 
 function nameVariants(name: string): string[] {
@@ -102,7 +126,12 @@ export function filterRecipes(
   const query = term.trim().toLocaleLowerCase('es')
   const matched = recipes.filter((recipe) => {
     if (options.favoritesOnly && !recipe.isFavorite) return false
-    if (options.category && !recipe.categories.includes(options.category))
+    if (
+      options.category &&
+      !recipe.categories.some((category) =>
+        sameCategory(category, options.category ?? ''),
+      )
+    )
       return false
     return query ? recipe.title.toLocaleLowerCase('es').includes(query) : true
   })
