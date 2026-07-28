@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  QUICK_MAIN_INGREDIENT_FILTERS,
   dishTypeLabel,
   filterRecipes,
   formatIngredient,
@@ -72,6 +73,24 @@ describe('recipes presentation', () => {
     expect(
       filterRecipes(rows, '', { category: 'Postre' }).map((row) => row.id),
     ).toEqual(['b'])
+  })
+
+  it('offers the agreed main-ingredient taxonomy and filters it without case sensitivity', () => {
+    expect(QUICK_MAIN_INGREDIENT_FILTERS.map((filter) => filter.value)).toEqual([
+      'Pasta',
+      'Verduras',
+      'Legumbres',
+      'Carne',
+      'Pescado',
+    ])
+
+    const rows = [
+      recipe({ id: 'pasta', title: 'Macarrones', categories: ['Pasta'] }),
+      recipe({ id: 'vegetales', title: 'Menestra', categories: ['Verduras'] }),
+    ]
+    expect(filterRecipes(rows, '', { category: 'pasta' }).map((row) => row.id)).toEqual([
+      'pasta',
+    ])
   })
 
   it('formats an ingredient with and without amount', () => {
