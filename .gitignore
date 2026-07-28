@@ -20,3 +20,10 @@
 Thumbs.db
 *.tsbuildinfo
 
+# local agent and tooling artifacts
+/.claude/settings.local.json
+/.codex-cache/
+/.git-worktrees/
+/.vercel/
+/graphify-out/
+
