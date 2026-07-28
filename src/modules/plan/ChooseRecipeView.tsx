@@ -55,7 +55,7 @@ export function ChooseRecipeView({
   category,
   recipes,
   suggestions,
-  recommended,
+  recommended = [],
 }: {
   mealDate: string
   mealType: MealType
@@ -63,7 +63,7 @@ export function ChooseRecipeView({
   category: string
   recipes: Recipe[]
   suggestions: Suggestion[]
-  recommended: Suggestion[]
+  recommended?: Suggestion[]
 }) {
   const backHref = `/plan?semana=${weekStart(mealDate)}`
   const [term, setTerm] = useState(query)
@@ -157,20 +157,18 @@ export function ChooseRecipeView({
           </>
         ) : null}
 
-        {term || category ? (
-          <p className="choose-results" role="status">
-            {results.length}{' '}
-            {results.length === 1 ? 'receta disponible' : 'recetas disponibles'}
-            {category ? ` \u00b7 ${category}` : ''}
-          </p>
-        ) : null}
+        <p className="choose-results" role="status">
+          {results.length}{' '}
+          {results.length === 1 ? 'receta disponible' : 'recetas disponibles'}
+          {category ? ` \u00b7 ${category}` : ''}
+        </p>
 
         {recipes.length === 0 ? (
           <p className="choose-empty">
             {'Todav\u00eda no tienes recetas guardadas. '}
             <Link href="/recetas">{'A\u00f1adir receta'}</Link>
           </p>
-        ) : term || category ? (
+        ) : term || category || suggestions.length === 0 ? (
           results.length === 0 ? (
             <p className="choose-empty">
               Ninguna receta coincide. <a href={chooseHref('')}>Ver todas las recetas</a>

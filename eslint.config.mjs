@@ -7,6 +7,8 @@ export default defineConfig([
   ...nextTypeScript,
   globalIgnores([
     '.next/**',
+    '.next-e2e/**',
+    '.git-worktrees/**',
     'coverage/**',
     'node_modules/**',
     'next-env.d.ts',

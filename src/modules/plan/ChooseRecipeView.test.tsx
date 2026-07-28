@@ -17,7 +17,6 @@ describe('ChooseRecipeView', () => {
         recipes={[
           {
             id: 'recipe-1',
-            householdId: 'household-1',
             title: 'Macarrones con verduras',
             dishType: null,
             totalMinutes: 25,

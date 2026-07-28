@@ -274,14 +274,6 @@ export function PantryWorkspace({
         onRemove={pendingId ? undefined : handleRemove}
         onUndo={undo ? handleUndo : undefined}
         onAddToShopping={pendingId ? undefined : handleAddToShopping}
-        onSelect={
-          pendingId
-            ? undefined
-            : (item) => {
-                setIsAdding(false)
-                setEditingItem(item)
-              }
-        }
         undoItemName={undo?.name}
         onAdd={() => {
           setEditingItem(null)

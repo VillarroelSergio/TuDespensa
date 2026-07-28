@@ -51,29 +51,10 @@ function unitLabel(code: string | null): string {
   return UNIT_OPTIONS.find((option) => option.value === code)?.label ?? ''
 }
 
-const CANONICAL_FACTOR: Record<string, number> = {
-  unit: 1,
-  g: 0.001,
-  kg: 1,
-  ml: 0.001,
-  l: 1,
-}
-
-function canonicalAmount(
-  quantity: number | null,
-  unitCode: string | null,
-): number | null {
-  if (quantity === null || !unitCode) return quantity
-  const factor = CANONICAL_FACTOR[unitCode]
-  return factor === undefined
-    ? quantity
-    : Math.round(quantity * factor * 1000) / 1000
-}
-
 export function formatIngredient(ingredient: RecipeIngredient): string {
   const amount = [
-    canonicalAmount(ingredient.quantity, ingredient.unitCode),
-    ingredient.quantity === null ? '' : 'uds.',
+    ingredient.quantity,
+    ingredient.quantity === null ? '' : unitLabel(ingredient.unitCode) || 'uds.',
   ]
     .filter((part) => part !== null && part !== '')
     .join(' ')
