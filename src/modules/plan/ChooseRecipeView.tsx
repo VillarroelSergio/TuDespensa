@@ -113,7 +113,9 @@ export function ChooseRecipeView({
     return recipes.filter((recipe) => {
       if (
         wantedCategory &&
-        !recipe.categories.some((name) => normalizeText(name) === wantedCategory)
+        !recipe.categories.some(
+          (name) => normalizeText(name) === wantedCategory,
+        )
       )
         return false
       return needle ? normalizeText(recipe.title).includes(needle) : true

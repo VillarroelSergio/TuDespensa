@@ -63,7 +63,10 @@ export function formatIngredient(ingredient: RecipeIngredient): string {
 
 export type IngredientAvailability = 'owned' | 'low' | 'missing'
 
-export type PantryAvailabilityItem = { name: string; status: 'out' | 'low' | 'available' }
+export type PantryAvailabilityItem = {
+  name: string
+  status: 'out' | 'low' | 'available'
+}
 
 // Mismo criterio que Plan y «cocinar»: comparar por subcadena normalizada, no
 // solo exacto+singular. Con el nombre ya limpio («cebolla» en vez de «1/4
