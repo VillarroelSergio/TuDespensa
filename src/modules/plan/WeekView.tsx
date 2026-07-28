@@ -112,7 +112,7 @@ function Slot({ slot }: { slot: PlanSlot }) {
           className="plan-slot__add"
           href={chooseHref(slot.mealDate, slot.mealType)}
         >
-          Añadir
+          + Añadir {mealLabel(slot.mealType).toLowerCase()}
         </a>
       )}
     </div>

@@ -5,6 +5,7 @@ import { FormEvent, useMemo, useState } from 'react'
 import { AppShell } from '@/components/ui/AppShell'
 import {
   DISH_TYPE_OPTIONS,
+  QUICK_MAIN_INGREDIENT_CATEGORIES,
   availableCategories,
   dishTypeLabel,
   filterRecipes,
@@ -121,6 +122,26 @@ export function RecipesList({
           >
             ★ Favoritas
           </button>
+          <div
+            className="recipes-quick-categories"
+            role="group"
+            aria-label="Filtrar por ingrediente principal"
+          >
+            {QUICK_MAIN_INGREDIENT_CATEGORIES.map((name) => {
+              const active = category === name
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  className={`recipes-filter${active ? ' is-active' : ''}`}
+                  aria-current={active ? 'true' : undefined}
+                  onClick={() => setCategory(active ? '' : name)}
+                >
+                  {name}
+                </button>
+              )
+            })}
+          </div>
           <label className="sr-only" htmlFor="recipes-dish-type">
             Tipo de plato
           </label>

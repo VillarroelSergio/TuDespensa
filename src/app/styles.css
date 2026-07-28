@@ -1435,6 +1435,12 @@ footer {
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
+.recipes-quick-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
 .recipes-filter {
   min-height: 44px;
   border: 1px solid var(--border);
@@ -1719,7 +1725,7 @@ footer {
 }
 .plan-menu__form input,
 .plan-menu__form select {
-  min-height: 36px;
+  min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
   background: #fff;
@@ -1727,7 +1733,7 @@ footer {
   font-size: 0.8125rem;
 }
 .plan-menu__form button {
-  min-height: 36px;
+  min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
   background: #fff;
@@ -1736,7 +1742,7 @@ footer {
   font-weight: 700;
 }
 .plan-menu__remove {
-  min-height: 36px;
+  min-height: 44px;
   width: 100%;
   border: 1px solid #b3261e;
   border-radius: 0.375rem;
@@ -1744,6 +1750,45 @@ footer {
   color: #b3261e;
   font-size: 0.75rem;
   font-weight: 700;
+}
+/* Móvil: el menú de acciones se comporta como hoja inferior (se ancla al
+   fondo de la pantalla) en vez de un desplegable en línea; se cierra igual
+   que antes, tocando "Opciones" de nuevo (el <summary> sigue en su sitio). */
+@media (max-width: 767px) {
+  .plan-menu[open] > .plan-menu__body {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 40;
+    margin: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 1rem 1rem 0 0;
+    box-shadow: var(--shadow);
+    background: #fff;
+    padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+/* Tablet/escritorio: el menú flota como un diálogo centrado bajo el disparador
+   en vez de empujar el resto de la tarjeta hacia abajo. */
+@media (min-width: 768px) {
+  .plan-menu {
+    position: relative;
+  }
+  .plan-menu[open] > .plan-menu__body {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    z-index: 40;
+    width: max-content;
+    min-width: 15rem;
+    margin-top: 0.375rem;
+    transform: translateX(-50%);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+    background: #fff;
+  }
 }
 .plan-undo {
   display: flex;
@@ -1798,6 +1843,20 @@ footer {
 .choose-suggestion__availability {
   color: var(--muted);
   font-size: 0.8125rem;
+}
+.choose-suggestion__meta {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.choose-suggestion__action,
+.choose-recipe__action {
+  justify-self: end;
+  border-radius: 999px;
+  background: var(--primary);
+  padding: 0.25rem 0.75rem;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 .choose-suggestions--secondary {
   margin-top: -0.125rem;
@@ -2069,6 +2128,11 @@ footer {
 .cook-row__current {
   color: var(--muted);
   font-size: 0.8125rem;
+}
+.cook-row__remaining {
+  color: var(--primary);
+  font-size: 0.8125rem;
+  font-weight: 700;
 }
 .cook-row__field {
   display: flex;
