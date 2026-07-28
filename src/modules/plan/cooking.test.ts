@@ -4,6 +4,7 @@ import {
   buildConsumptions,
   buildCookLines,
   cookReviewSummary,
+  selectedCookLineCount,
   type CookEdit,
   type CookLine,
   type CookPantryItem,
@@ -172,5 +173,19 @@ describe('cookReviewSummary', () => {
       eyebrow: 'Todo listo',
       message: 'No hay productos que descontar de tu despensa.',
     })
+  })
+})
+
+describe('selectedCookLineCount', () => {
+  it('no cuenta como seleccionado un producto que la persona ha desmarcado', () => {
+    expect(
+      selectedCookLineCount(
+        [line(), line({ itemId: 'item-2', name: 'Cebolla' })],
+        {
+          'item-1': { included: true, discount: 200, state: 'low' },
+          'item-2': { included: false, discount: 200, state: 'low' },
+        },
+      ),
+    ).toBe(1)
   })
 })
