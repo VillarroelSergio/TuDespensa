@@ -1415,8 +1415,8 @@ footer {
   gap: 0.5rem;
 }
 .plan-weeknav__step {
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1454,7 +1454,7 @@ footer {
 }
 .plan-week {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.75rem;
   margin: 1rem 0 0;
   padding: 0;
@@ -1462,18 +1462,25 @@ footer {
 }
 .plan-day {
   display: grid;
-  align-content: start;
-  gap: 0.5rem;
+  grid-template-columns: minmax(8.5rem, 0.34fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 1rem;
   border-radius: 0.5rem;
   background: #fff;
   padding: 0.75rem;
 }
 .plan-day__title {
   margin: 0;
-  color: var(--muted);
-  font-size: 0.75rem;
+  align-self: center;
+  color: var(--ink);
+  font-size: 1rem;
   font-weight: 700;
   text-transform: capitalize;
+}
+.plan-day__slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 .plan-slot {
   display: grid;
@@ -1506,7 +1513,7 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
+  min-height: 44px;
   border: 1px dashed var(--primary-soft-border);
   border-radius: 0.375rem;
   background: #fff;
@@ -1516,12 +1523,16 @@ footer {
   text-decoration: none;
 }
 @media (max-width: 1199px) {
-  .plan-week {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .plan-day {
+    grid-template-columns: minmax(7rem, 0.3fr) minmax(0, 1fr);
   }
 }
 @media (max-width: 767px) {
-  .plan-week {
+  .plan-day {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+  .plan-day__slots {
     grid-template-columns: 1fr;
   }
   .plan-weeknav__range {

@@ -258,9 +258,11 @@ export function WeekView({
           {days.map((day) => (
             <li className="plan-day" key={day.mealDate}>
               <h2 className="plan-day__title">{dayLabel(day.mealDate)}</h2>
-              {day.slots.map((slot) => (
-                <Slot key={slot.mealType} slot={slot} />
-              ))}
+              <div className="plan-day__slots">
+                {day.slots.map((slot) => (
+                  <Slot key={slot.mealType} slot={slot} />
+                ))}
+              </div>
             </li>
           ))}
         </ol>
