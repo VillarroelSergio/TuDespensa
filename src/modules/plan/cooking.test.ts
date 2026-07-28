@@ -43,7 +43,9 @@ describe('buildCookLines', () => {
       [pantryItem()],
     )
     expect(lines).toHaveLength(1)
-    expect(lines[0]!.proposedDiscount).toBe(200)
+    expect(lines[0]!.proposedDiscount).toBe(0.2)
+    expect(lines[0]!.quantity).toBe(0.5)
+    expect(lines[0]!.unitCode).toBe('unit')
   })
 
   it('convierte cuando el ingrediente y el producto miden lo mismo en otra unidad', () => {
@@ -51,7 +53,7 @@ describe('buildCookLines', () => {
       [{ name: 'aceite', quantity: 0.2, unitCode: 'l' }],
       [pantryItem({ name: 'Aceite', quantity: 1000, unitCode: 'ml' })],
     )
-    expect(lines[0]!.proposedDiscount).toBe(200)
+    expect(lines[0]!.proposedDiscount).toBe(0.2)
   })
 
   it('nunca propone descontar más de lo que hay', () => {
@@ -59,15 +61,29 @@ describe('buildCookLines', () => {
       [{ name: 'tomate', quantity: 900, unitCode: 'g' }],
       [pantryItem({ quantity: 500 })],
     )
-    expect(lines[0]!.proposedDiscount).toBe(500)
+    expect(lines[0]!.proposedDiscount).toBe(0.5)
   })
 
-  it('sin unidades compatibles no propone cantidad, deja corregir', () => {
+  it('propone una resta parcial para productos contados por unidades', () => {
+    const lines = buildCookLines(
+      [{ name: 'tomate', quantity: 2, unitCode: 'unit' }],
+      [
+        pantryItem({
+          trackingMode: 'units',
+          quantity: 10,
+          unitCode: 'unit',
+        }),
+      ],
+    )
+    expect(lines[0]!.proposedDiscount).toBe(2)
+  })
+
+  it('convierte medidas a unidades canónicas aunque cambie el tipo de medida', () => {
     const lines = buildCookLines(
       [{ name: 'tomate', quantity: 2, unitCode: 'unit' }],
       [pantryItem({ quantity: 500, unitCode: 'g' })],
     )
-    expect(lines[0]!.proposedDiscount).toBeNull()
+    expect(lines[0]!.proposedDiscount).toBe(0.5)
   })
 
   it('un producto aproximado propone bajar un nivel', () => {
@@ -119,6 +135,25 @@ describe('buildConsumptions', () => {
     expect(
       buildConsumptions([line()], { 'item-1': edit({ included: false }) }),
     ).toEqual([])
+  })
+
+  it('conserva las unidades restantes tras un descuento parcial', () => {
+    const [consumption] = buildConsumptions(
+      [
+        line({
+          trackingMode: 'units',
+          quantity: 10,
+          unitCode: 'unit',
+          proposedDiscount: 2,
+        }),
+      ],
+      { 'item-1': edit({ discount: 2 }) },
+    )
+    expect(consumption).toMatchObject({
+      tracking_mode: 'units',
+      quantity: 8,
+      unit_code: 'unit',
+    })
   })
 
   it('un descuento de cero no genera movimiento', () => {

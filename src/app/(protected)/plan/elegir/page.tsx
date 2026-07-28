@@ -34,10 +34,16 @@ export default async function ChooseRecipePage({
   }
 
   const scenario = getVisualFixtureScenario(fixture)
-  const [recipes, suggestions] = scenario
+  const [recipes, options] = scenario
     ? scenario === 'everyday'
-      ? [visualFixture.recipes, visualFixture.suggestions]
-      : [emptyVisualFixture.recipes, emptyVisualFixture.suggestions]
+      ? [
+          visualFixture.recipes,
+          { suggestions: visualFixture.suggestions, recommended: [] },
+        ]
+      : [
+          emptyVisualFixture.recipes,
+          { suggestions: emptyVisualFixture.suggestions, recommended: [] },
+        ]
     : await Promise.all([getRecipes(), getSuggestions(fecha)])
 
   return (
@@ -47,7 +53,8 @@ export default async function ChooseRecipePage({
       query={q?.trim() ?? ''}
       category={categoria?.trim() ?? ''}
       recipes={recipes}
-      suggestions={suggestions}
+      suggestions={options.suggestions}
+      recommended={options.recommended}
     />
   )
 }

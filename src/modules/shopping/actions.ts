@@ -116,6 +116,20 @@ export async function toggleShoppingItem(
   )
 }
 
+export async function deleteShoppingItem(
+  itemId: string,
+  version: number,
+  key?: string,
+) {
+  return rpc<{ item_id: string; removed: boolean }>('shopping_remove_item', {
+    item_id: itemId,
+    version,
+    idempotency_key: parseIdempotencyKey(
+      key ?? createIdempotencyKey('shopping_remove_item'),
+    ),
+  })
+}
+
 export async function getShoppingItems(): Promise<ShoppingItem[]> {
   const supabase = await createSupabaseServerClient()
   const {
@@ -123,9 +137,13 @@ export async function getShoppingItems(): Promise<ShoppingItem[]> {
   } = await supabase.auth.getUser()
   if (!user && process.env.NODE_ENV === 'development')
     return demoFixturesEnabled() ? demoShoppingItems : []
+  if (!user) return []
   const { data: membership, error: membershipError } = await supabase
     .from('household_members')
     .select('household_id')
+    // Filtrar por usuario es imprescindible: con dos personas en el hogar la
+    // consulta sin filtro devuelve dos filas y `maybeSingle` falla.
+    .eq('user_id', user.id)
     .eq('status', 'active')
     .maybeSingle()
   if (membershipError) failure(membershipError)
@@ -178,6 +196,7 @@ type CheckoutRow = {
   name: string
   action: 'add' | 'restore'
   suggested_zone: PantryZone | null
+  quantity: number | null
 }
 
 // Revisión C2: qué le pasará a la despensa a cada producto comprado.
@@ -198,6 +217,7 @@ export async function getCheckoutPreview(): Promise<CheckoutLine[]> {
     name: row.name,
     action: row.action,
     suggestedZone: row.suggested_zone ?? null,
+    quantity: row.quantity ?? null,
   }))
 }
 
@@ -227,4 +247,23 @@ export async function confirmPurchase(
   revalidatePath('/compra')
   revalidatePath('/despensa')
   return data as { confirmed: number }
+}
+
+export async function setPurchaseQuantities(
+  lines: { itemId: string; version: number; quantity: number }[],
+) {
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase.rpc(
+    'shopping_set_purchase_quantities' as never,
+    {
+      item_quantities: lines.map((line) => ({
+        item_id: line.itemId,
+        version: line.version,
+        quantity: line.quantity,
+      })),
+    } as never,
+  )
+  if (error) failure(error)
+  revalidatePath('/compra')
+  return data as { items: { item_id: string; version: number }[] }
 }

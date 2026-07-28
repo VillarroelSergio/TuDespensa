@@ -9,7 +9,12 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: ['e2e/**', 'node_modules/**'],
+    exclude: [
+      'e2e/**',
+      '**/node_modules/**',
+      '.claude/**',
+      '.git-worktrees/**',
+    ],
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     coverage: {

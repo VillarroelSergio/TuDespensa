@@ -10,12 +10,16 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseIdempotencyKey } from '@/lib/validation/onboarding'
 
 import type { RecipeDishType } from '@/modules/recipes/types'
+import { parseIngredient } from '@/modules/recipes/ingredient-normalize'
 
 import { addPlanItems } from '@/modules/shopping/actions'
 
+import { getCatalogEntries } from './catalog'
 import { buildCookLines } from './cooking'
 import type { Consumption, CookLine, CookPantryItem } from './cooking'
+import { classifyFoodGroup } from './foodGroups'
 import { addDays, weekStart } from './presentation'
+import { scalePlanQuantity } from './quantities'
 import { missingIngredients, rankSuggestions } from './suggestions'
 import type { Suggestion } from './suggestions'
 import type { MealType, PlannedMeal } from './types'
@@ -125,64 +129,49 @@ const SHOPPING_FAILED = -1
  * Lleva a Compra los ingredientes de la receta que no están en la despensa.
  * Devuelve cuántos productos son nuevos allí.
  */
-/**
- * Escala una cantidad de ingrediente sin inventar precisión: si falta la
- * ración base o elegida, se conserva la cantidad original de la receta.
- */
-export function scalePlanQuantity(
-  quantity: number | null,
-  recipeServings: number | null,
-  plannedServings: number | null,
-) {
-  if (
-    quantity === null ||
-    !recipeServings ||
-    !plannedServings ||
-    recipeServings <= 0
-  ) {
-    return quantity
-  }
-
-  // Redondear a milésimas evita residuos de coma flotante en el JSON que viaja
-  // a Postgres, sin perder precisión útil para g/ml.
-  return Math.round((quantity * plannedServings * 1000) / recipeServings) / 1000
-}
-
 async function consolidateShopping(
   recipeId: string,
   plannedServings: number | null,
 ): Promise<number> {
   const supabase = await createSupabaseServerClient()
-  const [ingredientsRes, recipeRes, pantry] = await Promise.all([
+  const [ingredientsRes, recipeRes, pantry, catalog] = await Promise.all([
     supabase
       .from('recipe_ingredients')
       .select('name,quantity,unit_code')
       .eq('recipe_id', recipeId),
     supabase.from('recipes').select('servings').eq('id', recipeId).maybeSingle(),
     getSuggestionPantry(supabase),
+    getCatalogEntries(supabase),
   ])
-  // Compra es una ayuda posterior a la asignacion: un fallo de lectura no debe
-  // deshacer la comida ya planificada ni convertir el flujo en un error.
+  // Nombre y cantidad limpios: «1/4 cebolla» → «cebolla», 0.25 uds. La Compra
+  // solo maneja artículos completos, así que las unidades contables se redondean
+  // hacia arriba (nunca se compra media cebolla). El peso/volumen se deja igual.
   if (ingredientsRes.error || recipeRes.error) return SHOPPING_FAILED
-  const rows = ingredientsRes.data ?? []
   const recipeServings = recipeRes.data?.servings ?? null
+  const rows = (ingredientsRes.data ?? []).map((row) => {
+    const parsed = parseIngredient(row.name, row.quantity, row.unit_code)
+    const scaledQuantity = scalePlanQuantity(
+      parsed.quantity,
+      recipeServings,
+      plannedServings,
+    )
+    return {
+      name: parsed.name,
+      quantity:
+        parsed.unitCode === 'unit' && scaledQuantity !== null
+          ? Math.ceil(scaledQuantity)
+          : scaledQuantity,
+      unitCode: parsed.unitCode,
+    }
+  })
   const missing = new Set(
     missingIngredients(
       rows.map((row) => row.name),
       pantry,
+      catalog,
     ),
   )
-  const items = rows
-    .filter((row) => missing.has(row.name))
-    .map((row) => ({
-      name: row.name,
-      quantity: scalePlanQuantity(
-        row.quantity,
-        recipeServings,
-        plannedServings,
-      ),
-      unitCode: row.unit_code,
-    }))
+  const items = rows.filter((row) => missing.has(row.name))
   if (!items.length) return 0
   try {
     return (await addPlanItems(items)).added
@@ -194,9 +183,9 @@ async function consolidateShopping(
 }
 
 /**
- * Asigna una receta a un hueco. Cubre elegir desde P2, ajustar raciones y
- * deshacer un borrado: los tres son la misma escritura sobre el mismo hueco.
- * Solo al elegir desde P2 se consolidan los faltantes en Compra.
+ * Asigna una receta a un hueco. Cubre elegir desde P2 y deshacer un borrado:
+ * las dos son la misma escritura sobre el mismo hueco. Solo al elegir desde
+ * P2 se consolidan los faltantes en Compra.
  */
 export async function assignMealAction(formData: FormData) {
   const slot = parseSlot(formData)
@@ -274,16 +263,28 @@ async function getSuggestionPantry(
   })
 }
 
+/** 3 sugerencias explicadas + 10 recomendadas adicionales para el buscador. */
+export type ChooseRecipeOptions = {
+  suggestions: Suggestion[]
+  recommended: Suggestion[]
+}
+
+const RECOMMENDED_COUNT = 10
+
 /**
  * Sugerencias explicables para un hueco: reúne biblioteca, despensa y semana, y
- * delega la puntuación en `rankSuggestions`, que es puro y determinista.
+ * delega la puntuación en `rankSuggestions`, que es puro y determinista. Además
+ * de las 3 sugerencias, devuelve 10 recomendadas más para el buscador («Buscar
+ * una receta»), complementarias a las sugerencias.
  */
-export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
+export async function getSuggestions(
+  mealDate: string,
+): Promise<ChooseRecipeOptions> {
   const supabase = await createSupabaseServerClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return []
+  if (!user) return { suggestions: [], recommended: [] }
 
   const startIso = weekStart(mealDate)
   const [
@@ -294,6 +295,7 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
     catsRes,
     plannedRes,
     pantry,
+    catalog,
   ] = await Promise.all([
     // Solo recetas listas: una captura `pending` todavía no se puede cocinar.
     supabase
@@ -315,16 +317,17 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
       .gte('meal_date', startIso)
       .lte('meal_date', addDays(startIso, 6)),
     getSuggestionPantry(supabase),
+    getCatalogEntries(supabase),
   ])
   if (recipesRes.error) failure(recipesRes.error)
   const recipes = recipesRes.data ?? []
-  if (!recipes.length) return []
+  if (!recipes.length) return { suggestions: [], recommended: [] }
 
   const ingredientsByRecipe = new Map<string, string[]>()
   for (const row of ingredientsRes.data ?? []) {
     ingredientsByRecipe.set(row.recipe_id, [
       ...(ingredientsByRecipe.get(row.recipe_id) ?? []),
-      row.name,
+      parseIngredient(row.name).name,
     ])
   }
   const prefByRecipe = new Map(
@@ -350,8 +353,13 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
   const plannedDishTypes = plannedRecipeIds.map(
     (id) => (dishTypeById.get(id) ?? null) as RecipeDishType | null,
   )
+  // Misma lógica de equilibrio semanal que ve cada sugerencia: qué grupo de
+  // alimento (legumbre, carne roja...) ya lleva la semana mostrada.
+  const plannedFoodGroups = plannedRecipeIds.map((id) =>
+    classifyFoodGroup(ingredientsByRecipe.get(id) ?? []),
+  )
 
-  return rankSuggestions({
+  const rankInput = {
     candidates: recipes.map((recipe) => ({
       id: recipe.id,
       title: recipe.title,
@@ -366,7 +374,16 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
     pantry,
     plannedRecipeIds,
     plannedDishTypes,
-  })
+    plannedFoodGroups,
+    catalog,
+  }
+  // Las 10 recomendadas son las siguientes en el mismo ranking, sin repetir
+  // las 3 sugerencias ya mostradas.
+  const ranked = rankSuggestions(rankInput, 3 + RECOMMENDED_COUNT)
+  return {
+    suggestions: ranked.slice(0, 3),
+    recommended: ranked.slice(3, 3 + RECOMMENDED_COUNT),
+  }
 }
 
 /** Comidas planificadas de la semana que empieza en `startIso` (lunes). */
@@ -452,7 +469,7 @@ export async function getCookPreview(
   if (mealError) failure(mealError)
   if (!meal) return null
 
-  const [recipeRes, ingredientsRes, pantry] = await Promise.all([
+  const [recipeRes, ingredientsRes, pantry, catalog] = await Promise.all([
     supabase
       .from('recipes')
       .select('title')
@@ -463,6 +480,7 @@ export async function getCookPreview(
       .select('name,quantity,unit_code')
       .eq('recipe_id', meal.recipe_id),
     getCookPantry(supabase),
+    getCatalogEntries(supabase),
   ])
   if (recipeRes.error) failure(recipeRes.error)
 
@@ -472,12 +490,15 @@ export async function getCookPreview(
     mealType,
     alreadyCooked: meal.cooked_at !== null,
     lines: buildCookLines(
-      (ingredientsRes.data ?? []).map((ingredient) => ({
-        name: ingredient.name,
-        quantity: ingredient.quantity,
-        unitCode: ingredient.unit_code,
-      })),
+      (ingredientsRes.data ?? []).map((ingredient) =>
+        parseIngredient(
+          ingredient.name,
+          ingredient.quantity,
+          ingredient.unit_code,
+        ),
+      ),
       pantry,
+      catalog,
     ),
   }
 }

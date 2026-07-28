@@ -9,8 +9,9 @@ import { expect, test, type Page } from '@playwright/test'
 import {
   adminClient,
   baseUrl as resolveBaseUrl,
+  createSyntheticAccount,
   deleteSyntheticUser,
-  loginViaMagicLink,
+  loginWithPassword,
 } from './support/auth'
 
 /** Crea el hogar y confirma una línea base vacía para llegar al área protegida. */
@@ -41,15 +42,17 @@ test('compra converge en tiempo real entre dos sesiones', async ({
   const baseUrl = resolveBaseUrl()
   const admin = adminClient()
   const email = `realtime-compra-${Date.now()}@example.test`
+  const password = 'Synthetic-Pw-Realtime1'
 
   const first = await browser.newContext()
   const second = await browser.newContext()
   try {
+    await createSyntheticAccount(admin, email, password)
     // Ambos inician sesión mientras el onboarding sigue incompleto: si B
     // entrara después de que A lo completase, su propio login le redirigiría
     // a /despensa en vez de /onboarding, rompiendo el ayudante compartido.
-    const pageA = await loginViaMagicLink(first, baseUrl, email)
-    const pageB = await loginViaMagicLink(second, baseUrl, email)
+    const pageA = await loginWithPassword(first, baseUrl, email, password)
+    const pageB = await loginWithPassword(second, baseUrl, email, password)
     await completeEmptyOnboarding(pageA)
 
     await pageA.goto(`${baseUrl}/compra`)
@@ -99,16 +102,18 @@ test('el plan converge en tiempo real entre dos sesiones', async ({
   const baseUrl = resolveBaseUrl()
   const admin = adminClient()
   const email = `realtime-plan-${Date.now()}@example.test`
+  const password = 'Synthetic-Pw-Realtime2'
   const recipeTitle = `Receta realtime ${Date.now()}`
 
   const first = await browser.newContext()
   const second = await browser.newContext()
   try {
+    await createSyntheticAccount(admin, email, password)
     // Ambos inician sesión mientras el onboarding sigue incompleto: si B
     // entrara después de que A lo completase, su propio login le redirigiría
     // a /despensa en vez de /onboarding, rompiendo el ayudante compartido.
-    const pageA = await loginViaMagicLink(first, baseUrl, email)
-    const pageB = await loginViaMagicLink(second, baseUrl, email)
+    const pageA = await loginWithPassword(first, baseUrl, email, password)
+    const pageB = await loginWithPassword(second, baseUrl, email, password)
     await completeEmptyOnboarding(pageA)
 
     // Crear una receta simple para poder asignarla desde el plan.
@@ -125,7 +130,6 @@ test('el plan converge en tiempo real entre dos sesiones', async ({
     await pageA.getByRole('link', { name: /^Añadir / }).first().click()
     await pageA.waitForURL('**/plan/elegir*')
     await pageA.getByLabel('Buscar una receta').fill(recipeTitle)
-    await pageA.getByRole('button', { name: 'Buscar' }).click()
     await pageA.getByRole('button', { name: new RegExp(recipeTitle) }).click()
     await pageA.waitForURL('**/plan*')
 
