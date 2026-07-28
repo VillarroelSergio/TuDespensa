@@ -5,6 +5,7 @@ import { timeLabel } from '@/modules/recipes/presentation'
 
 import { assignMealAction, moveMealAction, removeMealAction } from './actions'
 import {
+  addMealLabel,
   addWeeks,
   buildWeek,
   dayLabel,
@@ -129,7 +130,7 @@ function Slot({ slot }: { slot: PlanSlot }) {
           className="plan-slot__add"
           href={chooseHref(slot.mealDate, slot.mealType)}
         >
-          Añadir
+          {addMealLabel(slot.mealDate, slot.mealType)}
         </a>
       )}
     </div>

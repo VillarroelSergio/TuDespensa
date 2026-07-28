@@ -122,7 +122,7 @@ test('el plan converge en tiempo real entre dos sesiones', async ({
     await pageB.goto(`${baseUrl}/plan`)
 
     // A asigna la receta a un hueco vacío.
-    await pageA.getByRole('link', { name: 'Añadir' }).first().click()
+    await pageA.getByRole('link', { name: /^Añadir / }).first().click()
     await pageA.waitForURL('**/plan/elegir*')
     await pageA.getByLabel('Buscar una receta').fill(recipeTitle)
     await pageA.getByRole('button', { name: 'Buscar' }).click()

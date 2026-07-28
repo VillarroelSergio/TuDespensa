@@ -73,7 +73,7 @@ test('el hogar fundador recorre el valor completo de MiDespensa', async ({
 
     // Plan: asignar la receta a un hueco.
     await page.goto(`${baseUrl}/plan`)
-    await page.getByRole('link', { name: 'Añadir' }).first().click()
+    await page.getByRole('link', { name: /^Añadir / }).first().click()
     await page.waitForURL('**/plan/elegir*')
     await expect(
       page.getByRole('heading', { name: '¿Qué quieres comer?' }),

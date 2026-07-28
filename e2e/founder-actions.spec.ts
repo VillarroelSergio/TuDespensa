@@ -490,7 +490,7 @@ test.describe('plan', () => {
     await createRecipe(page, base, title)
 
     await page.goto(`${base}/plan`)
-    await page.getByRole('link', { name: 'Añadir' }).first().click()
+    await page.getByRole('link', { name: /^Añadir / }).first().click()
     await expect(
       page.getByRole('heading', { name: '¿Qué quieres comer?' }),
     ).toBeVisible()
@@ -506,7 +506,7 @@ test.describe('plan', () => {
     await createRecipe(page, base, title)
 
     await page.goto(`${base}/plan`)
-    await page.getByRole('link', { name: 'Añadir' }).first().click()
+    await page.getByRole('link', { name: /^Añadir / }).first().click()
     const slotUrl = new URL(page.url())
     const fecha = slotUrl.searchParams.get('fecha')!
     const servicio = slotUrl.searchParams.get('servicio') as 'lunch' | 'dinner'
@@ -533,7 +533,7 @@ test.describe('plan', () => {
     await createRecipe(page, base, titleC)
 
     async function assign(title: string) {
-      await page.getByRole('link', { name: 'Añadir' }).first().click()
+      await page.getByRole('link', { name: /^Añadir / }).first().click()
       const slotUrl = new URL(page.url())
       const fecha = slotUrl.searchParams.get('fecha')!
       const servicio = slotUrl.searchParams.get('servicio') as
@@ -629,7 +629,7 @@ test.describe('plan', () => {
     await createRecipe(page, base, title, ['Tomate', 'Cebolla'])
 
     await page.goto(`${base}/plan`)
-    await page.getByRole('link', { name: 'Añadir' }).first().click()
+    await page.getByRole('link', { name: /^Añadir / }).first().click()
     const slotUrl = new URL(page.url())
     const fecha = slotUrl.searchParams.get('fecha')!
     const servicio = slotUrl.searchParams.get('servicio') as 'lunch' | 'dinner'

@@ -78,6 +78,11 @@ export function slotLabel(iso: string, mealType: MealType) {
   return `${DAY_NAMES[toDate(iso).getUTCDay()]}, ${MEAL_LABELS[mealType].toLowerCase()}`
 }
 
+/** Texto de acción inequívoco para un hueco vacío del plan semanal. */
+export function addMealLabel(iso: string, mealType: MealType) {
+  return `Añadir ${MEAL_LABELS[mealType].toLowerCase()} del ${DAY_NAMES[toDate(iso).getUTCDay()]}`
+}
+
 /** «20 – 26 de julio» o «29 de junio – 5 de julio» si cruza de mes. */
 export function weekRangeLabel(startIso: string) {
   const start = toDate(startIso)
