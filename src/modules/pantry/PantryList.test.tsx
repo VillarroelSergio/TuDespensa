@@ -74,4 +74,52 @@ describe('PantryList', () => {
     )
     expect(screen.queryByLabelText('Ajustar Yogures')).not.toBeInTheDocument()
   })
+
+  it('solo muestra los controles de cantidad de la fila que se está ajustando', () => {
+    const onAdjust = vi.fn()
+    render(
+      <PantryList
+        initialItems={[
+          {
+            id: 'condensed-milk',
+            foodId: 'f-condensed-milk',
+            name: 'Leche condensada',
+            version: 1,
+            trackingMode: 'units',
+            approximateState: null,
+            attentionState: 'none',
+            quantity: 1,
+            unitCode: 'unit',
+          },
+          {
+            id: 'lettuce',
+            foodId: 'f-lettuce',
+            name: 'Lechuga',
+            version: 2,
+            trackingMode: 'units',
+            approximateState: null,
+            attentionState: 'none',
+            quantity: 2,
+            unitCode: 'unit',
+          },
+        ]}
+        onAdjust={onAdjust}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Ajustar Leche condensada, 1 uds.',
+      }),
+    )
+
+    expect(screen.getByLabelText('Ajustar Leche condensada')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Ajustar Lechuga')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '+1 Leche condensada' }))
+    expect(onAdjust).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'condensed-milk' }),
+      1,
+    )
+  })
 })

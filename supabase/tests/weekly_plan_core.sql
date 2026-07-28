@@ -21,7 +21,7 @@ select public.create_household_with_onboarding('Plan household', '[]'::jsonb, 'p
 do $$
 declare
   recipe_id_value uuid; other_recipe_id uuid;
-  set_result jsonb; replay_result jsonb; clear_result jsonb;
+  set_result jsonb; replay_result jsonb; clear_result jsonb; move_result jsonb;
 begin
   recipe_id_value := (public.recipes_create_recipe('Lentejas', null, null, null, 'plan-create-0001'))->>'recipe_id';
   other_recipe_id := (public.recipes_create_recipe('Tortilla', null, null, null, 'plan-create-0002'))->>'recipe_id';
@@ -82,6 +82,45 @@ begin
   end if;
   if ((public.plan_clear_meal('2026-07-23', 'lunch', 'plan-clear-0002'))->>'removed')::int <> 0 then
     raise exception 'Clearing an empty slot reported a removal';
+  end if;
+
+  -- Mover es una única operación: elimina el origen solo si puede ocupar el destino.
+  perform public.plan_set_meal('2026-07-22', 'lunch', recipe_id_value, 3, 'plan-move-set-0001');
+  move_result := public.plan_move_meal(
+    '2026-07-22', 'lunch', '2026-07-23', 'dinner', 'plan-move-0001');
+  if (move_result->>'moved')::boolean is not true then
+    raise exception 'Move did not report success';
+  end if;
+  if exists (
+    select 1 from public.planned_meals
+    where meal_date = '2026-07-22' and meal_type = 'lunch'
+  ) then
+    raise exception 'Move kept the origin meal';
+  end if;
+  if not exists (
+    select 1 from public.planned_meals
+    where meal_date = '2026-07-23' and meal_type = 'dinner'
+      and recipe_id = recipe_id_value and servings = 3
+  ) then
+    raise exception 'Move did not preserve the recipe and servings at destination';
+  end if;
+  if public.plan_move_meal(
+    '2026-07-22', 'lunch', '2026-07-23', 'dinner', 'plan-move-0001') <> move_result then
+    raise exception 'plan_move_meal was not idempotent';
+  end if;
+
+  -- Un destino ocupado se rechaza sin perder ni sobrescribir comidas.
+  perform public.plan_set_meal('2026-07-24', 'lunch', recipe_id_value, null, 'plan-move-set-0002');
+  perform public.plan_set_meal('2026-07-24', 'dinner', other_recipe_id, null, 'plan-move-set-0003');
+  begin
+    perform public.plan_move_meal(
+      '2026-07-24', 'lunch', '2026-07-24', 'dinner', 'plan-move-0002');
+    raise exception 'Move overwrote an occupied destination';
+  exception when invalid_parameter_value then null;
+  end;
+  if (select recipe_id from public.planned_meals where meal_date = '2026-07-24' and meal_type = 'lunch') <> recipe_id_value
+     or (select recipe_id from public.planned_meals where meal_date = '2026-07-24' and meal_type = 'dinner') <> other_recipe_id then
+    raise exception 'Rejected move changed a meal';
   end if;
 end;
 $$;
