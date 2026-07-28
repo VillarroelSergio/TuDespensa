@@ -15,6 +15,7 @@ import { expect, test } from '@playwright/test'
 import {
   adminClient,
   baseUrl as resolveBaseUrl,
+  createSyntheticAccount,
   deleteSyntheticUser,
   loginWithPassword,
 } from './support/auth'
@@ -32,6 +33,7 @@ test('two sessions converge during onboarding (auth + RLS + Realtime)', async ({
   const second = await browser.newContext()
   try {
     // Session A: real login, create household, add a first item.
+    await createSyntheticAccount(admin, email, password)
     const pageA = await loginWithPassword(first, baseUrl, email, password)
     await pageA.getByRole('button', { name: 'Preparar mi despensa' }).click()
     await expect(

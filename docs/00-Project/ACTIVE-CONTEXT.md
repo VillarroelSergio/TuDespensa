@@ -124,6 +124,8 @@ Crear hogar → integrantes → frigorífico → congelador → despensa/armario
 
 ## Siguientes acciones
 
+- **Hotfix de estabilidad — tormenta de mutaciones obsoletas (2026-07-28):** diagnóstico, decisión y plan de medición post-despliegue en [[TECHNICAL-ARCHITECTURE#6.1 Incidente de tormenta de mutaciones obsoletas (piloto, 2026-07-28)]]. Migración `20260728163451_fix_idempotency_version_race.sql` revisable pero no aplicada a producción; pendiente de despliegue y verificación en Supabase por la persona responsable.
+
 - **Copia de seguridad del hogar (2026-07-28):** en `/hogar`, cualquier integrante autenticado puede descargar una instantánea JSON de su propio hogar con Recetas, Compra y Despensa, incluidos datos relacionales e historial de movimientos. La RPC comprueba la pertenencia activa antes de leer y construye la instantánea en un único punto consistente; la operación no modifica los datos. Solo la propietaria puede cargar una copia del mismo hogar: antes se descarga el estado actual y se exige confirmar `RESTAURAR`; la restauración repone o actualiza los datos de la copia sin borrar los creados después. El archivo contiene información privada y debe guardarse fuera de MiDespensa en una ubicación segura; complementa las exportaciones cifradas operativas de PostgreSQL.
 
 - **Migraciones Supabase (2026-07-24):** historial remoto reconciliado con los archivos locales. Las tres migraciones `poc_*` sintéticas se marcaron como omitidas en el historial (no se ejecutaron en producción); las reglas de zona del catálogo y las invitaciones del hogar están aplicadas. `npx supabase db push --dry-run` confirma que la base remota está al día.
