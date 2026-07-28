@@ -52,6 +52,14 @@ export type Consumption = {
 /** Edición de una fila hecha por la persona en la revisión. */
 export type CookEdit = { included: boolean; discount: number; state: string }
 
+/** Cuenta los productos que la persona ha decidido revisar antes de confirmar. */
+export function selectedCookLineCount(
+  lines: CookLine[],
+  edits: Record<string, CookEdit>,
+): number {
+  return lines.filter((line) => edits[line.itemId]?.included).length
+}
+
 /** Copy breve que anticipa el alcance de la revisión antes de confirmar. */
 export function cookReviewSummary(lines: CookLine[]) {
   if (lines.length === 0) {

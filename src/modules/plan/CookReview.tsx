@@ -9,7 +9,11 @@ import { formatQuantity } from '@/modules/shopping/presentation'
 
 import type { CookPreview } from './actions'
 import { cookMeal } from './actions'
-import { buildConsumptions, cookReviewSummary } from './cooking'
+import {
+  buildConsumptions,
+  cookReviewSummary,
+  selectedCookLineCount,
+} from './cooking'
 import type { CookEdit, CookLine } from './cooking'
 import { slotLabel } from './presentation'
 
@@ -88,9 +92,7 @@ function CookRow({
               onChange({ discount: Number(event.target.value) })
             }
           />
-          {line.unitCode ? (
-            <span aria-hidden="true">{line.unitCode}</span>
-          ) : null}
+          {line.unitCode ? <span>{line.unitCode}</span> : null}
         </label>
       )}
     </div>
@@ -138,6 +140,10 @@ export function CookReview({
     [preview.lines, edits],
   )
   const summary = cookReviewSummary(preview.lines)
+  const selectedCount = useMemo(
+    () => selectedCookLineCount(preview.lines, edits),
+    [preview.lines, edits],
+  )
 
   function patch(itemId: string, next: Partial<CookEdit>) {
     setEdits((current) => {
@@ -194,7 +200,7 @@ export function CookReview({
         <section className="cook-overview" aria-label="Resumen de revisión">
           <p>{summary.message}</p>
           <span>
-            {preview.lines.length}/{preview.lines.length} seleccionados
+            {selectedCount}/{preview.lines.length} seleccionados
           </span>
         </section>
         {preview.lines.length ? (
