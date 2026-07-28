@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process'
 // Puertos del stack local declarados en supabase/config.toml (api, db, shadow,
 // studio, smtp, analytics). Si un arranque anterior no se cerró, quedan ocupados
 // y `supabase start` aborta con "port is already allocated".
-const SUPABASE_PORTS = [55320, 55321, 55322, 55323, 55324, 55327]
+const SUPABASE_PORTS = [57320, 57321, 57322, 57323, 57324, 57327, 57329]
 
 const run = (args, opts = {}) =>
   spawnSync('npx', args, { stdio: 'inherit', shell: true, ...opts })

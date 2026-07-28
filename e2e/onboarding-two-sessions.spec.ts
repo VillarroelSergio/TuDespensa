@@ -1,6 +1,6 @@
 /**
  * Real two-session E2E against the local stack: `npx supabase start` + `npm run dev`.
- * Auth uses the actual UI flow — magic link captured from Mailpit (port 55324) —
+ * Auth uses the actual UI flow — magic link captured from Mailpit (port 57324) —
  * so middleware cookies, the PKCE callback and Realtime are all exercised.
  * Requires local Supabase credentials in `.env.local` (or equivalent process env).
  * `SUPABASE_SERVICE_ROLE_KEY` is used only to delete the synthetic local user.

@@ -6,6 +6,9 @@ const projectRoot = fileURLToPath(new URL('../', import.meta.url))
 
 // Playwright runs outside Next.js, so it needs the local Supabase credentials
 // loaded explicitly before the test worker and its web server are spawned.
+// NODE_ENV=test makes Next.js skip .env.local (Vercel's remote project
+// credentials) and read .env.test.local (local Supabase) instead.
+process.env.NODE_ENV = 'test'
 nextEnv.loadEnvConfig(projectRoot)
 
 const args = process.argv.slice(2)
