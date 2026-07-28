@@ -1044,6 +1044,19 @@ footer {
   .shopping-row__delete {
     flex-shrink: 0;
   }
+  .pantry-stepper button,
+  .shopping-row__delete {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* ponytail: !important gana a los selectores de clase de cada formulario
+     (.recipe-editor, .cook-row__field, etc.) sin tocarlos uno a uno; por
+     debajo de 16px, iOS/Android hacen zoom automático al enfocar el campo. */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
   .pantry-bottom-nav {
     position: fixed;
     z-index: 1;

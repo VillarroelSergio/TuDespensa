@@ -268,8 +268,12 @@ async function auditFrictionCandidates(
     .first()
     .isVisible()
     .catch(() => false)
+  // `:visible` descarta el logo del panel lateral de escritorio: en móvil está
+  // oculto con `display: none` (AppShell.tsx), pero al ser el primer
+  // `a[href]` del DOM, `.first()` sin filtro lo detectaba como si fuera la
+  // acción principal ausente en todas las pantallas (falso positivo).
   const hasPrimaryAction = await page
-    .locator('button, a[href]')
+    .locator('button:visible, a[href]:visible')
     .first()
     .isVisible()
     .catch(() => false)
