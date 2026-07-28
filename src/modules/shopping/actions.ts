@@ -9,6 +9,7 @@ import {
   demoShoppingItems,
 } from '@/lib/dev/demo-fixtures'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
+import { logRpcConflict } from '@/lib/observability/logRpcConflict'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseFoodName, parseIdempotencyKey } from '@/lib/validation/onboarding'
 
@@ -31,7 +32,10 @@ function failure(error: { code?: string; message: string }): never {
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.rpc(name as never, args as never)
-  if (error) failure(error)
+  if (error) {
+    if (error.code === '40001') await logRpcConflict(name, error, args)
+    failure(error)
+  }
   revalidatePath('/compra')
   return data as T
 }
