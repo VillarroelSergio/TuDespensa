@@ -1,50 +1,18 @@
 import Link from 'next/link'
-import type { ReactNode } from 'react'
 
+import { AppShell } from '@/components/ui/AppShell'
 import {
   QUICK_MAIN_INGREDIENT_FILTERS,
   filterRecipes,
   timeLabel,
 } from '@/modules/recipes/presentation'
 import type { Recipe } from '@/modules/recipes/types'
-import { AppShell } from '@/components/ui/AppShell'
 
-import { assignMealAction } from './actions'
+import { ChooseRecipeAction } from './ChooseRecipeAction'
 import { slotLabel, weekStart } from './presentation'
 import { availabilityLabel } from './suggestions'
 import type { Suggestion } from './suggestions'
 import type { MealType } from './types'
-
-/** Botón de elegir receta: el mismo formulario para sugerencia y para búsqueda. */
-function ChooseForm({
-  mealDate,
-  mealType,
-  recipeId,
-  className,
-  children,
-}: {
-  mealDate: string
-  mealType: MealType
-  recipeId: string
-  className: string
-  children: ReactNode
-}) {
-  return (
-    // Elegir confirma el hueco directamente; las raciones se ajustan después
-    // desde el menú contextual (UX Plan P2).
-    <form action={assignMealAction}>
-      <input type="hidden" name="fecha" value={mealDate} />
-      <input type="hidden" name="servicio" value={mealType} />
-      <input type="hidden" name="receta" value={recipeId} />
-      {/* Elegir desde P2 es lo único que consolida faltantes en Compra; ajustar
-          raciones o deshacer un borrado no deben tocar la lista. */}
-      <input type="hidden" name="consolidar" value="1" />
-      <button className={className} type="submit">
-        {children}
-      </button>
-    </form>
-  )
-}
 
 export function ChooseRecipeView({
   mealDate,
@@ -79,27 +47,27 @@ export function ChooseRecipeView({
     <AppShell current="plan" contentClassName="choose-page">
       <section aria-labelledby="choose-title">
         <a className="choose-back" href={backHref}>
-          ← Añadir a · {slotLabel(mealDate, mealType)}
+          {'\u2190 A\u00f1adir a \u00b7 '}{slotLabel(mealDate, mealType)}
         </a>
         <header className="choose-header">
           <p className="choose-kicker">Decide una comida</p>
           <h1 className="choose-title" id="choose-title">
-            ¿Qué quieres comer?
+            {'\u00bfQu\u00e9 quieres comer?'}
           </h1>
           <p>Elige una sugerencia o busca en tus recetas guardadas.</p>
         </header>
 
-        {/* Las sugerencias solo aparecen sin búsqueda activa: al buscar, la
-          intención ya es explícita y mandan los resultados. */}
         {!query && suggestions.length > 0 ? (
           <ul className="choose-suggestions" aria-label="Sugerencias">
             {suggestions.map((suggestion) => (
               <li key={suggestion.recipeId}>
-                <ChooseForm
+                <ChooseRecipeAction
                   className="choose-suggestion"
                   mealDate={mealDate}
                   mealType={mealType}
                   recipeId={suggestion.recipeId}
+                  servings={suggestion.servings}
+                  title={suggestion.title}
                 >
                   <span className="choose-suggestion__title">
                     {suggestion.title}
@@ -110,7 +78,7 @@ export function ChooseRecipeView({
                   <span className="choose-suggestion__availability">
                     {availabilityLabel(suggestion.missing)}
                   </span>
-                </ChooseForm>
+                </ChooseRecipeAction>
               </li>
             ))}
           </ul>
@@ -119,7 +87,9 @@ export function ChooseRecipeView({
         <form className="choose-search" role="search" action="/plan/elegir">
           <input type="hidden" name="fecha" value={mealDate} />
           <input type="hidden" name="servicio" value={mealType} />
-          {category ? <input type="hidden" name="categoria" value={category} /> : null}
+          {category ? (
+            <input type="hidden" name="categoria" value={category} />
+          ) : null}
           <label className="choose-search__label" htmlFor="choose-q">
             Buscar una receta
           </label>
@@ -134,7 +104,10 @@ export function ChooseRecipeView({
         </form>
 
         {recipes.length ? (
-          <nav className="choose-filters" aria-label="Filtrar por ingrediente principal">
+          <nav
+            className="choose-filters"
+            aria-label="Filtrar por ingrediente principal"
+          >
             {QUICK_MAIN_INGREDIENT_FILTERS.map((filter) => {
               const active =
                 category.localeCompare(filter.value, 'es', {
@@ -156,41 +129,43 @@ export function ChooseRecipeView({
 
         {recipes.length > 0 ? (
           <p className="choose-results" role="status">
-            {results.length} {results.length === 1 ? 'receta disponible' : 'recetas disponibles'}
-            {category ? ` · ${category}` : ''}
+            {results.length}{' '}
+            {results.length === 1 ? 'receta disponible' : 'recetas disponibles'}
+            {category ? ` \u00b7 ${category}` : ''}
           </p>
         ) : null}
 
         {recipes.length === 0 ? (
           <p className="choose-empty">
-            Todavía no tienes recetas guardadas.{' '}
-            <Link href="/recetas">Añadir receta</Link>
+            {'Todav\u00eda no tienes recetas guardadas. '}
+            <Link href="/recetas">{'A\u00f1adir receta'}</Link>
           </p>
         ) : results.length === 0 ? (
           <p className="choose-empty">
-            Ninguna receta coincide con {category ? `el filtro ${category}` : `«${query}»`}.{' '}
-            <a href={chooseHref('')}>
-              Ver todas las recetas
-            </a>
+            Ninguna receta coincide con{' '}
+            {category ? `el filtro ${category}` : `\u00ab${query}\u00bb`}.{' '}
+            <a href={chooseHref('')}>Ver todas las recetas</a>
           </p>
         ) : (
           <ul className="choose-list">
             {results.map((recipe) => (
               <li key={recipe.id}>
-                <ChooseForm
+                <ChooseRecipeAction
                   className="choose-recipe"
                   mealDate={mealDate}
                   mealType={mealType}
                   recipeId={recipe.id}
+                  servings={recipe.servings}
+                  title={recipe.title}
                 >
                   <span className="choose-recipe__title">{recipe.title}</span>
                   <span className="choose-recipe__meta">
                     {timeLabel(recipe.totalMinutes)}
                   </span>
                   <span className="choose-recipe__action" aria-hidden="true">
-                    Elegir →
+                    {'Elegir \u2192'}
                   </span>
-                </ChooseForm>
+                </ChooseRecipeAction>
               </li>
             ))}
           </ul>

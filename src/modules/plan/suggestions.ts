@@ -34,6 +34,7 @@ export type SuggestionCandidate = {
   id: string
   title: string
   totalMinutes: number | null
+  servings?: number | null
   dishType: RecipeDishType | null
   isFavorite: boolean
   rating: number | null
@@ -62,6 +63,7 @@ export type Suggestion = {
   recipeId: string
   title: string
   totalMinutes: number | null
+  servings: number | null
   /** Motivo principal, uno solo, el de mayor peso que aplique. */
   reason: string
   /** Ingredientes que no están en la despensa; vacío = se puede cocinar ya. */
@@ -190,6 +192,7 @@ function scoreCandidate(
     recipeId: candidate.id,
     title: candidate.title,
     totalMinutes: candidate.totalMinutes,
+    servings: candidate.servings ?? null,
     reason,
     missing,
     score: factors.reduce((sum, factor) => sum + factor.points, 0),

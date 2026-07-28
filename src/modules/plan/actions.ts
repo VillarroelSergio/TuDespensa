@@ -125,16 +125,47 @@ const SHOPPING_FAILED = -1
  * Lleva a Compra los ingredientes de la receta que no están en la despensa.
  * Devuelve cuántos productos son nuevos allí.
  */
-async function consolidateShopping(recipeId: string): Promise<number> {
+/**
+ * Escala una cantidad de ingrediente sin inventar precisión: si falta la
+ * ración base o elegida, se conserva la cantidad original de la receta.
+ */
+export function scalePlanQuantity(
+  quantity: number | null,
+  recipeServings: number | null,
+  plannedServings: number | null,
+) {
+  if (
+    quantity === null ||
+    !recipeServings ||
+    !plannedServings ||
+    recipeServings <= 0
+  ) {
+    return quantity
+  }
+
+  // Redondear a milésimas evita residuos de coma flotante en el JSON que viaja
+  // a Postgres, sin perder precisión útil para g/ml.
+  return Math.round((quantity * plannedServings * 1000) / recipeServings) / 1000
+}
+
+async function consolidateShopping(
+  recipeId: string,
+  plannedServings: number | null,
+): Promise<number> {
   const supabase = await createSupabaseServerClient()
-  const [ingredientsRes, pantry] = await Promise.all([
+  const [ingredientsRes, recipeRes, pantry] = await Promise.all([
     supabase
       .from('recipe_ingredients')
       .select('name,quantity,unit_code')
       .eq('recipe_id', recipeId),
+    supabase.from('recipes').select('servings').eq('id', recipeId).maybeSingle(),
     getSuggestionPantry(supabase),
   ])
+  // Compra es una ayuda posterior a la asignacion: un fallo de lectura no debe
+  // deshacer la comida ya planificada ni convertir el flujo en un error.
+  if (ingredientsRes.error || recipeRes.error) return SHOPPING_FAILED
   const rows = ingredientsRes.data ?? []
+  const recipeServings = recipeRes.data?.servings ?? null
   const missing = new Set(
     missingIngredients(
       rows.map((row) => row.name),
@@ -145,7 +176,11 @@ async function consolidateShopping(recipeId: string): Promise<number> {
     .filter((row) => missing.has(row.name))
     .map((row) => ({
       name: row.name,
-      quantity: row.quantity,
+      quantity: scalePlanQuantity(
+        row.quantity,
+        recipeServings,
+        plannedServings,
+      ),
       unitCode: row.unit_code,
     }))
   if (!items.length) return 0
@@ -166,9 +201,10 @@ async function consolidateShopping(recipeId: string): Promise<number> {
 export async function assignMealAction(formData: FormData) {
   const slot = parseSlot(formData)
   const recipeId = parseRecipeId(formData)
-  await setMeal({ ...slot, recipeId, servings: parseServings(formData) })
+  const servings = parseServings(formData)
+  await setMeal({ ...slot, recipeId, servings })
   if (formData.get('consolidar') !== '1') backToWeek(slot.mealDate)
-  const added = await consolidateShopping(recipeId)
+  const added = await consolidateShopping(recipeId, servings)
   backToWeek(slot.mealDate, added ? `&compra=${added}` : '')
 }
 
@@ -262,7 +298,7 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
     // Solo recetas listas: una captura `pending` todavía no se puede cocinar.
     supabase
       .from('recipes')
-      .select('id,title,dish_type,total_minutes')
+      .select('id,title,dish_type,total_minutes,servings')
       .eq('status', 'ready'),
     supabase.from('recipe_ingredients').select('recipe_id,name'),
     supabase
@@ -320,6 +356,7 @@ export async function getSuggestions(mealDate: string): Promise<Suggestion[]> {
       id: recipe.id,
       title: recipe.title,
       totalMinutes: recipe.total_minutes,
+      servings: recipe.servings,
       dishType: recipe.dish_type as RecipeDishType | null,
       isFavorite: prefByRecipe.get(recipe.id)?.is_favorite ?? false,
       rating: prefByRecipe.get(recipe.id)?.rating ?? null,
