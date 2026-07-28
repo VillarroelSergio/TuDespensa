@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useOptimistic, useState, useTransition } from 'react'
+import { useCallback, useOptimistic, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
@@ -36,6 +36,9 @@ export function PantryWorkspace({
     null,
   )
   const [undo, setUndo] = useState<PresentedPantryItem | null>(null)
+  // `pendingId` se actualiza en el siguiente render. Este guard síncrono
+  // cubre los clics consecutivos que llegan antes de que React lo deshabilite.
+  const pendingIdsRef = useRef<Set<string>>(new Set())
   const [, startTransition] = useTransition()
   const refresh = useCallback(() => router.refresh(), [router])
   // «Se terminó» pinta el estado al instante; revalidatePath reconcilia con el
@@ -69,6 +72,8 @@ export function PantryWorkspace({
   ) {
     // La única acción de presencia viva es marcar «se terminó».
     if (state !== 'out') return
+    if (pendingIdsRef.current.has(item.id)) return
+    pendingIdsRef.current.add(item.id)
     setStatus('')
     startTransition(async () => {
       markOut(item.id)
@@ -98,6 +103,8 @@ export function PantryWorkspace({
           'No hemos podido guardar el cambio. Hemos actualizado la lista.',
         )
         refresh()
+      } finally {
+        pendingIdsRef.current.delete(item.id)
       }
     })
   }
