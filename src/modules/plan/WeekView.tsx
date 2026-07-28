@@ -4,6 +4,7 @@ import { AppShell } from '@/components/ui/AppShell'
 import { timeLabel } from '@/modules/recipes/presentation'
 
 import { assignMealAction, moveMealAction, removeMealAction } from './actions'
+import { PlanSlotActions } from './PlanSlotActions'
 import {
   addMealLabel,
   addWeeks,
@@ -123,7 +124,7 @@ function Slot({ slot }: { slot: PlanSlot }) {
           {slot.meal.cookedAt ? (
             <span className="plan-slot__cooked">✓ Cocinada</span>
           ) : null}
-          <SlotMenu meal={slot.meal} />
+          <PlanSlotActions meal={slot.meal} />
         </div>
       ) : (
         <a

@@ -1617,6 +1617,140 @@ footer {
   font-size: 0.75rem;
   font-weight: 700;
 }
+.plan-action-trigger {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--primary);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-align: left;
+}
+.plan-actions-dialog {
+  position: fixed;
+  inset: auto 0 0;
+  width: 100%;
+  max-width: none;
+  max-height: min(90dvh, 42rem);
+  overflow-y: auto;
+  border: 0;
+  border-radius: 1rem 1rem 0 0;
+  background: var(--surface);
+  padding: 1rem;
+  box-shadow: 0 -12px 40px rgb(32 43 38 / 22%);
+}
+.plan-actions-dialog::backdrop {
+  background: rgb(25 35 30 / 48%);
+}
+.plan-actions-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+}
+.plan-actions-dialog__header p,
+.plan-actions-dialog__remove p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.plan-actions-dialog__header h2 {
+  margin: 0.25rem 0 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+}
+.plan-actions-dialog__close {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: #fff;
+  color: var(--ink);
+  font-size: 1.5rem;
+}
+.plan-actions-dialog__body,
+.plan-actions-dialog__form,
+.plan-actions-dialog__remove {
+  display: grid;
+  gap: 0.5rem;
+}
+.plan-actions-dialog__body {
+  margin-top: 1rem;
+}
+.plan-actions-dialog__body > a,
+.plan-actions-dialog__primary,
+.plan-actions-dialog__form button,
+.plan-actions-dialog__remove button {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: #fff;
+  color: var(--primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.plan-actions-dialog__primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+.plan-actions-dialog__form {
+  border-top: 1px solid var(--border);
+  padding-top: 0.875rem;
+}
+.plan-actions-dialog__form label {
+  color: var(--muted-2);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.plan-actions-dialog__form > div,
+.plan-actions-dialog__move-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+}
+.plan-actions-dialog__move-fields {
+  grid-template-columns: minmax(0, 1fr) minmax(6.5rem, auto) auto;
+}
+.plan-actions-dialog__form input,
+.plan-actions-dialog__form select {
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: #fff;
+  padding: 0 0.625rem;
+  color: var(--ink);
+  font-size: 0.875rem;
+}
+.plan-actions-dialog__form button {
+  padding: 0 1rem;
+}
+.plan-actions-dialog__remove {
+  border-top: 1px solid var(--border);
+  padding-top: 0.875rem;
+}
+.plan-actions-dialog__remove button {
+  border-color: #b3261e;
+  color: #b3261e;
+}
+@media (min-width: 768px) {
+  .plan-actions-dialog {
+    inset: 50% auto auto 50%;
+    width: min(100% - 2rem, 34rem);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    transform: translate(-50%, -50%);
+  }
+}
 .plan-undo {
   display: flex;
   flex-wrap: wrap;
