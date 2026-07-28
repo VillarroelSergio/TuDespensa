@@ -239,8 +239,8 @@ export function WeekView({
             </p>
           </div>
           <div className="plan-overview__count">
-            <strong>{planned}<span>/14</span></strong>
-            <span>comidas decididas</span>
+            <strong>{planned}<span> de 14</span></strong>
+            <span>comidas planificadas</span>
           </div>
         </section>
         {!isCurrentWeek ? (

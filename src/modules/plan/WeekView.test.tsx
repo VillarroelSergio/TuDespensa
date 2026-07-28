@@ -15,7 +15,17 @@ describe('WeekView', () => {
       <WeekView
         startIso="2026-07-20"
         currentWeekIso="2026-07-20"
-        meals={[]}
+        meals={[
+          {
+            mealDate: '2026-07-20',
+            mealType: 'lunch',
+            recipeId: 'recipe-1',
+            title: 'Lentejas de la mamá',
+            totalMinutes: 45,
+            servings: 2,
+            cookedAt: null,
+          },
+        ]}
       />,
     )
 
@@ -24,5 +34,9 @@ describe('WeekView', () => {
     expect(container.querySelectorAll('.plan-day__slots .plan-slot')).toHaveLength(
       14,
     )
+    expect(
+      screen.getByText((_, element) => element?.textContent === '1 de 14'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('comidas planificadas')).toBeInTheDocument()
   })
 })
