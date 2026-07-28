@@ -51,6 +51,15 @@ function CookRow({
       ? (APPROX_STATES.find((state) => state.value === line.approximateState)
           ?.label ?? 'Algo')
       : (formatQuantity(line.quantity, line.unitCode) ?? 'Sin cantidad')
+  const remaining =
+    line.trackingMode === 'approximate'
+      ? null
+      : edit.included && line.quantity !== null
+        ? (formatQuantity(
+            Math.max(0, line.quantity - edit.discount),
+            line.unitCode,
+          ) ?? 'Sin cantidad')
+        : null
 
   return (
     <div className="cook-row">
@@ -95,6 +104,11 @@ function CookRow({
           {line.unitCode ? <span>{line.unitCode}</span> : null}
         </label>
       )}
+      {remaining ? (
+        <small className="cook-row__after">Quedarán: {remaining}</small>
+      ) : !edit.included ? (
+        <small className="cook-row__after">No se modifica</small>
+      ) : null}
     </div>
   )
 }

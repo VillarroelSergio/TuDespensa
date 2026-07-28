@@ -2103,6 +2103,11 @@ footer {
   color: var(--muted);
   font-size: 0.8125rem;
 }
+.cook-row__after {
+  color: var(--success);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
 .cook-row__field {
   display: flex;
   align-items: center;
