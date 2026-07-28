@@ -459,6 +459,14 @@ footer {
   color: var(--muted);
   font-size: 0.8125rem;
 }
+.pantry-row__quantity-button {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  padding: 0.375rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
 .pantry-row__status {
   font-size: 0.75rem;
   color: #33b266;
@@ -506,7 +514,7 @@ footer {
 }
 .pantry-stepper button,
 .pantry-presence button {
-  min-height: 36px;
+  min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
   background: #fff;
@@ -528,6 +536,12 @@ footer {
   min-width: 2rem;
   text-align: center;
   font-size: 0.8125rem;
+}
+.pantry-stepper__close {
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--muted) !important;
+  font-size: 1.125rem !important;
 }
 .pantry-presence .is-available {
   border-color: #33b266;

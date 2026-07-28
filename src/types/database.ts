@@ -938,6 +938,16 @@ export interface Database {
         }
         Returns: Json
       }
+      plan_move_meal: {
+        Args: {
+          from_meal_date_value: string
+          from_meal_type_value: 'lunch' | 'dinner'
+          to_meal_date_value: string
+          to_meal_type_value: 'lunch' | 'dinner'
+          idempotency_key: string
+        }
+        Returns: Json
+      }
       plan_cook_meal: {
         Args: {
           meal_date_value: string

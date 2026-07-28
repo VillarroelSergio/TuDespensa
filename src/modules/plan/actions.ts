@@ -96,6 +96,23 @@ async function clearMeal(input: { mealDate: string; mealType: MealType }) {
   if (error) failure(error)
 }
 
+async function moveMeal(input: {
+  from: { mealDate: string; mealType: MealType }
+  to: { mealDate: string; mealType: MealType }
+}) {
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.rpc('plan_move_meal', {
+    from_meal_date_value: input.from.mealDate,
+    from_meal_type_value: input.from.mealType,
+    to_meal_date_value: input.to.mealDate,
+    to_meal_type_value: input.to.mealType,
+    idempotency_key: parseIdempotencyKey(
+      createIdempotencyKey('plan_move_meal'),
+    ),
+  })
+  if (error) failure(error)
+}
+
 function backToWeek(mealDate: string, query = ''): never {
   revalidatePath('/plan')
   redirect(`/plan?semana=${weekStart(mealDate)}${query}`)
@@ -155,17 +172,14 @@ export async function assignMealAction(formData: FormData) {
   backToWeek(slot.mealDate, added ? `&compra=${added}` : '')
 }
 
-/** Mueve una comida a otro hueco; si el destino está ocupado, lo sustituye. */
+/** Mueve una comida en una sola RPC; un destino ocupado se rechaza sin cambios. */
 export async function moveMealAction(formData: FormData) {
   const from = parseSlot(formData, 'origen-')
   const to = parseSlot(formData)
-  const recipeId = parseRecipeId(formData)
-  const servings = parseServings(formData)
+  parseRecipeId(formData)
+  parseServings(formData)
   if (to.mealDate !== from.mealDate || to.mealType !== from.mealType) {
-    // Escribimos el destino antes de vaciar el origen: si lo segundo falla, la
-    // comida aparece duplicada, que es preferible a perderla.
-    await setMeal({ ...to, recipeId, servings })
-    await clearMeal(from)
+    await moveMeal({ from, to })
   }
   backToWeek(to.mealDate)
 }

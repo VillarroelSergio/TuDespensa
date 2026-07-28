@@ -34,6 +34,9 @@ function PantryRow({
   onAdjust,
   onSetPresence,
   onRemove,
+  isAdjusting,
+  onStartAdjusting,
+  onStopAdjusting,
   showLegacyPresenceControls = false,
 }: {
   item: PresentedPantryItem
@@ -44,8 +47,16 @@ function PantryRow({
     state: 'available' | 'low' | 'out',
   ) => void
   onRemove?: (item: PresentedPantryItem) => void
+  isAdjusting: boolean
+  onStartAdjusting: (itemId: string) => void
+  onStopAdjusting: () => void
   showLegacyPresenceControls?: boolean
 }) {
+  const canAdjust =
+    (item.trackingMode === 'units' || item.trackingMode === 'measure') &&
+    item.quantity !== null &&
+    onAdjust
+
   return (
     <div
       className={`pantry-row pantry-row--${item.status}`}
@@ -54,30 +65,54 @@ function PantryRow({
       <div className="pantry-row__detail">
         <span className="pantry-row__dot" aria-hidden="true" />
         <span className="pantry-row__name">{item.name}</span>
-        {item.quantityLabel ? (
+        {item.quantityLabel && !canAdjust ? (
           <span className="pantry-row__quantity">{item.quantityLabel}</span>
         ) : null}
+        {item.quantityLabel && canAdjust && !isAdjusting ? (
+          <button
+            className="pantry-row__quantity pantry-row__quantity-button"
+            type="button"
+            onClick={() => onStartAdjusting(item.id)}
+            aria-label={`Ajustar ${item.name}, ${item.quantityLabel}`}
+          >
+            {item.quantityLabel}
+          </button>
+        ) : null}
       </div>
-      {item.trackingMode === 'units' && item.quantity !== null && onAdjust ? (
+      {item.trackingMode === 'units' && item.quantity !== null && onAdjust && isAdjusting ? (
         <div className="pantry-stepper" aria-label={`Ajustar ${item.name}`}>
           <button
             disabled={item.quantity <= 0}
             onClick={() => onAdjust(item, -1)}
             type="button"
+            aria-label={`−1 ${item.name}`}
           >
             −1
           </button>
           <strong>{item.quantity}</strong>
-          <button onClick={() => onAdjust(item, 1)} type="button">
+          <button
+            onClick={() => onAdjust(item, 1)}
+            type="button"
+            aria-label={`+1 ${item.name}`}
+          >
             +1
+          </button>
+          <button
+            className="pantry-stepper__close"
+            onClick={onStopAdjusting}
+            type="button"
+            aria-label={`Cerrar ajuste de ${item.name}`}
+          >
+            ×
           </button>
         </div>
       ) : null}
-      {item.trackingMode === 'measure' && item.quantity !== null && onAdjust ? (
+      {item.trackingMode === 'measure' && item.quantity !== null && onAdjust && isAdjusting ? (
         <div className="pantry-stepper" aria-label={`Ajustar ${item.name}`}>
           <button
             onClick={() => onAdjust(item, -measureStep(item.unitCode))}
             type="button"
+            aria-label={`Restar ${measureStepLabel(item.unitCode)} de ${item.name}`}
           >
             −{measureStepLabel(item.unitCode)}
           </button>
@@ -85,8 +120,17 @@ function PantryRow({
           <button
             onClick={() => onAdjust(item, measureStep(item.unitCode))}
             type="button"
+            aria-label={`Sumar ${measureStepLabel(item.unitCode)} a ${item.name}`}
           >
             +{measureStepLabel(item.unitCode)}
+          </button>
+          <button
+            className="pantry-stepper__close"
+            onClick={onStopAdjusting}
+            type="button"
+            aria-label={`Cerrar ajuste de ${item.name}`}
+          >
+            ×
           </button>
         </div>
       ) : null}
@@ -182,6 +226,7 @@ export function PantryList({
   undoItemName,
 }: Props) {
   const [query, setQuery] = useState('')
+  const [adjustingId, setAdjustingId] = useState<string | null>(null)
   const rows = useMemo(
     () =>
       prioritizePantryItems(initialItems).filter((item) =>
@@ -254,6 +299,9 @@ export function PantryList({
                           onMarkLow={onMarkLow}
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
+                          isAdjusting={adjustingId === item.id}
+                          onStartAdjusting={setAdjustingId}
+                          onStopAdjusting={() => setAdjustingId(null)}
                         />
                       ))}
                     </div>
@@ -272,6 +320,9 @@ export function PantryList({
                           onMarkLow={onMarkLow}
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
+                          isAdjusting={adjustingId === item.id}
+                          onStartAdjusting={setAdjustingId}
+                          onStopAdjusting={() => setAdjustingId(null)}
                         />
                       ))}
                     </div>
@@ -285,6 +336,9 @@ export function PantryList({
                           key={item.id}
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
+                          isAdjusting={adjustingId === item.id}
+                          onStartAdjusting={setAdjustingId}
+                          onStopAdjusting={() => setAdjustingId(null)}
                         />
                       ))}
                     </div>
