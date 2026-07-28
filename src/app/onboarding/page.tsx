@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { BrandLockup } from '@/components/ui/BrandLockup'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SearchAddCombobox } from '@/components/ui/SearchAddCombobox'
+import { SignOutButton } from '@/components/ui/SignOutButton'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import {
   addPantryFood,
@@ -19,11 +20,6 @@ import {
 } from '@/modules/onboarding/actions'
 import { addFood, stepForProgress } from '@/modules/onboarding/machine'
 import type { OnboardingZone } from '@/modules/onboarding/types'
-import {
-  acceptInvitation,
-  getMyPendingInvitation,
-  type PendingInvitation,
-} from '@/modules/household/actions'
 
 const zones = [
   {
@@ -60,6 +56,7 @@ const emptyItems: Record<OnboardingZone, Food[]> = {
 }
 
 function OnboardingContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const isVisualFixture =
     process.env.NODE_ENV === 'development' &&
@@ -72,7 +69,6 @@ function OnboardingContent() {
   const [status, setStatus] = useState('')
   const [pending, setPending] = useState(false)
   const [editing, setEditing] = useState(false)
-  const [invitation, setInvitation] = useState<PendingInvitation | null>(null)
   const h1 = useRef<HTMLHeadingElement>(null)
   const activeZone = zones[Math.min(Math.max(step - 2, 0), 2)]!
 
@@ -135,29 +131,6 @@ function OnboardingContent() {
       JSON.stringify({ step, name, people }),
     )
   }, [step, name, people])
-
-  // Quien llega desde un correo de invitación aún no tiene hogar propio: le
-  // ofrecemos unirse al que le invitó antes de crear uno nuevo.
-  useEffect(() => {
-    if (isVisualFixture) return
-    void getMyPendingInvitation()
-      .then(setInvitation)
-      .catch(() => {})
-  }, [isVisualFixture])
-
-  async function acceptInvite() {
-    if (!invitation) return
-    setPending(true)
-    try {
-      await acceptInvitation(invitation.invitationId)
-      // El middleware enruta según el estado del hogar destino: a la despensa si
-      // ya está listo, o de vuelta al onboarding para continuarlo.
-      window.location.assign('/despensa')
-    } catch {
-      setStatus('No hemos podido unirte al hogar. Inténtalo de nuevo.')
-      setPending(false)
-    }
-  }
 
   async function begin() {
     setPending(true)
@@ -252,7 +225,8 @@ function OnboardingContent() {
     try {
       await confirmBaseline()
       localStorage.removeItem('midespensa-onboarding-draft')
-      setStep(6)
+      router.replace('/despensa')
+      router.refresh()
     } catch {
       setStatus('No se puede confirmar hasta sincronizar los cambios.')
     } finally {
@@ -265,34 +239,6 @@ function OnboardingContent() {
     setStep(index + 2)
   }
 
-  if (invitation && step === 1)
-    return (
-      <main className="onboarding">
-        <section className="onboarding-card">
-          <BrandLockup className="brand brand--welcome" href="/" />
-          <h1 ref={h1} tabIndex={-1}>
-            Te han invitado a un hogar
-          </h1>
-          <p>
-            {invitation.invitedByName} te ha invitado a compartir el hogar «
-            {invitation.householdName}». Al unirte, veréis y actualizaréis la
-            misma despensa, compra, recetas y plan.
-          </p>
-          <footer>
-            <PrimaryButton onClick={acceptInvite} disabled={pending}>
-              Unirme a «{invitation.householdName}»
-            </PrimaryButton>
-            <button
-              className="secondary-button"
-              onClick={() => setInvitation(null)}
-            >
-              Prefiero crear mi propio hogar
-            </button>
-          </footer>
-          <p aria-live="polite">{status}</p>
-        </section>
-      </main>
-    )
   if (step === 1)
     return (
       <main className="onboarding">
@@ -474,8 +420,11 @@ function OnboardingContent() {
 
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={null}>
-      <OnboardingContent />
-    </Suspense>
+    <>
+      <SignOutButton className="onboarding-sign-out" />
+      <Suspense fallback={null}>
+        <OnboardingContent />
+      </Suspense>
+    </>
   )
 }

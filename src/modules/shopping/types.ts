@@ -9,8 +9,7 @@ export type ShoppingItem = {
 }
 
 // Una línea de la revisión C2: qué le pasará a la despensa al confirmar la
-// compra. La despensa solo guarda presencia, así que no hay cantidades que
-// mostrar aquí: 'add' es un producto nuevo, 'restore' uno que ya existía.
+// compra. 'add' es un producto nuevo, 'restore' uno que ya existía.
 import type { PantryZone } from '@/modules/pantry/types'
 
 export type CheckoutLine = {
@@ -22,4 +21,8 @@ export type CheckoutLine = {
   // coincidencia de catálogo y hay que elegir la zona a mano. Irrelevante en
   // 'restore' (el producto ya tiene zona en la despensa).
   suggestedZone: PantryZone | null
+  // Unidades ya guardadas en el artículo de la lista (p. ej. desde un ticket);
+  // null si nunca se fijó ninguna. Valor inicial del campo Unidades en la
+  // revisión, para no perder lo que ya se sabía.
+  quantity: number | null
 }

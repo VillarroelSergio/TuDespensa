@@ -1,71 +1,89 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { BrandLockup } from '@/components/ui/BrandLockup'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { AppShell } from '@/components/ui/AppShell'
+import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 import {
   PANTRY_ZONE_META,
   PANTRY_ZONE_ORDER,
 } from '@/modules/pantry/presentation'
 import type { PantryZone } from '@/modules/pantry/types'
 
-import { confirmPurchase } from './actions'
+import { confirmPurchase, setPurchaseQuantities } from './actions'
 import { checkoutActionLabel } from './presentation'
-import { Navigation } from './ShoppingList'
 import type { CheckoutLine } from './types'
 
 export function CheckoutReview({
   initialLines,
+  isVisualFixture = false,
 }: {
   initialLines: CheckoutLine[]
+  isVisualFixture?: boolean
 }) {
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [pending, setPending] = useState(false)
   const [zoneChoices, setZoneChoices] = useState<Record<string, PantryZone>>({})
-  const refresh = useCallback(() => router.refresh(), [router])
+  const [quantities, setQuantities] = useState<Record<string, number>>(() =>
+    Object.fromEntries(
+      initialLines.map((line) => [line.itemId, line.quantity ?? 1]),
+    ),
+  )
+  // Evita que el eco realtime de nuestra propia confirmación dispare un
+  // refresh mientras ya estamos navegando fuera de esta página.
+  const confirming = useRef(false)
+  const refresh = useCallback(() => {
+    if (confirming.current) return
+    router.refresh()
+  }, [router])
 
   // Solo los altas sin coincidencia de catálogo necesitan que la persona
   // elija la zona a mano; el resto ya sabe dónde va o ya existía.
   const linesNeedingZone = initialLines.filter(
     (line) => line.action === 'add' && line.suggestedZone === null,
   )
-  const canConfirm = linesNeedingZone.every((line) => zoneChoices[line.itemId])
+  const canConfirm =
+    linesNeedingZone.every((line) => zoneChoices[line.itemId]) &&
+    initialLines.every((line) => {
+      const quantity = quantities[line.itemId] ?? 0
+      return Number.isFinite(quantity) && quantity > 0
+    })
 
   // Un cambio remoto en la lista (otro integrante) recarga la revisión en vivo,
   // sin ocultar lo que ya se ve.
-  useEffect(() => {
-    const client = createSupabaseBrowserClient()
-    const channel = client
-      .channel('checkout-refresh')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'shopping_items' },
-        refresh,
-      )
-      .subscribe()
-    return () => {
-      void client.removeChannel(channel)
-    }
-  }, [refresh])
+  useRealtimeRefresh('checkout-refresh', ['shopping_items'], {
+    enabled: !isVisualFixture,
+    shouldRefresh: () => !confirming.current,
+  })
 
   async function handleConfirm() {
     if (pending || !initialLines.length || !canConfirm) return
     setPending(true)
     setStatus('')
+    confirming.current = true
     try {
-      const { confirmed } = await confirmPurchase(
+      const updated = await setPurchaseQuantities(
         initialLines.map((line) => ({
           itemId: line.itemId,
           version: line.version,
+          quantity: quantities[line.itemId]!,
+        })),
+      )
+      const { confirmed } = await confirmPurchase(
+        initialLines.map((line) => ({
+          itemId: line.itemId,
+          version:
+            updated.items.find((item) => item.item_id === line.itemId)
+              ?.version ?? line.version,
           zone: zoneChoices[line.itemId],
         })),
       )
       router.push(`/compra?confirmado=${confirmed}`)
     } catch {
       // Conflicto o fallo: recargamos la revisión sin aplicar nada a medias.
+      confirming.current = false
       setStatus(
         'La lista ha cambiado. Hemos actualizado la revisión; compruébala y vuelve a confirmar.',
       )
@@ -75,15 +93,8 @@ export function CheckoutReview({
   }
 
   return (
-    <main className="shopping-page">
-      <aside className="shopping-sidebar">
-        <BrandLockup className="pantry-brand" />
-        <Navigation className="shopping-sidebar__nav" />
-      </aside>
-      <section
-        className="shopping-content checkout-content"
-        aria-labelledby="checkout-title"
-      >
+    <AppShell current="compra" contentClassName="checkout-content">
+      <section aria-labelledby="checkout-title">
         <a className="shopping-back" href="/compra">
           ← Volver a la lista
         </a>
@@ -112,6 +123,23 @@ export function CheckoutReview({
                     <span aria-hidden="true" className="shopping-review-icon" />
                     <span>{line.name}</span>
                     <small>{checkoutActionLabel(line)}</small>
+                    <label className="shopping-checkout-quantity">
+                      <span>Unidades</span>
+                      <input
+                        aria-label={`Unidades compradas de ${line.name}`}
+                        min="0.01"
+                        step="0.01"
+                        type="number"
+                        value={quantities[line.itemId] ?? 1}
+                        onChange={(event) =>
+                          setQuantities((current) => ({
+                            ...current,
+                            [line.itemId]: Number(event.target.value),
+                          }))
+                        }
+                      />
+                      <span aria-hidden="true">uds.</span>
+                    </label>
                     {needsZone ? (
                       <div
                         className="pantry-detail__chips"
@@ -158,7 +186,6 @@ export function CheckoutReview({
           </p>
         )}
       </section>
-      <Navigation className="shopping-bottom-nav" />
-    </main>
+    </AppShell>
   )
 }

@@ -48,4 +48,4 @@ Esto genera 57 pantallas visuales y 57 mapas de controles. Mantiene las capturas
 
 El escenario `everyday` se activa exclusivamente con `?fixture=everyday` en desarrollo. Contiene datos fijos sin PII —productos, recetas, plan, compra y revisión de Cocina— y nunca consulta ni escribe datos reales de Supabase. El script usa por defecto el puerto `3011` para no compartir servidor con otros worktrees; puede cambiarse con `VISUAL_CONTEXT_PORT`.
 
-Los archivos se guardan en `docs/00-Project/visual-context/`. Se actualizan a propósito: forman parte de la evidencia visual del proyecto y no contienen credenciales ni datos privados.
+Los archivos se guardan en `docs/00-Project/visual-context/`, en una subcarpeta por dispositivo (`movil/`, `tablet/`, `desktop/`). Se actualizan a propósito: forman parte de la evidencia visual del proyecto y no contienen credenciales ni datos privados.

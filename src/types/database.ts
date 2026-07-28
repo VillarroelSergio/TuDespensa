@@ -105,25 +105,36 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'household_members_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+        ]
       }
       household_people: {
         Row: {
           id: string
           household_id: string
           name: string
+          linked_user_id: string | null
           created_at: string
         }
         Insert: {
           id?: string
           household_id: string
           name: string
+          linked_user_id?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           household_id?: string
           name?: string
+          linked_user_id?: string | null
           created_at?: string
         }
         Relationships: []
@@ -132,33 +143,39 @@ export interface Database {
         Row: {
           id: string
           household_id: string
-          email: string
+          email: string | null
           invited_by: string
+          code_hash: string | null
           status: HouseholdInvitationStatus
           created_at: string
           updated_at: string
+          expires_at: string
           accepted_at: string | null
           accepted_by: string | null
         }
         Insert: {
           id?: string
           household_id: string
-          email: string
+          email?: string | null
           invited_by: string
+          code_hash?: string | null
           status?: HouseholdInvitationStatus
           created_at?: string
           updated_at?: string
+          expires_at?: string
           accepted_at?: string | null
           accepted_by?: string | null
         }
         Update: {
           id?: string
           household_id?: string
-          email?: string
+          email?: string | null
           invited_by?: string
+          code_hash?: string | null
           status?: HouseholdInvitationStatus
           created_at?: string
           updated_at?: string
+          expires_at?: string
           accepted_at?: string | null
           accepted_by?: string | null
         }
@@ -199,6 +216,7 @@ export interface Database {
           household_id: string
           name: string
           catalog_food_id: string | null
+          default_zone: string | null
           created_at: string
         }
         Insert: {
@@ -206,6 +224,7 @@ export interface Database {
           household_id: string
           name: string
           catalog_food_id?: string | null
+          default_zone?: string | null
           created_at?: string
         }
         Update: {
@@ -213,6 +232,7 @@ export interface Database {
           household_id?: string
           name?: string
           catalog_food_id?: string | null
+          default_zone?: string | null
           created_at?: string
         }
         Relationships: []
@@ -853,21 +873,41 @@ export interface Database {
         Args: { idempotency_key: string }
         Returns: Json
       }
-      invite_household_member: {
-        Args: { target_email: string }
+      create_household_invitation: {
+        Args: { code_hash: string }
         Returns: Json
+      }
+      claim_household_person: {
+        Args: { person_id: string | null; person_name: string | null; idempotency_key: string }
+        Returns: Json
+      }
+      pantry_delete_item: {
+        Args: { item_id: string; version: number; idempotency_key: string }
+        Returns: Json
+      }
+      redeem_invitation_for_new_member: {
+        Args: { code_hash: string; new_user_id: string }
+        Returns: Json
+      }
+      redeem_invitation: {
+        Args: { code_hash: string }
+        Returns: Json
+      }
+      pilot_needs_invitation: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      pilot_household_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       revoke_household_invitation: {
         Args: { invitation_id: string }
         Returns: Json
       }
-      get_my_pending_invitation: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      accept_household_invitation: {
-        Args: { invitation_id: string }
-        Returns: Json
+      reset_pilot_household: {
+        Args: { confirmation: string }
+        Returns: string[]
       }
       pantry_record_entry: {
         Args: {

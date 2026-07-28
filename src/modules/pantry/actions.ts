@@ -22,7 +22,9 @@ function failure(error: { code?: string; message: string }): never {
       ? 'FORBIDDEN'
       : error.code === '40001'
         ? 'CONFLICT'
-        : error.code === '22023' || error.code === '23514'
+        : error.code === '22023' ||
+            error.code === '23514' ||
+            error.code === '23505'
           ? 'INVALID_INPUT'
           : 'UNEXPECTED'
   throw new AppError(code, error.message)
@@ -135,16 +137,16 @@ export async function markPantryOut(
     ),
   })
 }
-export async function removeFinishedPantryItem(
+export async function deletePantryItem(
   itemId: string,
   version: number,
   key?: string,
 ) {
-  return rpc('pantry_remove_finished_item', {
+  return rpc('pantry_delete_item', {
     item_id: itemId,
     version,
     idempotency_key: parseIdempotencyKey(
-      key ?? createIdempotencyKey('pantry_remove_finished_item'),
+      key ?? createIdempotencyKey('pantry_delete_item'),
     ),
   })
 }
@@ -161,6 +163,61 @@ export async function renameHouseholdFood(
     ),
   })
 }
+export async function movePantryItem(
+  itemId: string,
+  version: number,
+  zone: PantryZone,
+  key?: string,
+) {
+  return rpc<PantryMutationResult>('pantry_move_item', {
+    item_id: itemId,
+    version,
+    zone,
+    idempotency_key: parseIdempotencyKey(
+      key ?? createIdempotencyKey('pantry_move_item'),
+    ),
+  })
+}
+
+export async function updatePantryItem(input: {
+  itemId: string
+  foodId: string
+  version: number
+  name: string
+  currentName: string
+  zone: PantryZone
+  currentZone: PantryZone
+  trackingMode: PantryMutationInput['trackingMode']
+  approximateState: PantryMutationInput['approximateState']
+  quantity: PantryMutationInput['quantity']
+  currentQuantity: number | null
+  unitCode: PantryMutationInput['unitCode']
+}) {
+  let version = input.version
+  const name = parseFoodName(input.name)
+  if (name !== input.currentName.trim()) {
+    await renameHouseholdFood(input.foodId, name)
+  }
+  // La cantidad se corrige antes de mover: si el destino fusiona con un
+  // producto existente, debe fusionar con la cantidad ya editada.
+  if (input.quantity !== null && input.quantity !== input.currentQuantity) {
+    const corrected = await correctPantryItem({
+      itemId: input.itemId,
+      version,
+      trackingMode: input.trackingMode,
+      approximateState: input.approximateState,
+      quantity: input.quantity,
+      unitCode: input.unitCode,
+    })
+    version = corrected.version
+  }
+  if (input.zone !== input.currentZone) {
+    const moved = await movePantryItem(input.itemId, version, input.zone)
+    version = moved.version
+  }
+  return { version }
+}
+
 export async function addHouseholdFoodAlias(
   foodId: string,
   alias: string,
@@ -191,6 +248,10 @@ export async function getPantryListItems(): Promise<PantryListItem[]> {
   const { data: membership, error: membershipError } = await supabase
     .from('household_members')
     .select('household_id')
+    // Sin filtrar por usuario esto devuelve TODOS los miembros del hogar (RLS
+    // permite que se vean entre sí), así que con dos personas `maybeSingle`
+    // fallaba con "multiple rows returned" y la despensa dejaba de cargar.
+    .eq('user_id', user.id)
     .eq('status', 'active')
     .maybeSingle()
   if (membershipError) failure(membershipError)

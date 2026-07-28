@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 
 import { captureLink, createRecipe, loadSeed } from './actions'
 import { RecipesList } from './RecipesList'
@@ -21,23 +21,9 @@ export function RecipesLibrary({
   const [pending, setPending] = useState(false)
   const refresh = useCallback(() => router.refresh(), [router])
 
-  useEffect(() => {
-    if (isVisualFixture) return
-    const client = createSupabaseBrowserClient()
-    const channel = client
-      .channel('recipes-refresh')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'recipes' },
-        refresh,
-      )
-      .subscribe((state) => {
-        if (state === 'SUBSCRIBED') refresh()
-      })
-    return () => {
-      void client.removeChannel(channel)
-    }
-  }, [isVisualFixture, refresh])
+  useRealtimeRefresh('recipes-refresh', ['recipes'], {
+    enabled: !isVisualFixture,
+  })
 
   // Crear/capturar lleva directo al editor R2 para seguir completando la receta.
   async function run(

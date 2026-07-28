@@ -8,9 +8,12 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 import {
   adminClient,
   baseUrl as resolveBaseUrl,
+  createSyntheticAccount,
   deleteSyntheticUser,
-  loginViaMagicLink,
+  loginWithPassword,
 } from './support/auth'
+
+const password = 'Synthetic-Pw-Actions1'
 
 function uniqueEmail(zone: string): string {
   return `accion-${zone}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.test`
@@ -112,12 +115,15 @@ async function createRecipe(
   await page.waitForURL(/\/recetas\/[0-9a-f-]+$/)
 }
 
-/** Añade un producto por presencia desde `/despensa` (formulario propio del componente). */
+/** Añade un producto desde `/despensa` (formulario propio del componente; unidades por defecto). */
 async function addPantryItem(page: Page, name: string, zoneLabel?: string) {
   await page.getByRole('button', { name: '+ Añadir producto' }).click()
   await page.getByRole('textbox', { name: 'Producto' }).fill(name)
   if (zoneLabel) await page.getByRole('button', { name: zoneLabel }).click()
   await page.getByRole('button', { name: 'Añadir a despensa' }).click()
+  // El panel se cierra al confirmarse el alta: esperarlo evita que una alta
+  // consecutiva reabra el mismo formulario mientras esta sigue en curso.
+  await expect(page.getByRole('textbox', { name: 'Producto' })).toBeHidden()
 }
 
 test.describe('pantry', () => {
@@ -130,7 +136,8 @@ test.describe('pantry', () => {
   test.beforeEach(async ({ browser }) => {
     email = uniqueEmail('pantry')
     context = await browser.newContext()
-    page = await loginViaMagicLink(context, resolveBaseUrl(), email)
+    await createSyntheticAccount(admin, email, password)
+    page = await loginWithPassword(context, resolveBaseUrl(), email, password)
     await completeEmptyOnboarding(page)
     await page.goto(`${resolveBaseUrl()}/despensa`)
   })
@@ -140,13 +147,19 @@ test.describe('pantry', () => {
     await deleteSyntheticUser(admin, email)
   })
 
-  test('añade un producto por presencia en la zona elegida, sin cantidades', async () => {
+  test('añade un producto en la zona elegida con la cantidad por defecto', async () => {
     await expect(page.getByRole('heading', { name: 'Despensa' })).toBeVisible()
-    await addPantryItem(page, 'Tomates', 'Frigorífico')
+    await page.getByRole('button', { name: '+ Añadir producto' }).click()
+    // El alta siempre es en unidades desde esta fase: el campo Cantidad ya
+    // trae "1" por defecto y no hace falta tocarlo para dar de alta.
+    await expect(page.getByLabel('Cantidad')).toHaveValue('1')
+    await page.getByRole('textbox', { name: 'Producto' }).fill('Tomates')
+    await page.getByRole('button', { name: 'Frigorífico' }).click()
+    await page.getByRole('button', { name: 'Añadir a despensa' }).click()
+    await expect(page.getByRole('textbox', { name: 'Producto' })).toBeHidden()
     await expect(
       page.getByRole('button', { name: 'Marcar Tomates como terminado' }),
     ).toBeVisible()
-    // La alta por presencia no pide cantidad: el formulario nunca la ofrece.
     const fridge = page.getByRole('region', { name: 'Inventario: Frigorífico' })
     await expect(fridge.getByText('Tomates')).toBeVisible()
     await page.reload()
@@ -210,7 +223,8 @@ test.describe('shopping', () => {
   test.beforeEach(async ({ browser }) => {
     email = uniqueEmail('shopping')
     context = await browser.newContext()
-    page = await loginViaMagicLink(context, resolveBaseUrl(), email)
+    await createSyntheticAccount(admin, email, password)
+    page = await loginWithPassword(context, resolveBaseUrl(), email, password)
     await completeEmptyOnboarding(page)
     await page.goto(`${resolveBaseUrl()}/compra`)
   })
@@ -235,6 +249,18 @@ test.describe('shopping', () => {
     await expect(page.getByRole('checkbox', { name: 'Pan' })).not.toBeChecked()
     await page.reload()
     await expect(page.getByRole('checkbox', { name: 'Pan' })).not.toBeChecked()
+  })
+
+  test('eliminar un producto lo quita de la lista y persiste tras recargar', async () => {
+    await page.getByLabel('Añadir a la compra').fill('Miel')
+    await page.getByRole('button', { name: 'Añadir' }).click()
+    await expect(page.getByRole('checkbox', { name: 'Miel' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Eliminar Miel' }).click()
+    await expect(page.getByRole('checkbox', { name: 'Miel' })).toHaveCount(0)
+
+    await page.reload()
+    await expect(page.getByRole('checkbox', { name: 'Miel' })).toHaveCount(0)
   })
 
   test('revisar la compra conserva las marcas al volver y confirma una sola vez', async () => {
@@ -316,7 +342,8 @@ test.describe('recipes', () => {
     email = uniqueEmail('recipes')
     base = resolveBaseUrl()
     context = await browser.newContext()
-    page = await loginViaMagicLink(context, base, email)
+    await createSyntheticAccount(admin, email, password)
+    page = await loginWithPassword(context, base, email, password)
     await completeEmptyOnboarding(page)
     await page.goto(`${base}/recetas`)
   })
@@ -475,7 +502,8 @@ test.describe('plan', () => {
     email = uniqueEmail('plan')
     base = resolveBaseUrl()
     context = await browser.newContext()
-    page = await loginViaMagicLink(context, base, email)
+    await createSyntheticAccount(admin, email, password)
+    page = await loginWithPassword(context, base, email, password)
     await completeEmptyOnboarding(page)
     await page.goto(`${base}/plan`)
   })
@@ -495,7 +523,6 @@ test.describe('plan', () => {
       page.getByRole('heading', { name: '¿Qué quieres comer?' }),
     ).toBeVisible()
     await page.getByLabel('Buscar una receta').fill(title)
-    await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: title }).click()
     await page.waitForURL(/\/plan\?semana=/)
     await expect(page.getByRole('link', { name: title })).toBeVisible()
@@ -511,7 +538,6 @@ test.describe('plan', () => {
     const fecha = slotUrl.searchParams.get('fecha')!
     const servicio = slotUrl.searchParams.get('servicio') as 'lunch' | 'dinner'
     await page.getByLabel('Buscar una receta').fill(title)
-    await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: title }).click()
     await page.waitForURL(/\/plan\?semana=/)
 
@@ -524,7 +550,7 @@ test.describe('plan', () => {
     await expect(page.getByRole('link', { name: title })).toBeVisible()
   })
 
-  test('cambiar receta, ajustar raciones, mover, eliminar y deshacer solo tocan el hueco objetivo', async () => {
+  test('cambiar receta, mover, eliminar y deshacer solo tocan el hueco objetivo', async () => {
     const titleA = `Plan A ${Date.now()}`
     const titleB = `Plan B ${Date.now()}`
     const titleC = `Plan C ${Date.now()}`
@@ -539,7 +565,6 @@ test.describe('plan', () => {
       const servicio = slotUrl.searchParams.get('servicio') as
         'lunch' | 'dinner'
       await page.getByLabel('Buscar una receta').fill(title)
-      await page.getByRole('button', { name: 'Buscar' }).click()
       await page.getByRole('button', { name: title }).click()
       await page.waitForURL(/\/plan\?semana=/)
       return { fecha, servicio }
@@ -551,18 +576,21 @@ test.describe('plan', () => {
     const label1 = slotLabelOf(slot1.fecha, slot1.servicio)
     const label2 = slotLabelOf(slot2.fecha, slot2.servicio)
     const menu1 = () =>
+      page.locator('.plan-menu').filter({
+        has: page.locator(`summary[aria-label="Opciones de ${label1}"]`),
+      })
+    // Toda receta se planifica siempre a 2 raciones, así que el texto por sí
+    // solo no distingue huecos: hay que acotarlo al bloque de la receta elegida.
+    const slotOf = (title: string) =>
       page
-        .locator('.plan-menu')
-        .filter({
-          has: page.locator(`summary[aria-label="Opciones de ${label1}"]`),
-        })
+        .locator('.plan-slot__recipe')
+        .filter({ has: page.getByRole('link', { name: title }) })
 
     // Cambiar receta: solo afecta al hueco 1; el hueco 2 permanece intacto.
     await page.locator(`summary[aria-label="Opciones de ${label1}"]`).click()
     await menu1().getByRole('link', { name: 'Cambiar receta' }).click()
     await page.waitForURL(/\/plan\/elegir/)
     await page.getByLabel('Buscar una receta').fill(titleC)
-    await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: titleC }).click()
     await page.waitForURL(/\/plan\?semana=/)
     await expect(page.getByRole('link', { name: titleC })).toBeVisible()
@@ -570,15 +598,6 @@ test.describe('plan', () => {
     await expect(
       page.locator(`summary[aria-label="Opciones de ${label2}"]`),
     ).toBeVisible()
-
-    // Ajustar raciones: persiste tras recargar.
-    await page.locator(`summary[aria-label="Opciones de ${label1}"]`).click()
-    await menu1().getByLabel('Ajustar raciones').fill('4')
-    await menu1().getByRole('button', { name: 'Guardar' }).click()
-    await page.waitForURL(/\/plan\?semana=/)
-    await expect(page.getByText('4 raciones')).toBeVisible()
-    await page.reload()
-    await expect(page.getByText('4 raciones')).toBeVisible()
 
     // Mover a otro día: el origen queda vacío y el destino conserva la comida.
     const movedFecha = addDaysIso(slot1.fecha, 2)
@@ -591,23 +610,22 @@ test.describe('plan', () => {
     ).toHaveCount(0)
     const labelMoved = slotLabelOf(movedFecha, slot1.servicio)
     const menuMoved = () =>
-      page
-        .locator('.plan-menu')
-        .filter({
-          has: page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
-        })
+      page.locator('.plan-menu').filter({
+        has: page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
+      })
     await expect(
       page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
     ).toBeVisible()
     await expect(page.getByRole('link', { name: titleC })).toBeVisible()
-    await expect(page.getByText('4 raciones')).toBeVisible()
+    await expect(slotOf(titleC).getByText('2 raciones')).toBeVisible()
 
     // Eliminar y deshacer: restaura la misma receta y raciones en el mismo hueco.
     await page
       .locator(`summary[aria-label="Opciones de ${labelMoved}"]`)
       .click()
-    await menuMoved().getByRole('button', { name: 'Eliminar' }).click()
-    await menuMoved().getByRole('button', { name: 'Sí, eliminar' }).click()
+    await menuMoved()
+      .getByRole('button', { name: 'Quitar de este hueco' })
+      .click()
     await page.waitForURL(/\/plan\?semana=.*deshacer=/)
     const toast = page.getByRole('status')
     await expect(toast).toContainText(`Hemos quitado ${labelMoved}.`)
@@ -617,7 +635,7 @@ test.describe('plan', () => {
       page.locator(`summary[aria-label="Opciones de ${labelMoved}"]`),
     ).toBeVisible()
     await expect(page.getByRole('link', { name: titleC })).toBeVisible()
-    await expect(page.getByText('4 raciones')).toBeVisible()
+    await expect(slotOf(titleC).getByText('2 raciones')).toBeVisible()
   })
 
   test('cocinar con revisión solo descuenta en Despensa los productos que quedan marcados', async () => {
@@ -634,7 +652,6 @@ test.describe('plan', () => {
     const fecha = slotUrl.searchParams.get('fecha')!
     const servicio = slotUrl.searchParams.get('servicio') as 'lunch' | 'dinner'
     await page.getByLabel('Buscar una receta').fill(title)
-    await page.getByRole('button', { name: 'Buscar' }).click()
     await page.getByRole('button', { name: title }).click()
     await page.waitForURL(/\/plan\?semana=/)
 

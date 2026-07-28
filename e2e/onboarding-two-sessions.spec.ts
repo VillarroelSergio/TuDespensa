@@ -1,7 +1,12 @@
 /**
  * Real two-session E2E against the local stack: `npx supabase start` + `npm run dev`.
- * Auth uses the actual UI flow — magic link captured from Mailpit (port 55324) —
- * so middleware cookies, the PKCE callback and Realtime are all exercised.
+ * This is the SAME account opened in two separate browser contexts — it
+ * validates that a session stays stable and converges across different
+ * devices/browsers, not that two distinct accounts can share a household
+ * (that requirement is covered by `pilot-invitation.spec.ts`). Auth uses
+ * password sign-in installed via `/auth/callback`, so middleware cookies and
+ * Realtime are still exercised end-to-end; there is no magic link or mailbox
+ * involved.
  * Requires local Supabase credentials in `.env.local` (or equivalent process env).
  * `SUPABASE_SERVICE_ROLE_KEY` is used only to delete the synthetic local user.
  * Run with: npm run test:e2e
@@ -11,7 +16,7 @@ import {
   adminClient,
   baseUrl as resolveBaseUrl,
   deleteSyntheticUser,
-  loginViaMagicLink,
+  loginWithPassword,
 } from './support/auth'
 
 test('two sessions converge during onboarding (auth + RLS + Realtime)', async ({
@@ -21,12 +26,13 @@ test('two sessions converge during onboarding (auth + RLS + Realtime)', async ({
   const baseUrl = resolveBaseUrl()
   const admin = adminClient()
   const email = `onboarding-${Date.now()}@example.test`
+  const password = 'e2e-synthetic-pw-1'
 
   const first = await browser.newContext()
   const second = await browser.newContext()
   try {
     // Session A: real login, create household, add a first item.
-    const pageA = await loginViaMagicLink(first, baseUrl, email)
+    const pageA = await loginWithPassword(first, baseUrl, email, password)
     await pageA.getByRole('button', { name: 'Preparar mi despensa' }).click()
     await expect(
       pageA.getByRole('heading', { name: 'Frigorífico' }),
@@ -38,7 +44,7 @@ test('two sessions converge during onboarding (auth + RLS + Realtime)', async ({
     ).toBeVisible()
 
     // Session B (same account, separate browser context): server snapshot resumes progress.
-    const pageB = await loginViaMagicLink(second, baseUrl, email)
+    const pageB = await loginWithPassword(second, baseUrl, email, password)
     await expect(
       pageB.getByRole('heading', { name: 'Frigorífico' }),
     ).toBeVisible()
