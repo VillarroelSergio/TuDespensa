@@ -21,9 +21,9 @@ vi.mock('./actions', () => ({
   correctPantryItem: vi
     .fn()
     .mockResolvedValue({ item_id: 'tomatoes', version: 2, presence: false }),
+  deletePantryItem: vi.fn(),
   markPantryLow: vi.fn(),
   recordPantryEntry: vi.fn(),
-  removeFinishedPantryItem: vi.fn(),
 }))
 vi.mock('@/modules/shopping/actions', () => ({
   addShoppingItem: vi.fn().mockResolvedValue({ item_id: 's1', version: 1 }),

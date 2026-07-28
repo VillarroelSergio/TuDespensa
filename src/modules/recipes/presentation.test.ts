@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
+import { buildCatalogEntries } from '@/modules/plan/suggestions'
+
 import {
   dishTypeLabel,
   filterRecipes,
   formatIngredient,
+  ingredientAvailability,
   timeLabel,
 } from './presentation'
 import type { Recipe } from './types'
@@ -53,43 +56,37 @@ describe('recipes presentation', () => {
 
   it('filters by favorite and by category', () => {
     const rows = [
-      recipe({
-        id: 'a',
-        title: 'Arroz',
-        isFavorite: true,
-        categories: ['Mediterránea'],
-      }),
-      recipe({
-        id: 'b',
-        title: 'Bizcocho',
-        isFavorite: false,
-        categories: ['Postre'],
-      }),
+      recipe({ id: 'a', title: 'Arroz', isFavorite: true, categories: ['Mediterranea'] }),
+      recipe({ id: 'b', title: 'Bizcocho', isFavorite: false, categories: ['Postre'] }),
     ]
-    expect(
-      filterRecipes(rows, '', { favoritesOnly: true }).map((row) => row.id),
-    ).toEqual(['a'])
-    expect(
-      filterRecipes(rows, '', { category: 'Postre' }).map((row) => row.id),
-    ).toEqual(['b'])
+    expect(filterRecipes(rows, '', { favoritesOnly: true }).map((row) => row.id)).toEqual(['a'])
+    expect(filterRecipes(rows, '', { category: 'Postre' }).map((row) => row.id)).toEqual(['b'])
   })
 
-  it('formats an ingredient with and without amount', () => {
+  it('ingredientAvailability empareja por catálogo cuando el texto no se parece', () => {
+    const catalog = buildCatalogEntries([
+      { canonicalName: 'Pan', terms: ['Pan'] },
+    ])
     expect(
-      formatIngredient({
-        position: 0,
-        name: 'Harina',
-        quantity: 200,
-        unitCode: 'g',
-      }),
-    ).toBe('200 g · Harina')
+      ingredientAvailability(
+        'pan del día anterior',
+        [{ name: 'Pan', status: 'available' }],
+        catalog,
+      ),
+    ).toBe('owned')
     expect(
-      formatIngredient({
-        position: 1,
-        name: 'Sal',
-        quantity: null,
-        unitCode: null,
-      }),
+      ingredientAvailability('pan del día anterior', [
+        { name: 'Pan', status: 'out' },
+      ]),
+    ).toBe('missing')
+  })
+
+  it('formats ingredient amounts as canonical units', () => {
+    expect(
+      formatIngredient({ position: 0, name: 'Harina', quantity: 200, unitCode: 'g' }),
+    ).toBe('0.2 uds. · Harina')
+    expect(
+      formatIngredient({ position: 1, name: 'Sal', quantity: null, unitCode: null }),
     ).toBe('Sal')
   })
 })

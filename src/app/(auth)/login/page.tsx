@@ -9,46 +9,69 @@ import {
   isDevelopmentAuthBypassEnabled,
 } from '@/lib/auth/development-mode'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import {
+  registerAccount,
+  type RegistrationResult,
+} from '@/modules/auth/registration'
 
 const DEV_ACCOUNT_EMAIL = 'admin@midespensa.local'
 const DEV_ACCOUNT_PASSWORD = 'admin'
 
+type RegistrationFailureReason = Extract<
+  RegistrationResult,
+  { ok: false }
+>['reason']
+
+const REGISTRATION_ERROR_MESSAGES: Record<RegistrationFailureReason, string> = {
+  code_required:
+    'Necesitas un código de invitación. Pídeselo a la persona que ya usa MiDespensa.',
+  code_invalid:
+    'Ese código no es válido o ha caducado. Pídele uno nuevo a la otra persona.',
+  email_taken:
+    'Ya existe una cuenta con ese correo. Entra con tu contraseña; si te han invitado, podrás escribir el código justo después.',
+  invalid_input: 'Revisa el correo y usa una contraseña de ocho caracteres o más.',
+  unexpected: 'No hemos podido crear la cuenta. Inténtalo de nuevo.',
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
+  const [mode, setMode] = useState<'login' | 'register'>('login')
   const [message, setMessage] = useState('')
-  const isDevelopmentBypassEnabled = isDevelopmentAuthBypassEnabled(
+  const [pending, setPending] = useState(false)
+  const bypass = isDevelopmentAuthBypassEnabled(
     process.env.NODE_ENV,
     process.env.NEXT_PUBLIC_E2E_AUTH_ENABLED,
     process.env.NEXT_PUBLIC_DEV_AUTH_ENABLED,
   )
-  const isDevelopmentAccount = isDevelopmentAccountEnabled(
+  const devAccount = isDevelopmentAccountEnabled(
     process.env.NODE_ENV,
     process.env.NEXT_PUBLIC_DEV_AUTH_ENABLED,
   )
+  const localMode = bypass || devAccount
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
-    if (isDevelopmentBypassEnabled) {
+    if (bypass) {
       router.replace('/despensa')
       return
     }
 
-    if (isDevelopmentAccount) {
+    const client = createSupabaseBrowserClient()
+
+    if (devAccount) {
       if (email.trim().toLowerCase() !== 'admin') {
         setMessage('Para el entorno local usa el identificador admin.')
         return
       }
-      const { error } = await createSupabaseBrowserClient().auth.signInWithPassword(
-        {
-          email: DEV_ACCOUNT_EMAIL,
-          password: DEV_ACCOUNT_PASSWORD,
-        },
-      )
+      const { error } = await client.auth.signInWithPassword({
+        email: DEV_ACCOUNT_EMAIL,
+        password: DEV_ACCOUNT_PASSWORD,
+      })
       if (error) {
-        setMessage(
-          'No se encuentra la cuenta local. Ejecuta npm run dev:reset una vez.',
-        )
+        setMessage('No se encuentra la cuenta local. Ejecuta npm run dev:reset una vez.')
         return
       }
       router.replace('/despensa')
@@ -56,46 +79,119 @@ export default function LoginPage() {
       return
     }
 
-    const { error } = await createSupabaseBrowserClient().auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${location.origin}/auth/callback` },
-    })
-    setMessage(
-      error
-        ? 'No hemos podido enviar el acceso. Inténtalo de nuevo.'
-        : 'Revisa tu correo para continuar.',
-    )
+    if (mode === 'register') {
+      setPending(true)
+      try {
+        const result = await registerAccount({
+          email,
+          password,
+          code: code.trim() || undefined,
+        })
+        if (!result.ok) {
+          setMessage(REGISTRATION_ERROR_MESSAGES[result.reason])
+          return
+        }
+        const { error } = await client.auth.signInWithPassword({ email, password })
+        if (error) {
+          setMessage('El correo o la contraseña no son correctos.')
+          return
+        }
+        router.replace('/despensa')
+        router.refresh()
+      } finally {
+        setPending(false)
+      }
+      return
+    }
+
+    const { error } = await client.auth.signInWithPassword({ email, password })
+    if (error) {
+      setMessage('El correo o la contraseña no son correctos.')
+      return
+    }
+    router.replace('/despensa')
+    router.refresh()
   }
 
-  const localMode = isDevelopmentBypassEnabled || isDevelopmentAccount
+  const title = localMode
+    ? 'Acceso de desarrollo'
+    : mode === 'register'
+      ? 'Crea tu cuenta'
+      : 'Acceso privado'
 
   return (
     <main className="auth-main">
       <section className="onboarding-card">
         <BrandLockup className="brand brand--welcome" href="/" />
-        <h1>{localMode ? 'Acceso de desarrollo' : 'Acceso privado'}</h1>
+        <h1>{title}</h1>
         <p>
-          {isDevelopmentBypassEnabled
-            ? 'Escribe cualquier valor para abrir la interfaz local. La autenticación real sigue activa en producción.'
-            : isDevelopmentAccount
-              ? 'Escribe admin para abrir la cuenta local con datos sintéticos persistentes. Solo existe en desarrollo.'
-              : 'Esta aplicación es solo para las cuentas autorizadas del hogar.'}
+          {bypass
+            ? 'Escribe cualquier valor para abrir la interfaz local.'
+            : devAccount
+              ? 'Escribe admin para abrir la cuenta local con datos sintéticos.'
+              : 'Entra con tu correo y contraseña.'}
         </p>
         <form onSubmit={submit}>
-          <label htmlFor="email">
-            {localMode ? 'Identificador de prueba' : 'Correo autorizado'}
-          </label>
+          <label htmlFor="email">{localMode ? 'Identificador de prueba' : 'Correo'}</label>
           <input
             id="email"
             type={localMode ? 'text' : 'email'}
+            autoComplete="email"
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-          <button className="primary-button">
-            {localMode ? 'Entrar en desarrollo' : 'Enviar enlace de acceso'}
+          {!localMode ? (
+            <>
+              <label htmlFor="password">Contraseña</label>
+              <input
+                id="password"
+                type="password"
+                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                minLength={8}
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </>
+          ) : null}
+          {!localMode && mode === 'register' ? (
+            <>
+              <label htmlFor="invitation-code">Código de invitación</label>
+              <input
+                id="invitation-code"
+                type="text"
+                autoComplete="off"
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+              />
+              <p>Si eres la primera persona que usa MiDespensa, déjalo vacío.</p>
+            </>
+          ) : null}
+          <button className="primary-button" disabled={pending}>
+            {localMode ? 'Entrar en desarrollo' : mode === 'register' ? 'Crear cuenta' : 'Entrar'}
           </button>
         </form>
+        {!localMode ? (
+          <p className="auth-links">
+            {mode === 'register' ? (
+              <button className="text-action" onClick={() => setMode('login')}>
+                Ya tengo cuenta
+              </button>
+            ) : (
+              <button className="text-action" onClick={() => setMode('register')}>
+                Crear cuenta
+              </button>
+            )}
+          </p>
+        ) : null}
+        {!localMode && mode === 'login' ? (
+          <p>
+            ¿Has olvidado la contraseña? Durante el piloto todavía no podemos
+            enviarte un correo para recuperarla. Pídele a la otra persona del
+            hogar que te ayude desde la pantalla Hogar.
+          </p>
+        ) : null}
         <p aria-live="polite">{message}</p>
       </section>
     </main>

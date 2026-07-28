@@ -3,18 +3,25 @@
 import { useState } from 'react'
 
 import { PANTRY_ZONE_META, PANTRY_ZONE_ORDER } from './presentation'
-import type { PantryZone } from './types'
+import type { PresentedPantryItem } from './presentation'
+import type {
+  PantryApproximateState,
+  PantryTrackingMode,
+  PantryUnitCode,
+  PantryZone,
+} from './types'
 
 type EntryInput = {
   zone: PantryZone
   foodName: string
-  trackingMode: 'approximate'
-  approximateState: 'some'
-  quantity: null
-  unitCode: null
+  trackingMode: PantryTrackingMode
+  approximateState: PantryApproximateState | null
+  quantity: number | null
+  unitCode: PantryUnitCode | null
 }
 
 type Props = {
+  item?: PresentedPantryItem
   onClose: () => void
   onSave: (input: EntryInput) => Promise<void>
 }
@@ -24,25 +31,43 @@ const zoneOptions = PANTRY_ZONE_ORDER.map((value) => ({
   label: PANTRY_ZONE_META[value].label,
 }))
 
-/** Añadir ya significa que el producto está disponible en casa. */
-export function PantryEntryForm({ onClose, onSave }: Props) {
-  const [zone, setZone] = useState<PantryZone>('pantry')
-  const [foodName, setFoodName] = useState('')
+const unitLabels: Record<PantryUnitCode, string> = {
+  unit: 'unidades',
+  g: 'g',
+  kg: 'kg',
+  ml: 'ml',
+  l: 'l',
+}
+
+/**
+ * Al dar de alta un producto, la despensa se mide únicamente en unidades.
+ * Al editar uno existente, se conserva su modo de seguimiento (unidades,
+ * medida o aproximado) — solo nombre, zona y cantidad son editables aquí.
+ */
+export function PantryEntryForm({ item, onClose, onSave }: Props) {
+  const [zone, setZone] = useState<PantryZone>(item?.zone ?? 'pantry')
+  const [foodName, setFoodName] = useState(item?.name ?? '')
+  const [quantity, setQuantity] = useState(String(item?.quantity ?? 1))
   const [pending, setPending] = useState(false)
+  const trackingMode = item?.trackingMode ?? 'units'
+  const hasQuantity = trackingMode !== 'approximate'
+  const exactQuantity = Number(quantity)
+  const hasValidQuantity =
+    !hasQuantity || (Number.isFinite(exactQuantity) && exactQuantity > 0)
 
   async function save() {
     const name = foodName.trim()
-    if (!name) return
+    if (!name || !hasValidQuantity) return
 
     setPending(true)
     try {
       await onSave({
         zone,
         foodName: name,
-        trackingMode: 'approximate',
-        approximateState: 'some',
-        quantity: null,
-        unitCode: null,
+        trackingMode,
+        approximateState: item?.approximateState ?? null,
+        quantity: hasQuantity ? exactQuantity : null,
+        unitCode: hasQuantity ? (item?.unitCode ?? 'unit') : null,
       })
     } finally {
       setPending(false)
@@ -55,12 +80,15 @@ export function PantryEntryForm({ onClose, onSave }: Props) {
         ← Volver
       </button>
       <div className="pantry-detail__title">
-        <h2 id="pantry-entry-title">Añadir producto</h2>
+        <h2 id="pantry-entry-title">
+          {item ? 'Editar producto' : 'Añadir producto'}
+        </h2>
       </div>
       <label className="pantry-detail__field" htmlFor="pantry-entry-name">
         Producto
         <input
           autoFocus
+          disabled={pending}
           id="pantry-entry-name"
           maxLength={120}
           onChange={(event) => setFoodName(event.target.value)}
@@ -75,6 +103,7 @@ export function PantryEntryForm({ onClose, onSave }: Props) {
           {zoneOptions.map((option) => (
             <button
               className={zone === option.value ? 'is-selected' : undefined}
+              disabled={pending}
               key={option.value}
               onClick={() => setZone(option.value)}
               type="button"
@@ -88,13 +117,45 @@ export function PantryEntryForm({ onClose, onSave }: Props) {
           ))}
         </div>
       </section>
+      {hasQuantity ? (
+        <section className="pantry-detail__section">
+          <h3>Unidades</h3>
+          <div className="pantry-detail__exact-fields">
+            <label
+              className="pantry-detail__field"
+              htmlFor="pantry-entry-quantity"
+            >
+              Cantidad
+              <input
+                disabled={pending}
+                id="pantry-entry-quantity"
+                inputMode="decimal"
+                min="0.001"
+                onChange={(event) => setQuantity(event.target.value)}
+                step="any"
+                type="number"
+                value={quantity}
+              />
+            </label>
+            <p className="pantry-detail__exact-unit">
+              {unitLabels[item?.unitCode ?? 'unit']}
+            </p>
+          </div>
+        </section>
+      ) : null}
       <button
         className="pantry-detail__save"
-        disabled={pending || !foodName.trim()}
+        disabled={pending || !foodName.trim() || !hasValidQuantity}
         onClick={() => void save()}
         type="button"
       >
-        {pending ? 'Añadiendo…' : 'Añadir a despensa'}
+        {pending
+          ? item
+            ? 'Guardando…'
+            : 'Añadiendo…'
+          : item
+            ? 'Guardar cambios'
+            : 'Añadir a despensa'}
       </button>
     </aside>
   )

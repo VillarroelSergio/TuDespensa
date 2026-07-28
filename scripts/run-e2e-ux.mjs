@@ -2,10 +2,16 @@ import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import nextEnv from '@next/env'
 
+import { freeE2EPort } from './free-e2e-port.mjs'
+
 const projectRoot = fileURLToPath(new URL('../', import.meta.url))
+// NODE_ENV=test makes Next.js skip .env.local (Vercel's remote project
+// credentials) and read .env.test.local (local Supabase) instead.
+process.env.NODE_ENV = 'test'
 nextEnv.loadEnvConfig(projectRoot)
 
 const port = Number(process.env.E2E_PORT ?? 3002)
+freeE2EPort(port)
 const baseUrl = `http://127.0.0.1:${port}`
 
 async function applicationIsReady() {

@@ -397,6 +397,20 @@ footer {
   background: #fff;
   overflow: hidden;
 }
+.pantry-zone__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+.pantry-zone__count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
 .pantry-list__priority h2 {
   min-height: 32px;
   display: flex;
@@ -439,6 +453,10 @@ footer {
 .pantry-row:hover {
   background: var(--surface-2);
 }
+.pantry-row__detail--button {
+  font: inherit;
+  cursor: pointer;
+}
 .pantry-row__dot {
   width: 0.625rem;
   height: 0.625rem;
@@ -472,7 +490,7 @@ footer {
   font-weight: 700;
 }
 .pantry-quick-action {
-  min-height: 36px;
+  min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
   background: #fff;
@@ -595,7 +613,9 @@ footer {
   background: #fff;
 }
 .pantry-detail__back {
-  min-height: 24px;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   width: fit-content;
   border: 0;
   background: transparent;
@@ -644,7 +664,7 @@ footer {
   gap: 0.5rem;
 }
 .pantry-detail__chips button {
-  min-height: 36px;
+  min-height: 44px;
   border: 0;
   border-radius: 999px;
   background: var(--surface-2);
@@ -796,6 +816,20 @@ footer {
   cursor: not-allowed;
   opacity: 0.55;
 }
+.shopping-select-all {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  color: var(--ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.shopping-select-all input {
+  width: 1.125rem;
+  min-height: 1.125rem;
+  accent-color: var(--primary);
+}
 .shopping-list {
   margin-top: 1rem;
   overflow: hidden;
@@ -804,7 +838,7 @@ footer {
 }
 .shopping-row {
   display: grid;
-  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   min-height: 56px;
   align-items: center;
   gap: 0.75rem;
@@ -816,10 +850,43 @@ footer {
 .shopping-row:last-child {
   border-bottom: 0;
 }
+.shopping-row__label {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
 .shopping-row input {
   width: 1.125rem;
   min-height: 1.125rem;
   accent-color: var(--primary);
+}
+.shopping-row__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  min-height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-2);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.shopping-row__delete:hover:not(:disabled) {
+  background: var(--border);
+  color: var(--ink);
+}
+.shopping-row__delete:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.shopping-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 .shopping-row small {
   color: var(--muted-2);
@@ -854,7 +921,9 @@ footer {
   font-variant-numeric: tabular-nums;
 }
 .shopping-back {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   margin-bottom: 0.5rem;
   color: var(--primary);
   font-size: 0.8125rem;
@@ -871,6 +940,32 @@ footer {
   height: 1.125rem;
   border-radius: 999px;
   background: #33b266;
+}
+.shopping-checkout-quantity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.shopping-checkout-quantity input {
+  width: 4.5rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0 0.5rem;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: right;
+}
+@media (max-width: 600px) {
+  .shopping-checkout-quantity {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
 }
 .shopping-confirm {
   display: inline-flex;
@@ -904,7 +999,7 @@ footer {
   color: var(--primary);
   font-weight: 700;
 }
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .pantry-page {
     display: block;
     padding-bottom: 4.5rem;
@@ -931,12 +1026,36 @@ footer {
     min-height: 0;
     padding: 1.25rem;
   }
+  .pantry-row {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+    padding: 0.625rem 1rem;
+  }
   .pantry-row__detail {
     grid-template-columns: 0.625rem minmax(0, 1fr) auto;
+    flex: 1 1 100%;
   }
   .pantry-row__status {
     grid-column: 2 / -1;
     margin-top: -0.5rem;
+  }
+  .pantry-stepper,
+  .pantry-quick-action,
+  .shopping-row__delete {
+    flex-shrink: 0;
+  }
+  .pantry-stepper button,
+  .shopping-row__delete {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* ponytail: !important gana a los selectores de clase de cada formulario
+     (.recipe-editor, .cook-row__field, etc.) sin tocarlos uno a uno; por
+     debajo de 16px, iOS/Android hacen zoom automático al enfocar el campo. */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
   }
   .pantry-bottom-nav {
     position: fixed;
@@ -988,7 +1107,7 @@ footer {
   }
 }
 .recipes-add-cta {
-  min-height: 40px;
+  min-height: 44px;
   border: 0;
   border-radius: 0.5rem;
   background: var(--primary);
@@ -1029,7 +1148,7 @@ footer {
   gap: 0.5rem;
 }
 .recipes-form__row button {
-  min-height: 40px;
+  min-height: 44px;
   border: 0;
   border-radius: 0.5rem;
   background: var(--primary);
@@ -1091,7 +1210,7 @@ footer {
   margin-top: 0;
 }
 .recipes-add .recipes-form button {
-  min-height: 40px;
+  min-height: 44px;
   border: 0;
   border-radius: 0.5rem;
   background: var(--primary);
@@ -1266,6 +1385,36 @@ footer {
   padding-left: 1.25rem;
   font-size: 0.9375rem;
 }
+.recipe-detail__ingredients {
+  padding-left: 0;
+  list-style: none;
+}
+.recipe-detail__ingredient {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.recipe-detail__ingredient-text {
+  flex: 1;
+}
+.recipe-ingredient-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--success);
+}
+.recipe-ingredient-dot--low {
+  background: var(--warning);
+}
+.recipe-ingredient-dot--missing {
+  background: #e54033;
+}
+.recipe-ingredient-owned {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
 .recipe-pending,
 .recipe-source {
   margin: 0;
@@ -1287,7 +1436,7 @@ footer {
   margin-top: 0.75rem;
 }
 .recipes-filter {
-  min-height: 36px;
+  min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: #fff;
@@ -1322,6 +1471,17 @@ footer {
 .recipes-seed:disabled {
   cursor: wait;
   opacity: 0.6;
+}
+.recipes-show-more {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: #fff;
+  color: var(--primary-strong);
+  font-weight: 700;
 }
 .recipe-preferences {
   display: flex;
@@ -1401,8 +1561,8 @@ footer {
   gap: 0.5rem;
 }
 .plan-weeknav__step {
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1492,7 +1652,7 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
+  min-height: 44px;
   border: 1px dashed var(--primary-soft-border);
   border-radius: 0.375rem;
   background: #fff;
@@ -1535,6 +1695,13 @@ footer {
   border-top: 1px solid var(--border);
   padding-top: 0.5rem;
 }
+/* `display: grid` de arriba anula el ocultado nativo del navegador para el
+   contenido de un <details> cerrado (el origen "autor" siempre gana sobre el
+   agente de usuario, sea cual sea la especificidad): se fuerza aquí para que
+   el menú "Opciones" no quede visible ni interactuable sin abrirlo. */
+.plan-menu:not([open]) > .plan-menu__body {
+  display: none;
+}
 .plan-menu__body a {
   color: var(--primary);
   font-size: 0.75rem;
@@ -1568,18 +1735,7 @@ footer {
   font-size: 0.75rem;
   font-weight: 700;
 }
-.plan-menu__danger > summary {
-  cursor: pointer;
-  color: #b3261e;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-.plan-menu__danger p {
-  margin: 0.375rem 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-.plan-menu__danger button {
+.plan-menu__remove {
   min-height: 36px;
   width: 100%;
   border: 1px solid #b3261e;
@@ -1643,13 +1799,30 @@ footer {
   color: var(--muted);
   font-size: 0.8125rem;
 }
+.choose-suggestions--secondary {
+  margin-top: -0.125rem;
+}
+.choose-suggestion--secondary {
+  border-color: var(--border);
+  background: #fff;
+}
+.choose-suggestion--secondary .choose-suggestion__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.choose-suggestion--secondary .choose-suggestion__reason {
+  color: var(--muted);
+  font-weight: 500;
+}
 .choose-page {
   width: min(100%, 40rem);
   margin: 0 auto;
   padding: 1.5rem 1rem 4rem;
 }
 .choose-back {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--primary);
   font-size: 0.875rem;
   font-weight: 600;
@@ -2049,12 +2222,49 @@ a:focus-visible {
   background: var(--primary-soft);
   color: var(--primary-strong);
 }
+.sign-out {
+  color: var(--muted);
+}
+.sign-out .text-action {
+  min-height: 44px;
+}
+.sign-out p {
+  margin: 0.35rem 0 0;
+  color: var(--primary-strong);
+  font-size: 0.8rem;
+}
+.app-shell__sign-out {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.app-shell__sign-out-mobile {
+  display: none;
+}
+.onboarding-sign-out {
+  position: fixed;
+  z-index: 30;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+}
+.onboarding-sign-out .text-action {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgb(255 253 249 / 92%);
+  padding: 0.5rem 0.8rem;
+  box-shadow: var(--shadow);
+}
 .app-shell__nav-icon {
   display: grid;
-  width: 1.25rem;
+  width: 1.35rem;
+  height: 1.35rem;
   place-items: center;
-  font-size: 1rem;
-  font-weight: 700;
+  flex: 0 0 auto;
+}
+.app-shell__nav-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .app-shell__content {
   width: min(100%, 78rem);
@@ -2304,6 +2514,19 @@ a:focus-visible {
 .app-shell .choose-suggestion__reason {
   color: var(--primary-strong);
 }
+.app-shell .choose-suggestion--secondary {
+  min-height: auto;
+  padding: 0.75rem 0.9rem;
+  background: rgb(255 253 249 / 88%);
+  box-shadow: none;
+}
+.app-shell .choose-suggestion--secondary .choose-suggestion__title {
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.app-shell .choose-suggestion--secondary .choose-suggestion__reason {
+  color: var(--muted);
+}
 .app-shell .choose-search {
   margin-top: 0.5rem;
   padding: 1rem;
@@ -2435,31 +2658,56 @@ a:focus-visible {
     bottom: max(0.75rem, env(safe-area-inset-bottom));
     left: 0.75rem;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.2rem;
     border: 1px solid rgb(228 221 210 / 88%);
     border-radius: 1.15rem;
     background: rgb(255 253 249 / 88%);
-    padding: 0.35rem;
+    padding: 0.4rem;
     box-shadow: 0 0.9rem 2rem rgb(63 44 23 / 16%);
     backdrop-filter: blur(18px);
   }
+  .app-shell__sign-out-mobile {
+    position: fixed;
+    z-index: 21;
+    top: max(1rem, env(safe-area-inset-top));
+    right: max(1rem, env(safe-area-inset-right));
+    display: block;
+  }
+  .app-shell__sign-out-mobile .text-action {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgb(255 253 249 / 92%);
+    padding: 0.5rem 0.8rem;
+    box-shadow: var(--shadow);
+  }
   .app-shell__dock a {
     display: grid;
-    min-height: 52px;
+    min-width: 0;
+    min-height: 58px;
     place-items: center;
-    gap: 0.1rem;
+    gap: 0.25rem;
     border-radius: 0.85rem;
     color: var(--muted);
-    font-size: 0.67rem;
-    font-weight: 650;
+    font-size: 0.68rem;
+    font-weight: 700;
     text-decoration: none;
+    transition:
+      background 160ms var(--ease-out),
+      color 160ms var(--ease-out),
+      transform 120ms var(--ease-out);
   }
   .app-shell__dock a[aria-current='page'] {
     background: var(--primary-soft);
     color: var(--primary-strong);
   }
   .app-shell__dock .app-shell__nav-icon {
-    font-size: 1rem;
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+  .app-shell__dock a:focus-visible {
+    outline: 3px solid rgb(194 82 55 / 30%);
+    outline-offset: -3px;
   }
   .app-shell h1,
   .app-shell .shopping-header h1,
@@ -2497,4 +2745,143 @@ a:focus-visible {
   .app-shell *::after {
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Gestión del hogar e invitaciones */
+.household-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: 1rem 0;
+}
+.household-manager h1 {
+  margin: 0;
+}
+.household-people,
+.household-invitations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.household-invitations li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.household-invitations__actions {
+  display: flex;
+  gap: 1rem;
+}
+.household-people li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.household-access-role {
+  color: var(--muted);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+.household-access-you {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: #33b266;
+}
+.household-invite {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.household-invite-code {
+  display: grid;
+  gap: 0.4rem;
+  border: 1px dashed var(--primary-soft-border);
+  border-radius: var(--radius-lg);
+  background: var(--primary-soft);
+  padding: 1rem;
+}
+.household-invite-code__value {
+  margin: 0;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--primary-strong);
+  user-select: all;
+}
+.pantry-detail__exact-fields {
+  display: flex;
+  align-items: end;
+  gap: 0.75rem;
+}
+.pantry-detail__exact-fields .pantry-detail__field {
+  flex: 1;
+}
+.pantry-detail__exact-unit,
+.pantry-detail__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.household-security,
+.household-backup,
+.household-restore,
+.household-reset {
+  display: grid;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgb(255 253 249 / 82%);
+  padding: 1rem;
+}
+.household-security p,
+.household-backup p,
+.household-restore p,
+.household-reset p {
+  margin: 0;
+}
+
+.household-backup__notice {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.household-reset {
+  border-color: var(--primary-soft-border);
+  background: linear-gradient(135deg, var(--primary-soft), rgb(255 253 249 / 92%));
+}
+.household-reset input {
+  max-width: 14rem;
+}
+.danger-button {
+  min-height: 44px;
+  border: 1px solid #8e3022;
+  border-radius: 0.75rem;
+  background: #8e3022;
+  color: #fff;
+  padding: 0.65rem 0.9rem;
+  font-weight: 750;
+}
+.danger-button:disabled {
+  border-color: var(--border);
+  background: var(--surface-2);
+  color: var(--muted-2);
 }

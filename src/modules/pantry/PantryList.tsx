@@ -23,6 +23,7 @@ type Props = {
   onRemove?: (item: PresentedPantryItem) => void
   onUndo?: () => void
   onAddToShopping?: (item: PresentedPantryItem) => void
+  onSelect?: (item: PresentedPantryItem) => void
   undoItemName?: string
   detail?: ReactNode
   status?: string
@@ -34,6 +35,7 @@ function PantryRow({
   onAdjust,
   onSetPresence,
   onRemove,
+  onSelect,
   showLegacyPresenceControls = false,
 }: {
   item: PresentedPantryItem
@@ -44,6 +46,7 @@ function PantryRow({
     state: 'available' | 'low' | 'out',
   ) => void
   onRemove?: (item: PresentedPantryItem) => void
+  onSelect?: (item: PresentedPantryItem) => void
   showLegacyPresenceControls?: boolean
 }) {
   return (
@@ -51,13 +54,28 @@ function PantryRow({
       className={`pantry-row pantry-row--${item.status}`}
       style={{ backgroundColor: '#fff' }}
     >
-      <div className="pantry-row__detail">
-        <span className="pantry-row__dot" aria-hidden="true" />
-        <span className="pantry-row__name">{item.name}</span>
-        {item.quantityLabel ? (
-          <span className="pantry-row__quantity">{item.quantityLabel}</span>
-        ) : null}
-      </div>
+      {onSelect ? (
+        <button
+          className="pantry-row__detail pantry-row__detail--button"
+          onClick={() => onSelect(item)}
+          type="button"
+          aria-label={`Editar ${item.name}`}
+        >
+          <span className="pantry-row__dot" aria-hidden="true" />
+          <span className="pantry-row__name">{item.name}</span>
+          {item.quantityLabel ? (
+            <span className="pantry-row__quantity">{item.quantityLabel}</span>
+          ) : null}
+        </button>
+      ) : (
+        <div className="pantry-row__detail">
+          <span className="pantry-row__dot" aria-hidden="true" />
+          <span className="pantry-row__name">{item.name}</span>
+          {item.quantityLabel ? (
+            <span className="pantry-row__quantity">{item.quantityLabel}</span>
+          ) : null}
+        </div>
+      )}
       {item.trackingMode === 'units' && item.quantity !== null && onAdjust ? (
         <div className="pantry-stepper" aria-label={`Ajustar ${item.name}`}>
           <button
@@ -131,15 +149,6 @@ function PantryRow({
           Se terminó
         </button>
       ) : null}
-      {onRemove && item.status === 'out' ? (
-        <button
-          className="pantry-quick-action"
-          onClick={() => onRemove(item)}
-          type="button"
-        >
-          Quitar de despensa
-        </button>
-      ) : null}
       {onMarkLow &&
       item.status === 'available' &&
       item.trackingMode !== 'approximate' ? (
@@ -150,6 +159,16 @@ function PantryRow({
           aria-label={`Marcar ${item.name} como queda poco`}
         >
           Queda poco
+        </button>
+      ) : null}
+      {onRemove ? (
+        <button
+          aria-label={`Eliminar ${item.name}`}
+          className="shopping-row__delete"
+          onClick={() => onRemove(item)}
+          type="button"
+        >
+          ×
         </button>
       ) : null}
     </div>
@@ -179,6 +198,7 @@ export function PantryList({
   status,
   onUndo,
   onAddToShopping,
+  onSelect,
   undoItemName,
 }: Props) {
   const [query, setQuery] = useState('')
@@ -254,6 +274,7 @@ export function PantryList({
                           onMarkLow={onMarkLow}
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
+                          onSelect={onSelect}
                         />
                       ))}
                     </div>
@@ -272,6 +293,7 @@ export function PantryList({
                           onMarkLow={onMarkLow}
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
+                          onSelect={onSelect}
                         />
                       ))}
                     </div>
@@ -285,6 +307,7 @@ export function PantryList({
                           key={item.id}
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
+                          onSelect={onSelect}
                         />
                       ))}
                     </div>

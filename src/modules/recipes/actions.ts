@@ -11,6 +11,8 @@ import {
   parseRecipeTitle,
 } from '@/lib/validation/onboarding'
 
+import { parseIngredient } from './ingredient-normalize'
+
 import type {
   Recipe,
   RecipeCategory,
@@ -317,12 +319,15 @@ export async function getRecipe(id: string): Promise<RecipeDetail | null> {
     categories: recipeCategories.map((category) => category.name),
     version: recipe.data.version,
     sourceUrl: recipe.data.source_url,
-    ingredients: (ingredients.data ?? []).map((row) => ({
-      position: row.position,
-      name: row.name,
-      quantity: row.quantity,
-      unitCode: row.unit_code,
-    })),
+    ingredients: (ingredients.data ?? []).map((row) => {
+      const parsed = parseIngredient(row.name, row.quantity, row.unit_code)
+      return {
+        position: row.position,
+        name: parsed.name,
+        quantity: parsed.quantity,
+        unitCode: parsed.unitCode,
+      }
+    }),
     steps: (steps.data ?? []).map((row) => ({
       position: row.position,
       instruction: row.instruction,

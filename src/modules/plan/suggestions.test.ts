@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   availabilityLabel,
+  buildCatalogEntries,
+  matches,
   missingIngredients,
   rankSuggestions,
   type SuggestionCandidate,
@@ -115,6 +117,44 @@ describe('rankSuggestions', () => {
     ).toBe(false)
   })
 
+  it('penaliza un grupo de alimento repetido 2+ veces esta semana', () => {
+    const lentejas = candidate({
+      id: 'lentejas',
+      title: 'Lentejas con verduras',
+      ingredients: ['lentejas', 'zanahoria'],
+      totalMinutes: 90,
+    })
+    const [suggestion] = rankSuggestions(
+      input({
+        candidates: [lentejas],
+        plannedFoodGroups: ['legumbre', 'legumbre'],
+      }),
+    )
+    expect(
+      suggestion!.factors.some(
+        (factor) => factor.points < 0 && /legumbres/.test(factor.label),
+      ),
+    ).toBe(true)
+  })
+
+  it('premia y explica un grupo aún no presente esta semana', () => {
+    const pescado = candidate({
+      id: 'pescado',
+      title: 'Merluza al horno',
+      ingredients: ['merluza', 'patata'],
+      totalMinutes: 90,
+    })
+    const [suggestion] = rankSuggestions(
+      input({
+        candidates: [pescado],
+        plannedFoodGroups: ['carne_roja'],
+        // dishType 'main' ya presente: aísla el motivo de equilibrio del de variedad.
+        plannedDishTypes: ['main'],
+      }),
+    )
+    expect(suggestion!.reason).toBe('Esta semana aún no has tomado pescado')
+  })
+
   it('suma favorito, puntuación y mediterránea como factores visibles', () => {
     const [suggestion] = rankSuggestions(
       input({
@@ -138,6 +178,34 @@ describe('availabilityLabel', () => {
     expect(availabilityLabel(['jamón', 'pan'])).toBe(
       'Necesitas comprar: jamón, pan',
     )
+  })
+})
+
+describe('matches', () => {
+  it('ya no confunde una palabra suelta con parte de otra palabra', () => {
+    // Antes "pan" encajaba dentro de "empanadillas" por ser subcadena.
+    expect(matches('pan', 'Empanadillas')).toBe(false)
+    expect(matches('pan del día anterior', 'Pan')).toBe(true)
+  })
+
+  it('sigue tolerando el plural simple', () => {
+    expect(matches('tomate', 'Tomates pera')).toBe(true)
+    expect(matches('jamón', 'Jamon serrano')).toBe(true)
+  })
+
+  it('con catálogo, empareja alimentos cuyo texto no se parece', () => {
+    const catalog = buildCatalogEntries([
+      { canonicalName: 'Pan', terms: ['Pan', 'Pan de molde'] },
+    ])
+    expect(matches('pan del día anterior', 'Pan de molde', catalog)).toBe(true)
+  })
+
+  it('con catálogo, no empareja alimentos distintos aunque el texto se solape', () => {
+    const catalog = buildCatalogEntries([
+      { canonicalName: 'Pan', terms: ['Pan'] },
+      { canonicalName: 'Pan rallado', terms: ['Pan rallado'] },
+    ])
+    expect(matches('pan del día anterior', 'Pan rallado', catalog)).toBe(false)
   })
 })
 

@@ -1,10 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { AppShell } from '@/components/ui/AppShell'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 import { formatQuantity } from '@/modules/shopping/presentation'
 
 import type { CookPreview } from './actions'
@@ -88,9 +88,7 @@ function CookRow({
               onChange({ discount: Number(event.target.value) })
             }
           />
-          {line.unitCode ? (
-            <span aria-hidden="true">{line.unitCode}</span>
-          ) : null}
+          <span aria-hidden="true">uds.</span>
         </label>
       )}
     </div>
@@ -110,28 +108,18 @@ export function CookReview({
   )
   const [status, setStatus] = useState('')
   const [pending, setPending] = useState(false)
-  const refresh = useCallback(() => router.refresh(), [router])
+  // Evita que el eco realtime de nuestra propia confirmación dispare un
+  // refresh mientras ya estamos navegando fuera de esta página.
+  const confirming = useRef(false)
+  const refresh = useCallback(() => {
+    if (confirming.current) return
+    router.refresh()
+  }, [router])
 
-  useEffect(() => {
-    if (visualFixture) return
-    const client = createSupabaseBrowserClient()
-    const channel = client
-      .channel('cook-refresh')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'planned_meals' },
-        refresh,
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pantry_items' },
-        refresh,
-      )
-      .subscribe()
-    return () => {
-      void client.removeChannel(channel)
-    }
-  }, [refresh, visualFixture])
+  useRealtimeRefresh('cook-refresh', ['planned_meals', 'pantry_items'], {
+    enabled: !visualFixture,
+    shouldRefresh: () => !confirming.current,
+  })
 
   const consumptions = useMemo(
     () => buildConsumptions(preview.lines, edits),
@@ -154,6 +142,7 @@ export function CookReview({
     if (pending) return
     setPending(true)
     setStatus('')
+    confirming.current = true
     try {
       const { consumed } = await cookMeal(
         preview.mealDate,
@@ -162,6 +151,7 @@ export function CookReview({
       )
       router.push(`/plan?cocinada=${consumed}`)
     } catch {
+      confirming.current = false
       setStatus(
         'Algo cambió mientras revisabas. Hemos actualizado la despensa; compruébala y vuelve a confirmar.',
       )

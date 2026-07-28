@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkoutActionLabel, confirmNotice, formatQuantity, shoppingProgress, ticketNotice } from './presentation'
+import {
+  checkoutActionLabel,
+  confirmNotice,
+  formatQuantity,
+  shoppingProgress,
+  ticketNotice,
+} from './presentation'
 import type { CheckoutLine } from './types'
 
 const line = (overrides: Partial<CheckoutLine> = {}): CheckoutLine => ({
@@ -8,10 +14,8 @@ const line = (overrides: Partial<CheckoutLine> = {}): CheckoutLine => ({
   version: 1,
   name: 'Tomates',
   action: 'add',
-  fromQuantity: null,
-  fromUnit: null,
-  toQuantity: null,
-  toUnit: null,
+  suggestedZone: 'pantry',
+  quantity: null,
   ...overrides,
 })
 
@@ -30,30 +34,30 @@ describe('formatQuantity', () => {
 
 describe('checkoutActionLabel', () => {
   it('un producto nuevo se añade a la despensa', () => {
-    expect(checkoutActionLabel(line({ action: 'add' }))).toBe('Añadir a despensa')
-  })
-  it('un producto con cantidad compatible muestra la suma proyectada', () => {
-    const label = checkoutActionLabel(
-      line({ action: 'update', fromQuantity: 0.5, fromUnit: 'l', toQuantity: 1.5, toUnit: 'l' }),
+    expect(checkoutActionLabel(line({ action: 'add' }))).toBe(
+      'Añadir a Despensa',
     )
-    expect(label).toBe('Actualizar: 0.5 l → 1.5 l')
   })
-  it('sin suma posible solo refresca la presencia', () => {
-    // Ya presente pero sin cantidad conocida: no hay «de → a» que mostrar.
-    expect(checkoutActionLabel(line({ action: 'update' }))).toBe('Actualizar en despensa')
-  })
-  it('misma cantidad de entrada y salida no finge un cambio', () => {
-    const label = checkoutActionLabel(
-      line({ action: 'update', fromQuantity: 2, fromUnit: 'unit', toQuantity: 2, toUnit: 'unit' }),
+  it('pide elegir la zona cuando el catálogo no ofrece una', () => {
+    expect(checkoutActionLabel(line({ suggestedZone: null }))).toBe(
+      'Añadir a despensa — elige dónde',
     )
-    expect(label).toBe('Actualizar en despensa')
+  })
+  it('un producto existente solo refresca su presencia', () => {
+    expect(
+      checkoutActionLabel(line({ action: 'restore', suggestedZone: null })),
+    ).toBe('Ya estaba en tu despensa')
   })
 })
 
 describe('confirmNotice', () => {
   it('singular y plural', () => {
-    expect(confirmNotice('1')).toBe('Hemos actualizado tu despensa con 1 producto.')
-    expect(confirmNotice('3')).toBe('Hemos actualizado tu despensa con 3 productos.')
+    expect(confirmNotice('1')).toBe(
+      'Hemos actualizado tu despensa con 1 producto.',
+    )
+    expect(confirmNotice('3')).toBe(
+      'Hemos actualizado tu despensa con 3 productos.',
+    )
   })
   it('valores ausentes o inválidos no muestran aviso', () => {
     expect(confirmNotice(undefined)).toBeNull()
@@ -65,8 +69,12 @@ describe('confirmNotice', () => {
 
 describe('ticketNotice', () => {
   it('informa de los productos importados', () => {
-    expect(ticketNotice('1')).toBe('Hemos añadido 1 producto del ticket a Compra, ya marcados como comprados.')
-    expect(ticketNotice('4')).toBe('Hemos añadido 4 productos del ticket a Compra, ya marcados como comprados.')
+    expect(ticketNotice('1')).toBe(
+      'Hemos añadido 1 producto del ticket a Compra, ya marcados como comprados.',
+    )
+    expect(ticketNotice('4')).toBe(
+      'Hemos añadido 4 productos del ticket a Compra, ya marcados como comprados.',
+    )
   })
 
   it('no muestra avisos para valores ausentes o inválidos', () => {
@@ -78,11 +86,17 @@ describe('ticketNotice', () => {
 
 describe('shoppingProgress', () => {
   it('explica lo que queda por comprar con un texto útil', () => {
-    expect(shoppingProgress(6, 3)).toEqual({ label: '3 pendientes', ratio: 0.5 })
+    expect(shoppingProgress(6, 3)).toEqual({
+      label: '3 pendientes',
+      ratio: 0.5,
+    })
     expect(shoppingProgress(1, 1)).toEqual({ label: 'Compra lista', ratio: 1 })
   })
 
   it('no inventa progreso para una lista vacía', () => {
-    expect(shoppingProgress(0, 0)).toEqual({ label: 'Aún no hay productos', ratio: 0 })
+    expect(shoppingProgress(0, 0)).toEqual({
+      label: 'Aún no hay productos',
+      ratio: 0,
+    })
   })
 })

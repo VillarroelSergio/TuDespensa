@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
   // just-set session cookie, so it looks logged out. Rebuild the origin from
   // the real Host header instead.
   const origin = `${url.protocol}//${request.headers.get('host') ?? url.host}`
-  const response = NextResponse.redirect(new URL('/onboarding', origin))
+  const requestedNext = url.searchParams.get('next')
+  const nextPath = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : '/onboarding'
+  const response = NextResponse.redirect(new URL(nextPath, origin))
   // access_token/refresh_token: solo los usan las pruebas E2E, que verifican el
   // enlace mágico vía la API de administrador (flujo implícito, sin `code` de
   // PKCE) para no depender de un correo real. Los enlaces reales usan `code`.
