@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { BrandLockup } from '@/components/ui/BrandLockup'
 import {
@@ -33,8 +33,16 @@ const REGISTRATION_ERROR_MESSAGES: Record<RegistrationFailureReason, string> = {
   unexpected: 'No hemos podido crear la cuenta. Inténtalo de nuevo.',
 }
 
-export default function LoginPage() {
+// Solo rutas protegidas conocidas: evita un open redirect vía ?returnTo=.
+const RETURNABLE_PATH = /^\/(despensa|compra|recetas|plan|hogar)(\/|\?|$)/
+
+function LoginForm() {
   const router = useRouter()
+  const returnToParam = useSearchParams().get('returnTo')
+  const returnTo =
+    returnToParam && RETURNABLE_PATH.test(returnToParam)
+      ? returnToParam
+      : '/despensa'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
@@ -55,7 +63,7 @@ export default function LoginPage() {
   async function submit(event: React.FormEvent) {
     event.preventDefault()
     if (bypass) {
-      router.replace('/despensa')
+      router.replace(returnTo)
       return
     }
 
@@ -74,7 +82,7 @@ export default function LoginPage() {
         setMessage('No se encuentra la cuenta local. Ejecuta npm run dev:reset una vez.')
         return
       }
-      router.replace('/despensa')
+      router.replace(returnTo)
       router.refresh()
       return
     }
@@ -96,7 +104,7 @@ export default function LoginPage() {
           setMessage('El correo o la contraseña no son correctos.')
           return
         }
-        router.replace('/despensa')
+        router.replace(returnTo)
         router.refresh()
       } finally {
         setPending(false)
@@ -109,7 +117,7 @@ export default function LoginPage() {
       setMessage('El correo o la contraseña no son correctos.')
       return
     }
-    router.replace('/despensa')
+    router.replace(returnTo)
     router.refresh()
   }
 
@@ -195,5 +203,13 @@ export default function LoginPage() {
         <p aria-live="polite">{message}</p>
       </section>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   )
 }

@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { getSuggestions } from '@/modules/plan/actions'
 import { ChooseRecipeView } from '@/modules/plan/ChooseRecipeView'
 import type { MealType } from '@/modules/plan/types'
-import { getRecipes } from '@/modules/recipes/actions'
 import {
   emptyVisualFixture,
   getVisualFixtureScenario,
@@ -33,24 +32,26 @@ export default async function ChooseRecipePage({
   }
 
   const scenario = getVisualFixtureScenario(fixture)
-  const [recipes, options] = scenario
+  const options = scenario
     ? scenario === 'everyday'
-      ? [
-          visualFixture.recipes,
-          { suggestions: visualFixture.suggestions, recommended: [] },
-        ]
-      : [
-          emptyVisualFixture.recipes,
-          { suggestions: emptyVisualFixture.suggestions, recommended: [] },
-        ]
-    : await Promise.all([getRecipes(), getSuggestions(fecha)])
+      ? {
+          recipes: visualFixture.recipes,
+          suggestions: visualFixture.suggestions,
+          recommended: [],
+        }
+      : {
+          recipes: emptyVisualFixture.recipes,
+          suggestions: emptyVisualFixture.suggestions,
+          recommended: [],
+        }
+    : await getSuggestions(fecha)
 
   return (
     <ChooseRecipeView
       mealDate={fecha}
       mealType={servicio as MealType}
       query={q?.trim() ?? ''}
-      recipes={recipes}
+      recipes={options.recipes}
       suggestions={options.suggestions}
       recommended={options.recommended}
     />

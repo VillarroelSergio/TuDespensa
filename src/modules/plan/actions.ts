@@ -236,10 +236,23 @@ async function getSuggestionPantry(
   })
 }
 
-/** 3 sugerencias explicadas + 10 recomendadas adicionales para el buscador. */
+/** Índice mínimo para el buscador de recetas del selector (Plan P2). */
+export type SearchableRecipe = {
+  id: string
+  title: string
+  totalMinutes: number | null
+  categories: string[]
+}
+
+/**
+ * 3 sugerencias explicadas + 10 recomendadas adicionales, y el índice de
+ * búsqueda del selector — comparten la misma consulta de recetas en vez de
+ * que el selector pida además la biblioteca completa por separado.
+ */
 export type ChooseRecipeOptions = {
   suggestions: Suggestion[]
   recommended: Suggestion[]
+  recipes: SearchableRecipe[]
 }
 
 const RECOMMENDED_COUNT = 10
@@ -247,8 +260,8 @@ const RECOMMENDED_COUNT = 10
 /**
  * Sugerencias explicables para un hueco: reúne biblioteca, despensa y semana, y
  * delega la puntuación en `rankSuggestions`, que es puro y determinista. Además
- * de las 3 sugerencias, devuelve 10 recomendadas más para el buscador («Buscar
- * una receta»), complementarias a las sugerencias.
+ * de las 3 sugerencias, devuelve 10 recomendadas más y el índice de búsqueda
+ * completo, para que el selector no repita la consulta de recetas.
  */
 export async function getSuggestions(
   mealDate: string,
@@ -257,7 +270,7 @@ export async function getSuggestions(
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { suggestions: [], recommended: [] }
+  if (!user) return { suggestions: [], recommended: [], recipes: [] }
 
   const startIso = weekStart(mealDate)
   const [
@@ -294,7 +307,7 @@ export async function getSuggestions(
   ])
   if (recipesRes.error) failure(recipesRes.error)
   const recipes = recipesRes.data ?? []
-  if (!recipes.length) return { suggestions: [], recommended: [] }
+  if (!recipes.length) return { suggestions: [], recommended: [], recipes: [] }
 
   const ingredientsByRecipe = new Map<string, string[]>()
   for (const row of ingredientsRes.data ?? []) {
@@ -355,6 +368,12 @@ export async function getSuggestions(
   return {
     suggestions: ranked.slice(0, 3),
     recommended: ranked.slice(3, 3 + RECOMMENDED_COUNT),
+    recipes: recipes.map((recipe) => ({
+      id: recipe.id,
+      title: recipe.title,
+      totalMinutes: recipe.total_minutes,
+      categories: categoriesByRecipe.get(recipe.id) ?? [],
+    })),
   }
 }
 

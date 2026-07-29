@@ -13,7 +13,7 @@ const protectedPaths = [
   ...appPaths,
 ]
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
   // Manual local UI work can skip Auth, but E2E explicitly opts into the real
   // Supabase session flow so RLS and server actions are exercised end-to-end.
@@ -43,8 +43,13 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   const pathname = request.nextUrl.pathname
-  if (protectedPaths.some((path) => pathname.startsWith(path)) && !user)
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (protectedPaths.some((path) => pathname.startsWith(path)) && !user) {
+    const loginUrl = new URL('/login', request.url)
+    // Vuelve al destino original tras autenticarse en vez de aterrizar siempre
+    // en Despensa (auditoría 2026-07-29). Login valida esto antes de usarlo.
+    loginUrl.searchParams.set('returnTo', pathname + request.nextUrl.search)
+    return NextResponse.redirect(loginUrl)
+  }
   if (!user) return response
   const { data: membership } = await supabase
     .from('household_members')

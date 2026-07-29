@@ -41,8 +41,13 @@ export function RecipesList({
   const [category, setCategory] = useState('')
   const [dishType, setDishType] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  // Las 5 más comunes ya son botón rápido arriba; el desplegable solo cubre
+  // el resto para no duplicar el mismo filtro dos veces.
   const categories = useMemo(
-    () => availableCategories(initialRecipes),
+    () =>
+      availableCategories(initialRecipes).filter(
+        (name) => !QUICK_MAIN_INGREDIENT_CATEGORIES.includes(name),
+      ),
     [initialRecipes],
   )
   const recipes = useMemo(
@@ -169,7 +174,7 @@ export function RecipesList({
                 value={category}
                 onChange={(event) => setCategory(event.target.value)}
               >
-                <option value="">Todas las categorías</option>
+                <option value="">Otras categorías</option>
                 {categories.map((name) => (
                   <option key={name} value={name}>
                     {name}

@@ -8,10 +8,9 @@ import {
   normalizeText,
   timeLabel,
 } from '@/modules/recipes/presentation'
-import type { Recipe } from '@/modules/recipes/types'
 import { AppShell } from '@/components/ui/AppShell'
 
-import { assignMealAction } from './actions'
+import { assignMealAction, type SearchableRecipe } from './actions'
 import { slotLabel, weekStart } from './presentation'
 import { availabilityLabel } from './suggestions'
 import type { Suggestion } from './suggestions'
@@ -94,7 +93,7 @@ export function ChooseRecipeView({
   mealDate: string
   mealType: MealType
   query: string
-  recipes: Recipe[]
+  recipes: SearchableRecipe[]
   suggestions: Suggestion[]
   recommended: Suggestion[]
 }) {
