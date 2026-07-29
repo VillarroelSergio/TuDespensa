@@ -47,8 +47,11 @@ export function PantryWorkspace({
   const pendingIdsRef = useRef<Set<string>>(new Set())
   const [, startTransition] = useTransition()
   const refresh = useCallback(() => router.refresh(), [router])
-  // Cada acción pinta su cambio al instante; revalidatePath reconcilia con el
-  // servidor sin recarga global. Si algo falla, refrescamos para resincronizar.
+  // Cada acción pinta su cambio al instante y luego refresca: useOptimistic
+  // descarta su capa optimista en cuanto la transición termina y vuelve a
+  // `initialItems`, así que sin este refresh el ítem "revive" hasta que
+  // Realtime reaccione (o nunca, si el evento se pierde). Si la mutación
+  // falla, refrescamos igual para resincronizar con el estado real.
   type PantryOptimisticAction =
     | { type: 'markOut'; id: string }
     | { type: 'adjust'; id: string; quantity: number }
@@ -121,6 +124,7 @@ export function PantryWorkspace({
               })
         setStatus(`${item.name}: se terminó.`)
         setUndo({ ...item, version: result.version })
+        refresh()
       } catch {
         setStatus(
           'No hemos podido guardar el cambio. Hemos actualizado la lista.',
@@ -189,6 +193,7 @@ export function PantryWorkspace({
           unitCode: item.unitCode,
         })
         setStatus(`${item.name}: cantidad actualizada.`)
+        refresh()
       } catch {
         setStatus(
           'No hemos podido actualizar la cantidad. Hemos actualizado la lista.',
@@ -209,6 +214,7 @@ export function PantryWorkspace({
       try {
         await deletePantryItem(item.id, item.version)
         setStatus(`${item.name}: eliminado de la despensa.`)
+        refresh()
       } catch {
         setStatus('No hemos podido eliminarlo. Hemos actualizado la lista.')
         refresh()

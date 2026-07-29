@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const createUser = vi.fn()
 const deleteUser = vi.fn()
@@ -40,21 +40,29 @@ function mockRpc(options: {
   })
 }
 
+const BOOTSTRAP_CODE = 'arranque-piloto'
+
 beforeEach(() => {
   vi.clearAllMocks()
+  process.env.PILOT_BOOTSTRAP_CODE = BOOTSTRAP_CODE
   createUser.mockResolvedValue({
     data: { user: { id: 'new-user-id' } },
     error: null,
   })
 })
 
+afterEach(() => {
+  delete process.env.PILOT_BOOTSTRAP_CODE
+})
+
 describe('registerAccount', () => {
-  it('creates the account and does not require a code when no household exists yet', async () => {
+  it('creates the first account when the bootstrap code matches', async () => {
     mockRpc({ householdExists: false })
 
     const result = await registerAccount({
       email: 'first@example.com',
       password: 'password1',
+      code: BOOTSTRAP_CODE,
     })
 
     expect(result).toEqual({ ok: true })
@@ -63,8 +71,51 @@ describe('registerAccount', () => {
       password: 'password1',
       email_confirm: true,
     })
+    // La primera cuenta no canjea invitación: solo se consulta si hay hogar.
     expect(rpc).toHaveBeenCalledTimes(1)
     expect(rpc).toHaveBeenCalledWith('pilot_household_exists')
+  })
+
+  // Regresión: sin hogar todavía, este Server Action público creaba cuentas
+  // sin credencial alguna, así que permitía altas masivas (auditoría
+  // 2026-07-29).
+  it('refuses to create the first account without the bootstrap code', async () => {
+    mockRpc({ householdExists: false })
+
+    const result = await registerAccount({
+      email: 'intruder@example.com',
+      password: 'password1',
+    })
+
+    expect(result).toEqual({ ok: false, reason: 'code_required' })
+    expect(createUser).not.toHaveBeenCalled()
+  })
+
+  it('refuses to create the first account with a wrong bootstrap code', async () => {
+    mockRpc({ householdExists: false })
+
+    const result = await registerAccount({
+      email: 'intruder@example.com',
+      password: 'password1',
+      code: 'no-es-el-codigo',
+    })
+
+    expect(result).toEqual({ ok: false, reason: 'code_invalid' })
+    expect(createUser).not.toHaveBeenCalled()
+  })
+
+  it('fails closed when no bootstrap code is configured on the server', async () => {
+    delete process.env.PILOT_BOOTSTRAP_CODE
+    mockRpc({ householdExists: false })
+
+    const result = await registerAccount({
+      email: 'intruder@example.com',
+      password: 'password1',
+      code: 'lo-que-sea',
+    })
+
+    expect(result).toEqual({ ok: false, reason: 'bootstrap_unavailable' })
+    expect(createUser).not.toHaveBeenCalled()
   })
 
   it('requires a code when a household already exists', async () => {
@@ -170,6 +221,7 @@ describe('registerAccount', () => {
     const result = await registerAccount({
       email: 'first@example.com',
       password: 'password1',
+      code: BOOTSTRAP_CODE,
     })
 
     expect(result).toEqual({ ok: false, reason: 'email_taken' })

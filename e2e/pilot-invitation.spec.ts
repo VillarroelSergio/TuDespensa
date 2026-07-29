@@ -120,7 +120,12 @@ test.describe('invitación del piloto', () => {
     const contextB = await browser.newContext()
     try {
       const pageA = await contextA.newPage()
-      await registerThroughLoginForm(pageA, emailA, passwordA)
+      await registerThroughLoginForm(
+        pageA,
+        emailA,
+        passwordA,
+        process.env.PILOT_BOOTSTRAP_CODE,
+      )
       // Primera cuenta, sin hogar todavía: acaba en el onboarding, no en /unirme.
       await expect(
         pageA.getByRole('heading', { name: 'Organiza la comida de casa' }),

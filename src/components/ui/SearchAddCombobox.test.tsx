@@ -8,7 +8,7 @@ describe('SearchAddCombobox', () => {
   it('adds text with Enter and keeps focus', () => {
     const onAdd = vi.fn()
     render(<SearchAddCombobox zoneLabel="frigorífico" suggestions={[]} onAdd={onAdd} />)
-    const input = screen.getByRole('combobox')
+    const input = screen.getByRole('searchbox')
     fireEvent.change(input, { target: { value: 'Leche' } })
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(onAdd).toHaveBeenCalledWith('Leche')
@@ -20,6 +20,6 @@ describe('SearchAddCombobox', () => {
     render(<SearchAddCombobox zoneLabel="frigorífico" suggestions={['Huevos']} onAdd={onAdd} />)
     fireEvent.click(screen.getByRole('button', { name: '+ Huevos' }))
     expect(onAdd).toHaveBeenCalledWith('Huevos')
-    expect(screen.getByRole('combobox')).toHaveValue('')
+    expect(screen.getByRole('searchbox')).toHaveValue('')
   })
 })

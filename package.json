@@ -7,7 +7,7 @@
     "node": "24.x"
   },
   "overrides": {
-    "postcss": "8.5.10"
+    "postcss": "8.5.25"
   },
   "scripts": {
     "dev": "next dev",
@@ -20,7 +20,7 @@
     "dev:stop": "npx supabase stop",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "eslint . --ignore-pattern \".git-worktrees/**\" --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
@@ -39,7 +39,7 @@
     "@supabase/ssr": "0.12.3",
     "@supabase/supabase-js": "2.110.7",
     "@vercel/speed-insights": "2.0.0",
-    "next": "16.2.10",
+    "next": "^16.2.12",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "server-only": "0.0.1"
@@ -53,7 +53,7 @@
     "@types/react-dom": "19.2.3",
     "@vitest/coverage-v8": "4.1.10",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.2.10",
+    "eslint-config-next": "^16.2.12",
     "jsdom": "29.1.1",
     "prettier": "3.9.5",
     "typescript": "6.0.3",

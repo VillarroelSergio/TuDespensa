@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { AppShell } from '@/components/ui/AppShell'
+import { RealtimeRefresh } from '@/components/ui/RealtimeRefresh'
 import { timeLabel } from '@/modules/recipes/presentation'
 
 import { assignMealAction, moveMealAction, removeMealAction } from './actions'
@@ -172,6 +173,9 @@ export function WeekView({
 
   return (
     <AppShell current="plan" contentClassName="plan-content">
+      {/* Era la única vista principal sin realtime: un cambio de plan desde
+          otro dispositivo no llegaba hasta recargar (auditoría 2026-07-29). */}
+      <RealtimeRefresh channel="plan-refresh" tables={['planned_meals']} />
       <div aria-labelledby="plan-title">
         <header className="shopping-header plan-header">
           <h1 id="plan-title">Plan</h1>

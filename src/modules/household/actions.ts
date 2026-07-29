@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { AppError } from '@/lib/errors/AppError'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { failure } from '@/lib/supabase/rpc'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseIdempotencyKey } from '@/lib/validation/onboarding'
 import {
@@ -58,20 +59,6 @@ export async function restoreHouseholdBackup(
   } as never)
   if (error) failure(error)
   revalidatePath('/', 'layout')
-}
-
-function failure(error: { code?: string; message: string }): never {
-  const code =
-    error.code === '42501'
-      ? 'FORBIDDEN'
-      : error.code === '40001'
-        ? 'CONFLICT'
-        : error.code === '23505'
-          ? 'CONFLICT'
-          : error.code === '22023' || error.code === '23514'
-            ? 'INVALID_INPUT'
-            : 'UNEXPECTED'
-  throw new AppError(code, error.message)
 }
 
 // Genera (o renueva) el código de invitación del hogar. El código en claro

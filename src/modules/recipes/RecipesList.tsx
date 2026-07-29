@@ -4,13 +4,12 @@ import { FormEvent, useMemo, useState } from 'react'
 
 import { AppShell } from '@/components/ui/AppShell'
 import {
-  DISH_TYPE_OPTIONS,
   QUICK_MAIN_INGREDIENT_CATEGORIES,
   dishTypeLabel,
   filterRecipes,
   timeLabel,
 } from './presentation'
-import type { Recipe, RecipeDishType } from './types'
+import type { Recipe } from './types'
 
 /** Recetas por tanda: evita renderizar las 164 de golpe (Fase rendimiento). */
 const PAGE_SIZE = 24
@@ -38,16 +37,14 @@ export function RecipesList({
   const [link, setLink] = useState('')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [category, setCategory] = useState('')
-  const [dishType, setDishType] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const recipes = useMemo(
     () =>
       filterRecipes(initialRecipes, term, {
         favoritesOnly,
         category: category || undefined,
-        dishType: (dishType || undefined) as RecipeDishType | undefined,
       }),
-    [initialRecipes, term, favoritesOnly, category, dishType],
+    [initialRecipes, term, favoritesOnly, category],
   )
   // Vuelve a la primera tanda cuando cambia el filtro: si no, un filtro estrecho
   // podría dejar fuera resultados por el corte de la tanda anterior. Se ajusta
@@ -56,15 +53,13 @@ export function RecipesList({
     term,
     favoritesOnly,
     category,
-    dishType,
   ])
   if (
     appliedFilters[0] !== term ||
     appliedFilters[1] !== favoritesOnly ||
-    appliedFilters[2] !== category ||
-    appliedFilters[3] !== dishType
+    appliedFilters[2] !== category
   ) {
-    setAppliedFilters([term, favoritesOnly, category, dishType])
+    setAppliedFilters([term, favoritesOnly, category])
     setVisibleCount(PAGE_SIZE)
   }
   const visibleRecipes = recipes.slice(0, visibleCount)
@@ -137,22 +132,6 @@ export function RecipesList({
               )
             })}
           </div>
-          <label className="sr-only" htmlFor="recipes-dish-type">
-            Tipo de plato
-          </label>
-          <select
-            id="recipes-dish-type"
-            className="recipes-filter-select"
-            value={dishType}
-            onChange={(event) => setDishType(event.target.value)}
-          >
-            <option value="">Todos los tipos</option>
-            {DISH_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         </div>
         {adding ? (
           <div className="recipes-add">
@@ -234,7 +213,7 @@ export function RecipesList({
         {!recipes.length ? (
           <div className="recipes-empty">
             <p>
-              {term.trim() || favoritesOnly || category || dishType
+              {term.trim() || favoritesOnly || category
                 ? 'No hay recetas que coincidan con el filtro.'
                 : 'Guarda recetas para decidir más rápido.'}
             </p>

@@ -23,6 +23,10 @@ Thumbs.db
 .vercel
 .codex-cache
 
+# Instalador de una herramienta externa (codebase-memory-mcp), ajeno a la app:
+# se ignora para que no acabe versionado por error (auditoría 2026-07-29).
+/install.ps1
+
 # Generated codebase graph artifacts
 /graphify-out/
 /graphify-out
