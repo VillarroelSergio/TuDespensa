@@ -3,11 +3,14 @@
 import Link from 'next/link'
 import { useMemo, useState, type ReactNode } from 'react'
 
-import { timeLabel } from '@/modules/recipes/presentation'
-import type { Recipe } from '@/modules/recipes/types'
+import {
+  QUICK_MAIN_INGREDIENT_CATEGORIES,
+  normalizeText,
+  timeLabel,
+} from '@/modules/recipes/presentation'
 import { AppShell } from '@/components/ui/AppShell'
 
-import { assignMealAction } from './actions'
+import { assignMealAction, type SearchableRecipe } from './actions'
 import { slotLabel, weekStart } from './presentation'
 import { availabilityLabel } from './suggestions'
 import type { Suggestion } from './suggestions'
@@ -65,9 +68,16 @@ function SuggestionItem({
     >
       <span className="choose-suggestion__title">{suggestion.title}</span>
       <span className="choose-suggestion__reason">{suggestion.reason}</span>
+      {!suggestion.reason.startsWith('Lista en') &&
+      timeLabel(suggestion.totalMinutes) ? (
+        <span className="choose-suggestion__meta">
+          {timeLabel(suggestion.totalMinutes)}
+        </span>
+      ) : null}
       <span className="choose-suggestion__availability">
         {availabilityLabel(suggestion.missing)}
       </span>
+      <span className="choose-suggestion__action">Elegir</span>
     </ChooseForm>
   )
 }
@@ -83,23 +93,33 @@ export function ChooseRecipeView({
   mealDate: string
   mealType: MealType
   query: string
-  recipes: Recipe[]
+  recipes: SearchableRecipe[]
   suggestions: Suggestion[]
   recommended: Suggestion[]
 }) {
   const backHref = `/plan?semana=${weekStart(mealDate)}`
   // Búsqueda en el propio cliente: como las recetas ya están en memoria, filtra
   // al teclear sin ida y vuelta al servidor (antes recargaba la página por cada
-  // búsqueda). Sin escribir no se listan las 164 (coste de render alto): solo
-  // sugerencias + recomendadas.
+  // búsqueda). Sin escribir ni filtrar por categoría no se listan las 164 (coste
+  // de render alto): solo sugerencias + recomendadas.
   const [term, setTerm] = useState(query)
+  const [category, setCategory] = useState('')
+  const browsing = term.trim().length > 0 || category.length > 0
   const results = useMemo(() => {
-    const needle = term.trim().toLocaleLowerCase('es')
-    if (!needle) return []
-    return recipes.filter((recipe) =>
-      recipe.title.toLocaleLowerCase('es').includes(needle),
-    )
-  }, [recipes, term])
+    if (!browsing) return []
+    const needle = normalizeText(term)
+    const wantedCategory = category ? normalizeText(category) : null
+    return recipes.filter((recipe) => {
+      if (
+        wantedCategory &&
+        !recipe.categories.some(
+          (name) => normalizeText(name) === wantedCategory,
+        )
+      )
+        return false
+      return needle ? normalizeText(recipe.title).includes(needle) : true
+    })
+  }, [recipes, term, category, browsing])
 
   return (
     <AppShell current="plan" contentClassName="choose-page">
@@ -115,9 +135,9 @@ export function ChooseRecipeView({
           <p>Elige una sugerencia o busca en tus recetas guardadas.</p>
         </header>
 
-        {/* Las sugerencias solo aparecen sin búsqueda activa: al buscar, la
-          intención ya es explícita y mandan los resultados. */}
-        {!term && suggestions.length > 0 ? (
+        {/* Las sugerencias solo aparecen sin búsqueda ni filtro activos: al
+          explorar, la intención ya es explícita y mandan los resultados. */}
+        {!browsing && suggestions.length > 0 ? (
           <ul className="choose-suggestions" aria-label="Sugerencias">
             {suggestions.map((suggestion) => (
               <li key={suggestion.recipeId}>
@@ -145,9 +165,30 @@ export function ChooseRecipeView({
           />
         </div>
 
+        <div
+          className="recipes-quick-categories"
+          role="group"
+          aria-label="Filtrar por ingrediente principal"
+        >
+          {QUICK_MAIN_INGREDIENT_CATEGORIES.map((name) => {
+            const active = category === name
+            return (
+              <button
+                key={name}
+                type="button"
+                className={`recipes-filter${active ? ' is-active' : ''}`}
+                aria-current={active ? 'true' : undefined}
+                onClick={() => setCategory(active ? '' : name)}
+              >
+                {name}
+              </button>
+            )
+          })}
+        </div>
+
         {/* Recomendadas: complementan las 3 sugerencias con 10 recetas más que
-          encajan bien (comida o cena), visibles solo antes de buscar. */}
-        {!term && recommended.length > 0 ? (
+          encajan bien (comida o cena), visibles solo antes de explorar. */}
+        {!browsing && recommended.length > 0 ? (
           <>
             <p className="choose-kicker">También te puede interesar</p>
             <ul
@@ -173,13 +214,17 @@ export function ChooseRecipeView({
             Todavía no tienes recetas guardadas.{' '}
             <Link href="/recetas">Añadir receta</Link>
           </p>
-        ) : !term ? (
+        ) : !browsing ? (
           <p className="choose-empty">
-            Escribe el nombre de una receta para buscar entre tus{' '}
-            {recipes.length} recetas.
+            Escribe el nombre de una receta o elige una categoría para buscar
+            entre tus {recipes.length} recetas.
           </p>
         ) : results.length === 0 ? (
-          <p className="choose-empty">Ninguna receta coincide con «{term}».</p>
+          <p className="choose-empty">
+            {term
+              ? `Ninguna receta coincide con «${term}».`
+              : 'Ninguna receta coincide con esa categoría.'}
+          </p>
         ) : (
           <ul className="choose-list">
             {results.map((recipe) => (
@@ -194,6 +239,7 @@ export function ChooseRecipeView({
                   <span className="choose-recipe__meta">
                     {timeLabel(recipe.totalMinutes)}
                   </span>
+                  <span className="choose-recipe__action">Elegir</span>
                 </ChooseForm>
               </li>
             ))}

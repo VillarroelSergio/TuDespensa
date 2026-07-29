@@ -175,6 +175,9 @@ function PantryRow({
   )
 }
 
+/** Filas normales visibles por zona antes de pedir "Mostrar más" (baja el DOM inicial). */
+const INITIAL_REGULAR_COUNT = 8
+
 function measureStep(unitCode: PresentedPantryItem['unitCode']): number {
   return unitCode === 'kg' ? 0.25 : unitCode === 'l' ? 0.5 : 250
 }
@@ -202,6 +205,7 @@ export function PantryList({
   undoItemName,
 }: Props) {
   const [query, setQuery] = useState('')
+  const [expandedZones, setExpandedZones] = useState<Set<string>>(new Set())
   const rows = useMemo(
     () =>
       prioritizePantryItems(initialItems).filter((item) =>
@@ -285,7 +289,10 @@ export function PantryList({
                         urgent.length ? 'pantry-list__regular' : undefined
                       }
                     >
-                      {regular.map((item) => (
+                      {(expandedZones.has(zone)
+                        ? regular
+                        : regular.slice(0, INITIAL_REGULAR_COUNT)
+                      ).map((item) => (
                         <PantryRow
                           item={item}
                           key={item.id}
@@ -296,6 +303,20 @@ export function PantryList({
                           onSelect={onSelect}
                         />
                       ))}
+                      {!expandedZones.has(zone) &&
+                      regular.length > INITIAL_REGULAR_COUNT ? (
+                        <button
+                          className="pantry-show-more"
+                          type="button"
+                          onClick={() =>
+                            setExpandedZones(
+                              (previous) => new Set(previous).add(zone),
+                            )
+                          }
+                        >
+                          Mostrar {regular.length - INITIAL_REGULAR_COUNT} más
+                        </button>
+                      ) : null}
                     </div>
                   ) : null}
                   {finished.length ? (

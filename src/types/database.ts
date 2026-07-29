@@ -878,7 +878,11 @@ export interface Database {
         Returns: Json
       }
       claim_household_person: {
-        Args: { person_id: string | null; person_name: string | null; idempotency_key: string }
+        Args: {
+          person_id: string | null
+          person_name: string | null
+          idempotency_key: string
+        }
         Returns: Json
       }
       pantry_delete_item: {
@@ -1028,6 +1032,12 @@ export interface Database {
           recipe_id_value: string
           servings_value: number | null
           idempotency_key: string
+        }
+        Returns: Json
+      }
+      plan_choose_recipe_options: {
+        Args: {
+          week_start_value: string
         }
         Returns: Json
       }

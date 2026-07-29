@@ -33,6 +33,19 @@ function initialEdits(lines: CookLine[]): Record<string, CookEdit> {
   )
 }
 
+/** Texto de "quedará": lo que tendrá la despensa tras aplicar esta fila. */
+function remainingLabel(line: CookLine, edit: CookEdit): string {
+  if (line.trackingMode === 'approximate') {
+    const state = edit.included ? edit.state : line.approximateState
+    return (
+      APPROX_STATES.find((option) => option.value === state)?.label ?? 'Algo'
+    )
+  }
+  const discount = edit.included ? edit.discount || 0 : 0
+  const remaining = Math.max(0, (line.quantity ?? 0) - discount)
+  return formatQuantity(remaining, line.unitCode) ?? 'Sin cantidad'
+}
+
 function CookRow({
   line,
   edit,
@@ -91,6 +104,9 @@ function CookRow({
           <span aria-hidden="true">uds.</span>
         </label>
       )}
+      <small className="cook-row__remaining" aria-live="polite">
+        Quedará: {remainingLabel(line, edit)}
+      </small>
     </div>
   )
 }
