@@ -3,15 +3,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { getPublicSupabaseEnvironment } from '@/lib/supabase/env'
 import { isDevelopmentAuthBypassEnabled } from '@/lib/auth/development-mode'
+import {
+  needsOnboardingGate,
+  requiresSession,
+  resolveOnboardingRedirect,
+} from '@/lib/auth/access-decision'
 import type { Database } from '@/types/database'
-
-const appPaths = ['/despensa', '/compra', '/recetas', '/plan', '/hogar']
-const protectedPaths = [
-  '/onboarding',
-  '/unirme',
-  '/auth/update-password',
-  ...appPaths,
-]
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -43,7 +40,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   const pathname = request.nextUrl.pathname
-  if (protectedPaths.some((path) => pathname.startsWith(path)) && !user) {
+  if (requiresSession(pathname) && !user) {
     const loginUrl = new URL('/login', request.url)
     // Vuelve al destino original tras autenticarse en vez de aterrizar siempre
     // en Despensa (auditoría 2026-07-29). Login valida esto antes de usarlo.
@@ -54,12 +51,7 @@ export async function proxy(request: NextRequest) {
   // Esta lógica solo decide redirecciones para rutas de onboarding; en el
   // resto (p.ej. /auth/update-password o páginas públicas ya con sesión) las
   // dos consultas siguientes no cambiarían nada (auditoría 2026-07-29).
-  const needsOnboardingGate =
-    pathname === '/login' ||
-    pathname === '/unirme' ||
-    pathname.startsWith('/onboarding') ||
-    appPaths.some((path) => pathname.startsWith(path))
-  if (!needsOnboardingGate) return response
+  if (!needsOnboardingGate(pathname)) return response
   const { data: membership } = await supabase
     .from('household_members')
     .select('household_id')
@@ -67,66 +59,42 @@ export async function proxy(request: NextRequest) {
     .eq('status', 'active')
     .maybeSingle()
 
+  let onboardingCompleted = false
+  let needsInvitationCode = false
+  let invitationCheckFailed = false
+
   if (membership) {
     const { data: household } = await supabase
       .from('households')
       .select('onboarding_status')
       .eq('id', membership.household_id)
       .maybeSingle()
-    const completed = household?.onboarding_status === 'completed'
-    if (pathname === '/unirme')
-      return NextResponse.redirect(
-        new URL(completed ? '/despensa' : '/onboarding', request.url),
-      )
-    if (
-      completed &&
-      (pathname === '/login' || pathname.startsWith('/onboarding'))
-    )
-      return NextResponse.redirect(new URL('/despensa', request.url))
-    if (!completed && appPaths.some((path) => pathname.startsWith(path)))
-      return NextResponse.redirect(new URL('/onboarding', request.url))
-    if (pathname === '/login')
-      return NextResponse.redirect(new URL('/onboarding', request.url))
-    return response
+    onboardingCompleted = household?.onboarding_status === 'completed'
+  } else {
+    // Sin membresía activa: hay que distinguir "el hogar ya existe pero esta
+    // cuenta no es miembro" (necesita canjear un código en /unirme) de "aún no
+    // existe ningún hogar" (esta cuenta va a crear el primero). RLS impide
+    // correctamente que un no-miembro lea `households`, así que sin esta RPC no
+    // hay forma de diferenciar ambos casos aquí, y el onboarding volvería a
+    // ofrecer "crear hogar" a una cuenta que el trigger de hogar único
+    // rechazaría. Solo se llama en esta rama: el caso habitual (ya con
+    // membresía) no paga ese viaje de red.
+    const { data, error } = await supabase.rpc('pilot_needs_invitation')
+    needsInvitationCode = data === true
+    invitationCheckFailed = Boolean(error)
   }
 
-  // Sin membresía activa: hay que distinguir "el hogar ya existe pero esta
-  // cuenta no es miembro" (necesita canjear un código en /unirme) de "aún no
-  // existe ningún hogar" (esta cuenta va a crear el primero). RLS impide
-  // correctamente que un no-miembro lea `households`, así que sin esta RPC no
-  // hay forma de diferenciar ambos casos aquí, y el onboarding volvería a
-  // ofrecer "crear hogar" a una cuenta que el trigger de hogar único
-  // rechazaría. Solo se llama en esta rama: el caso habitual (ya con
-  // membresía) no paga ese viaje de red.
-  const { data: needsInvitationCode, error: invitationCheckError } =
-    await supabase.rpc('pilot_needs_invitation')
+  const redirectTo = resolveOnboardingRedirect({
+    pathname,
+    hasActiveMembership: Boolean(membership),
+    onboardingCompleted,
+    needsInvitationCode,
+    invitationCheckFailed,
+  })
 
-  // Fallar CERRADO: si no podemos determinar si esta cuenta necesita un
-  // código (por ejemplo si la migración aún no está aplicada en este
-  // entorno), la llevamos a /unirme, que es una pantalla informativa con
-  // salida por "cerrar sesión". La alternativa —dejarla pasar al
-  // onboarding— haría que intentara crear un segundo hogar y recibiera el
-  // error crudo del trigger de hogar único, que es justo el defecto que
-  // este rediseño elimina.
-  if (invitationCheckError) {
-    if (pathname !== '/unirme')
-      return NextResponse.redirect(new URL('/unirme', request.url))
-    return response
-  }
-
-  if (needsInvitationCode) {
-    if (pathname !== '/unirme')
-      return NextResponse.redirect(new URL('/unirme', request.url))
-    return response
-  }
-
-  if (pathname === '/unirme')
-    return NextResponse.redirect(new URL('/onboarding', request.url))
-  if (pathname === '/login')
-    return NextResponse.redirect(new URL('/onboarding', request.url))
-  if (appPaths.some((path) => pathname.startsWith(path)))
-    return NextResponse.redirect(new URL('/onboarding', request.url))
-  return response
+  return redirectTo
+    ? NextResponse.redirect(new URL(redirectTo, request.url))
+    : response
 }
 
 export const config = {

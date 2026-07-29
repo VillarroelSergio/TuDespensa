@@ -1,3 +1,12 @@
+import { AppError } from '@/lib/errors/AppError'
+
+// Estos fallos son entrada inválida del usuario, no errores inesperados: van
+// como AppError('INVALID_INPUT') para no romper el contrato de errores tipados
+// que sigue el resto de la app (auditoría 2026-07-29).
+function invalid(message: string): never {
+  throw new AppError('INVALID_INPUT', message)
+}
+
 const HOUSEHOLD_NAME_MAX_LENGTH = 80
 const PERSON_NAME_MAX_LENGTH = 80
 const FOOD_NAME_MAX_LENGTH = 120
@@ -18,9 +27,7 @@ function parseBoundedText(
   const normalized = normalizeText(value)
 
   if (normalized.length === 0 || normalized.length > maxLength) {
-    throw new Error(
-      `${fieldName} must contain between 1 and ${maxLength} characters`,
-    )
+    invalid(`${fieldName} must contain between 1 and ${maxLength} characters`)
   }
 
   return normalized
@@ -32,7 +39,7 @@ export function parseHouseholdName(value: string): string {
 
 export function parsePeople(values: readonly string[]): string[] {
   if (values.length > PEOPLE_MAX_COUNT) {
-    throw new Error(`people must contain at most ${PEOPLE_MAX_COUNT} entries`)
+    invalid(`people must contain at most ${PEOPLE_MAX_COUNT} entries`)
   }
 
   const people = values.map((value) =>
@@ -43,7 +50,7 @@ export function parsePeople(values: readonly string[]): string[] {
   )
 
   if (normalizedNames.size !== people.length) {
-    throw new Error('people must not contain duplicate names')
+    invalid('people must not contain duplicate names')
   }
 
   return people
@@ -63,7 +70,7 @@ export function parseIdempotencyKey(value: string): string {
     value.length > IDEMPOTENCY_KEY_MAX_LENGTH ||
     !/^[A-Za-z0-9._:-]+$/.test(value)
   ) {
-    throw new Error(
+    invalid(
       `idempotency key must contain ${IDEMPOTENCY_KEY_MIN_LENGTH}-${IDEMPOTENCY_KEY_MAX_LENGTH} safe characters`,
     )
   }

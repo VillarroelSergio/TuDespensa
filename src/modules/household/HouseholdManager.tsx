@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 import {
   claimHouseholdPerson,
   createInvitationCode,
@@ -40,21 +41,9 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
   const hasFreeSpot = data.activeMemberCount < 2
   const canInvite = data.isOwner && hasFreeSpot
 
-  useEffect(() => {
-    const client = createSupabaseBrowserClient()
-    const channel = client
-      .channel('household-membership-refresh')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'household_invitations' },
-        () => router.refresh(),
-      )
-      .subscribe()
-
-    return () => {
-      void client.removeChannel(channel)
-    }
-  }, [router])
+  // Antes duplicaba a mano la suscripción del hook común, sin su agrupación de
+  // ráfagas de eventos (auditoría 2026-07-29).
+  useRealtimeRefresh('household-membership-refresh', ['household_invitations'])
 
   function generateCode() {
     startTransition(async () => {
