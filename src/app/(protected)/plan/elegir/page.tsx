@@ -8,6 +8,7 @@ import {
   getVisualFixtureScenario,
   visualFixture,
 } from '@/lib/visual-context/fixtures'
+import { withPhaseTiming } from '@/lib/observability/logPhaseDuration'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -44,7 +45,7 @@ export default async function ChooseRecipePage({
           suggestions: emptyVisualFixture.suggestions,
           recommended: [],
         }
-    : await getSuggestions(fecha)
+    : await withPhaseTiming('plan.getSuggestions', () => getSuggestions(fecha))
 
   return (
     <ChooseRecipeView

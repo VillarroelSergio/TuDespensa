@@ -6,7 +6,6 @@ import { AppShell } from '@/components/ui/AppShell'
 import {
   DISH_TYPE_OPTIONS,
   QUICK_MAIN_INGREDIENT_CATEGORIES,
-  availableCategories,
   dishTypeLabel,
   filterRecipes,
   timeLabel,
@@ -41,15 +40,6 @@ export function RecipesList({
   const [category, setCategory] = useState('')
   const [dishType, setDishType] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
-  // Las 5 más comunes ya son botón rápido arriba; el desplegable solo cubre
-  // el resto para no duplicar el mismo filtro dos veces.
-  const categories = useMemo(
-    () =>
-      availableCategories(initialRecipes).filter(
-        (name) => !QUICK_MAIN_INGREDIENT_CATEGORIES.includes(name),
-      ),
-    [initialRecipes],
-  )
   const recipes = useMemo(
     () =>
       filterRecipes(initialRecipes, term, {
@@ -163,26 +153,6 @@ export function RecipesList({
               </option>
             ))}
           </select>
-          {categories.length ? (
-            <>
-              <label className="sr-only" htmlFor="recipes-category">
-                Categoría
-              </label>
-              <select
-                id="recipes-category"
-                className="recipes-filter-select"
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-              >
-                <option value="">Otras categorías</option>
-                {categories.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </>
-          ) : null}
         </div>
         {adding ? (
           <div className="recipes-add">

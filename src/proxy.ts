@@ -51,6 +51,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
   if (!user) return response
+  // Esta lógica solo decide redirecciones para rutas de onboarding; en el
+  // resto (p.ej. /auth/update-password o páginas públicas ya con sesión) las
+  // dos consultas siguientes no cambiarían nada (auditoría 2026-07-29).
+  const needsOnboardingGate =
+    pathname === '/login' ||
+    pathname === '/unirme' ||
+    pathname.startsWith('/onboarding') ||
+    appPaths.some((path) => pathname.startsWith(path))
+  if (!needsOnboardingGate) return response
   const { data: membership } = await supabase
     .from('household_members')
     .select('household_id')

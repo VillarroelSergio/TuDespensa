@@ -19,7 +19,11 @@ import { buildCookLines } from './cooking'
 import type { Consumption, CookLine, CookPantryItem } from './cooking'
 import { classifyFoodGroup } from './foodGroups'
 import { addDays, weekStart } from './presentation'
-import { missingIngredients, rankSuggestions } from './suggestions'
+import {
+  buildCatalogEntries,
+  missingIngredients,
+  rankSuggestions,
+} from './suggestions'
 import type { Suggestion } from './suggestions'
 import type { MealType, PlannedMeal } from './types'
 
@@ -257,11 +261,35 @@ export type ChooseRecipeOptions = {
 
 const RECOMMENDED_COUNT = 10
 
+/** Forma cruda que devuelve la RPC `plan_choose_recipe_options`. */
+type ChooseRecipeOptionsRpc = {
+  recipes: {
+    id: string
+    title: string
+    dishType: string | null
+    totalMinutes: number | null
+    ingredients: string[]
+  }[]
+  preferences: {
+    recipeId: string
+    isFavorite: boolean
+    rating: number | null
+  }[]
+  categoryAssignments: { recipeId: string; categoryName: string }[]
+  plannedRecipeIds: string[]
+  pantry: { name: string; priority: boolean }[]
+  catalog: { canonicalName: string; terms: string[] }[]
+}
+
 /**
  * Sugerencias explicables para un hueco: reúne biblioteca, despensa y semana, y
  * delega la puntuación en `rankSuggestions`, que es puro y determinista. Además
  * de las 3 sugerencias, devuelve 10 recomendadas más y el índice de búsqueda
  * completo, para que el selector no repita la consulta de recetas.
+ *
+ * Toda la lectura viene de una sola RPC (`plan_choose_recipe_options`) en vez
+ * de ~11 consultas separadas: mismo dato, un solo viaje de red (auditoría
+ * 2026-07-29).
  */
 export async function getSuggestions(
   mealDate: string,
@@ -273,68 +301,35 @@ export async function getSuggestions(
   if (!user) return { suggestions: [], recommended: [], recipes: [] }
 
   const startIso = weekStart(mealDate)
-  const [
-    recipesRes,
-    ingredientsRes,
-    prefsRes,
-    assignsRes,
-    catsRes,
-    plannedRes,
-    pantry,
-    catalog,
-  ] = await Promise.all([
-    // Solo recetas listas: una captura `pending` todavía no se puede cocinar.
-    supabase
-      .from('recipes')
-      .select('id,title,dish_type,total_minutes')
-      .eq('status', 'ready'),
-    supabase.from('recipe_ingredients').select('recipe_id,name'),
-    supabase
-      .from('recipe_preferences')
-      .select('recipe_id,is_favorite,rating')
-      .eq('user_id', user.id),
-    supabase
-      .from('recipe_category_assignments')
-      .select('recipe_id,category_id'),
-    supabase.from('recipe_categories').select('id,name'),
-    supabase
-      .from('planned_meals')
-      .select('recipe_id')
-      .gte('meal_date', startIso)
-      .lte('meal_date', addDays(startIso, 6)),
-    getSuggestionPantry(supabase),
-    getCatalogEntries(supabase),
-  ])
-  if (recipesRes.error) failure(recipesRes.error)
-  const recipes = recipesRes.data ?? []
+  const { data, error } = await supabase.rpc('plan_choose_recipe_options', {
+    week_start_value: startIso,
+  })
+  if (error) failure(error)
+  const options = (data ?? {}) as Partial<ChooseRecipeOptionsRpc>
+  const recipes = options.recipes ?? []
   if (!recipes.length) return { suggestions: [], recommended: [], recipes: [] }
 
   const ingredientsByRecipe = new Map<string, string[]>()
-  for (const row of ingredientsRes.data ?? []) {
-    ingredientsByRecipe.set(row.recipe_id, [
-      ...(ingredientsByRecipe.get(row.recipe_id) ?? []),
-      parseIngredient(row.name).name,
-    ])
+  for (const recipe of recipes) {
+    ingredientsByRecipe.set(
+      recipe.id,
+      recipe.ingredients.map((name) => parseIngredient(name).name),
+    )
   }
   const prefByRecipe = new Map(
-    (prefsRes.data ?? []).map((row) => [row.recipe_id, row]),
-  )
-  const categoryNameById = new Map(
-    (catsRes.data ?? []).map((row) => [row.id, row.name]),
+    (options.preferences ?? []).map((row) => [row.recipeId, row]),
   )
   const categoriesByRecipe = new Map<string, string[]>()
-  for (const row of assignsRes.data ?? []) {
-    const name = categoryNameById.get(row.category_id)
-    if (!name) continue
-    categoriesByRecipe.set(row.recipe_id, [
-      ...(categoriesByRecipe.get(row.recipe_id) ?? []),
-      name,
+  for (const row of options.categoryAssignments ?? []) {
+    categoriesByRecipe.set(row.recipeId, [
+      ...(categoriesByRecipe.get(row.recipeId) ?? []),
+      row.categoryName,
     ])
   }
 
-  const plannedRecipeIds = (plannedRes.data ?? []).map((row) => row.recipe_id)
+  const plannedRecipeIds = options.plannedRecipeIds ?? []
   const dishTypeById = new Map(
-    recipes.map((recipe) => [recipe.id, recipe.dish_type]),
+    recipes.map((recipe) => [recipe.id, recipe.dishType]),
   )
   const plannedDishTypes = plannedRecipeIds.map(
     (id) => (dishTypeById.get(id) ?? null) as RecipeDishType | null,
@@ -349,18 +344,18 @@ export async function getSuggestions(
     candidates: recipes.map((recipe) => ({
       id: recipe.id,
       title: recipe.title,
-      totalMinutes: recipe.total_minutes,
-      dishType: recipe.dish_type as RecipeDishType | null,
-      isFavorite: prefByRecipe.get(recipe.id)?.is_favorite ?? false,
+      totalMinutes: recipe.totalMinutes,
+      dishType: recipe.dishType as RecipeDishType | null,
+      isFavorite: prefByRecipe.get(recipe.id)?.isFavorite ?? false,
       rating: prefByRecipe.get(recipe.id)?.rating ?? null,
       categories: categoriesByRecipe.get(recipe.id) ?? [],
       ingredients: ingredientsByRecipe.get(recipe.id) ?? [],
     })),
-    pantry,
+    pantry: options.pantry ?? [],
     plannedRecipeIds,
     plannedDishTypes,
     plannedFoodGroups,
-    catalog,
+    catalog: buildCatalogEntries(options.catalog ?? []),
   }
   // Las 10 recomendadas son las siguientes en el mismo ranking, sin repetir
   // las 3 sugerencias ya mostradas.
@@ -371,7 +366,7 @@ export async function getSuggestions(
     recipes: recipes.map((recipe) => ({
       id: recipe.id,
       title: recipe.title,
-      totalMinutes: recipe.total_minutes,
+      totalMinutes: recipe.totalMinutes,
       categories: categoriesByRecipe.get(recipe.id) ?? [],
     })),
   }
