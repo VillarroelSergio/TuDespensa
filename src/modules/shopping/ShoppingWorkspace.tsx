@@ -1,6 +1,6 @@
 'use client'
 
-import { useOptimistic, useState, useTransition } from 'react'
+import { useOptimistic, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
@@ -25,7 +25,12 @@ export function ShoppingWorkspace({
   const router = useRouter()
   const [status, setStatus] = useState('')
   const [adding, setAdding] = useState(false)
-  const [, startTransition] = useTransition()
+  const [isPending, startTransition] = useTransition()
+  // Ítems con una mutación en curso, comprobado de forma síncrona: evita que
+  // un doble clic dispare una segunda RPC para el mismo ítem antes de que
+  // React repinte con isPending en true.
+  const pendingIdsRef = useRef<Set<string>>(new Set())
+  const busy = adding || isPending
   // Pinta el tick al instante; revalidatePath en la action reconcilia con el
   // servidor sin recarga global. Si algo falla, refrescamos para resincronizar.
   const [items, applyToggle] = useOptimistic(
@@ -43,10 +48,14 @@ export function ShoppingWorkspace({
 
   useRealtimeRefresh('shopping-refresh', ['shopping_items'], {
     enabled: !isVisualFixture,
+    // Mientras esta sesión tiene una mutación propia en curso, revalidatePath
+    // en la action ya reconcilia su vista; el aviso Realtime del mismo cambio
+    // solo duplicaría el refresco.
+    shouldRefresh: () => pendingIdsRef.current.size === 0,
   })
 
   async function handleAdd(name: string) {
-    if (adding) return
+    if (busy) return
     setAdding(true)
     setStatus('')
     try {
@@ -60,7 +69,9 @@ export function ShoppingWorkspace({
   }
 
   function handleToggle(item: ShoppingItem) {
+    if (pendingIdsRef.current.has(item.id)) return
     setStatus('')
+    pendingIdsRef.current.add(item.id)
     startTransition(async () => {
       applyToggle(item.id)
       try {
@@ -73,12 +84,16 @@ export function ShoppingWorkspace({
           'No hemos podido guardar el cambio. Hemos actualizado la lista.',
         )
         router.refresh()
+      } finally {
+        pendingIdsRef.current.delete(item.id)
       }
     })
   }
 
   function handleDelete(item: ShoppingItem) {
+    if (pendingIdsRef.current.has(item.id)) return
     setStatus('')
+    pendingIdsRef.current.add(item.id)
     startTransition(async () => {
       applyDelete(item.id)
       try {
@@ -89,16 +104,20 @@ export function ShoppingWorkspace({
           'No hemos podido eliminar el producto. Hemos actualizado la lista.',
         )
         router.refresh()
+      } finally {
+        pendingIdsRef.current.delete(item.id)
       }
     })
   }
 
   function handleToggleAll(purchased: boolean) {
     const targets = visibleItems.filter(
-      (item) => item.isPurchased !== purchased,
+      (item) =>
+        item.isPurchased !== purchased && !pendingIdsRef.current.has(item.id),
     )
     if (!targets.length) return
     setStatus('')
+    targets.forEach((item) => pendingIdsRef.current.add(item.id))
     startTransition(async () => {
       targets.forEach((item) => applyToggle(item.id))
       try {
@@ -115,6 +134,8 @@ export function ShoppingWorkspace({
           'No hemos podido guardar los cambios. Hemos actualizado la lista.',
         )
         router.refresh()
+      } finally {
+        targets.forEach((item) => pendingIdsRef.current.delete(item.id))
       }
     })
   }
@@ -122,7 +143,7 @@ export function ShoppingWorkspace({
   return (
     <ShoppingList
       initialItems={visibleItems}
-      pending={adding}
+      pending={busy}
       status={status}
       notice={notice}
       onAdd={handleAdd}

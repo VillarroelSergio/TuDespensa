@@ -32,10 +32,6 @@ export const UNIT_OPTIONS = [
   { value: 'l', label: 'l' },
 ] as const
 
-function unitLabel(code: string | null): string {
-  return UNIT_OPTIONS.find((option) => option.value === code)?.label ?? ''
-}
-
 const CANONICAL_FACTOR: Record<string, number> = {
   unit: 1,
   g: 0.001,
@@ -67,7 +63,10 @@ export function formatIngredient(ingredient: RecipeIngredient): string {
 
 export type IngredientAvailability = 'owned' | 'low' | 'missing'
 
-export type PantryAvailabilityItem = { name: string; status: 'out' | 'low' | 'available' }
+export type PantryAvailabilityItem = {
+  name: string
+  status: 'out' | 'low' | 'available'
+}
 
 // Mismo criterio que Plan y «cocinar»: comparar por subcadena normalizada, no
 // solo exacto+singular. Con el nombre ya limpio («cebolla» en vez de «1/4
@@ -109,6 +108,38 @@ export function timeLabel(totalMinutes: number | null): string | null {
   return totalMinutes && totalMinutes > 0 ? `${totalMinutes} min` : null
 }
 
+/** Compara texto ignorando mayúsculas y tildes (buscar "jamon" encuentra "jamón"). */
+export function normalizeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLocaleLowerCase('es')
+    .trim()
+}
+
+// Las 8 categorías fijas del filtro por ingrediente principal (dimensión
+// `main_ingredient`). Se guardan como `recipe_categories.name` normales, sin
+// enum en BD: son sugerencias de nombre, no un valor cerrado por columna.
+export const MAIN_INGREDIENT_CATEGORIES = [
+  'Pasta',
+  'Verduras',
+  'Legumbres',
+  'Arroz y cereales',
+  'Huevo',
+  'Aves',
+  'Carne',
+  'Pescado',
+] as const
+
+/** Subconjunto que se muestra como chip de un toque (el resto vive en "Todas las categorías"). */
+export const QUICK_MAIN_INGREDIENT_CATEGORIES: readonly string[] = [
+  'Pasta',
+  'Verduras',
+  'Legumbres',
+  'Carne',
+  'Pescado',
+]
+
 // ponytail: filtra por título y categoría/favorito; la búsqueda por ingrediente
 // llega cuando los ingredientes se carguen con la tarjeta.
 export function filterRecipes(
@@ -120,13 +151,17 @@ export function filterRecipes(
     dishType?: RecipeDishType
   } = {},
 ): Recipe[] {
-  const query = term.trim().toLocaleLowerCase('es')
+  const query = normalizeText(term)
+  const category = options.category ? normalizeText(options.category) : null
   const matched = recipes.filter((recipe) => {
     if (options.favoritesOnly && !recipe.isFavorite) return false
-    if (options.category && !recipe.categories.includes(options.category))
+    if (
+      category &&
+      !recipe.categories.some((name) => normalizeText(name) === category)
+    )
       return false
     if (options.dishType && recipe.dishType !== options.dishType) return false
-    return query ? recipe.title.toLocaleLowerCase('es').includes(query) : true
+    return query ? normalizeText(recipe.title).includes(query) : true
   })
   return [...matched].sort((left, right) =>
     left.title.localeCompare(right.title, 'es'),

@@ -9,6 +9,8 @@ import {
   demoShoppingItems,
 } from '@/lib/dev/demo-fixtures'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
+import { logRpcConflict } from '@/lib/observability/logRpcConflict'
+import { isRpcConflictResult } from '@/lib/observability/rpcConflict'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseFoodName, parseIdempotencyKey } from '@/lib/validation/onboarding'
 
@@ -31,7 +33,17 @@ function failure(error: { code?: string; message: string }): never {
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.rpc(name as never, args as never)
-  if (error) failure(error)
+  if (error || isRpcConflictResult(data)) {
+    const conflict = error?.code === '40001' || isRpcConflictResult(data)
+    const failureError =
+      error ??
+      ({
+        code: '40001',
+        message: 'Item was changed, unavailable, or inaccessible',
+      } satisfies { code: string; message: string })
+    if (conflict) await logRpcConflict(name, failureError, args)
+    failure(failureError)
+  }
   revalidatePath('/compra')
   return data as T
 }

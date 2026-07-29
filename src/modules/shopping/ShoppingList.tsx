@@ -9,10 +9,12 @@ import type { ShoppingItem } from './types'
 function SelectAllRow({
   total,
   purchased,
+  pending,
   onToggleAll,
 }: {
   total: number
   purchased: number
+  pending: boolean
   onToggleAll: (purchased: boolean) => void
 }) {
   const ref = useRef<HTMLInputElement>(null)
@@ -25,6 +27,7 @@ function SelectAllRow({
       <input
         ref={ref}
         checked={allChecked}
+        disabled={pending}
         onChange={() => onToggleAll(!allChecked)}
         type="checkbox"
       />
@@ -170,6 +173,7 @@ export function ShoppingList({
           <SelectAllRow
             total={items.length}
             purchased={purchased}
+            pending={pending}
             onToggleAll={onToggleAll}
           />
         ) : null}

@@ -6,6 +6,7 @@ import {
   getVisualFixtureScenario,
   visualFixture,
 } from '@/lib/visual-context/fixtures'
+import { withPhaseTiming } from '@/lib/observability/logPhaseDuration'
 
 export default async function ShoppingPage({
   searchParams,
@@ -16,6 +17,6 @@ export default async function ShoppingPage({
   const scenario = getVisualFixtureScenario(fixture)
   const items = scenario
     ? scenario === 'everyday' ? visualFixture.shopping : emptyVisualFixture.shopping
-    : await getShoppingItems()
+    : await withPhaseTiming('compra.getShoppingItems', getShoppingItems)
   return <ShoppingWorkspace initialItems={items} notice={confirmNotice(confirmado) ?? ticketNotice(ticket)} isVisualFixture={Boolean(scenario)} />
 }

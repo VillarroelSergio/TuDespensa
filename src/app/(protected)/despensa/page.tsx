@@ -5,6 +5,7 @@ import {
   getVisualFixtureScenario,
   visualFixture,
 } from '@/lib/visual-context/fixtures'
+import { withPhaseTiming } from '@/lib/observability/logPhaseDuration'
 
 export default async function PantryPage({
   searchParams,
@@ -15,6 +16,6 @@ export default async function PantryPage({
   const scenario = getVisualFixtureScenario(fixture)
   const items = scenario
     ? scenario === 'everyday' ? visualFixture.pantry : emptyVisualFixture.pantry
-    : await getPantryListItems()
+    : await withPhaseTiming('despensa.getPantryListItems', getPantryListItems)
   return <PantryWorkspace initialItems={items} isVisualFixture={Boolean(scenario)} />
 }

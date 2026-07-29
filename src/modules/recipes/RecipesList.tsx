@@ -5,7 +5,7 @@ import { FormEvent, useMemo, useState } from 'react'
 import { AppShell } from '@/components/ui/AppShell'
 import {
   DISH_TYPE_OPTIONS,
-  availableCategories,
+  QUICK_MAIN_INGREDIENT_CATEGORIES,
   dishTypeLabel,
   filterRecipes,
   timeLabel,
@@ -40,10 +40,6 @@ export function RecipesList({
   const [category, setCategory] = useState('')
   const [dishType, setDishType] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
-  const categories = useMemo(
-    () => availableCategories(initialRecipes),
-    [initialRecipes],
-  )
   const recipes = useMemo(
     () =>
       filterRecipes(initialRecipes, term, {
@@ -121,6 +117,26 @@ export function RecipesList({
           >
             ★ Favoritas
           </button>
+          <div
+            className="recipes-quick-categories"
+            role="group"
+            aria-label="Filtrar por ingrediente principal"
+          >
+            {QUICK_MAIN_INGREDIENT_CATEGORIES.map((name) => {
+              const active = category === name
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  className={`recipes-filter${active ? ' is-active' : ''}`}
+                  aria-current={active ? 'true' : undefined}
+                  onClick={() => setCategory(active ? '' : name)}
+                >
+                  {name}
+                </button>
+              )
+            })}
+          </div>
           <label className="sr-only" htmlFor="recipes-dish-type">
             Tipo de plato
           </label>
@@ -137,26 +153,6 @@ export function RecipesList({
               </option>
             ))}
           </select>
-          {categories.length ? (
-            <>
-              <label className="sr-only" htmlFor="recipes-category">
-                Categoría
-              </label>
-              <select
-                id="recipes-category"
-                className="recipes-filter-select"
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-              >
-                <option value="">Todas las categorías</option>
-                {categories.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </>
-          ) : null}
         </div>
         {adding ? (
           <div className="recipes-add">

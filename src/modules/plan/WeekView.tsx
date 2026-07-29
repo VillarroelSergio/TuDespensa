@@ -93,7 +93,11 @@ function Slot({ slot }: { slot: PlanSlot }) {
       <span className="plan-slot__label">{mealLabel(slot.mealType)}</span>
       {slot.meal ? (
         <div className="plan-slot__recipe">
-          <Link href={`/recetas/${slot.meal.recipeId}`}>{slot.meal.title}</Link>
+          {/* Hasta 14 huecos por semana enlazan aquí; la mayoría no se abren
+              (auditoría 2026-07-29), así que no precargamos el detalle. */}
+          <Link href={`/recetas/${slot.meal.recipeId}`} prefetch={false}>
+            {slot.meal.title}
+          </Link>
           <span className="plan-slot__meta">
             {[
               timeLabel(slot.meal.totalMinutes),
@@ -112,7 +116,7 @@ function Slot({ slot }: { slot: PlanSlot }) {
           className="plan-slot__add"
           href={chooseHref(slot.mealDate, slot.mealType)}
         >
-          Añadir
+          + Añadir {mealLabel(slot.mealType).toLowerCase()}
         </a>
       )}
     </div>

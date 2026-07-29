@@ -1,6 +1,12 @@
 'use client'
 
-import { useCallback, useOptimistic, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
@@ -36,25 +42,45 @@ export function PantryWorkspace({
     null,
   )
   const [undo, setUndo] = useState<PresentedPantryItem | null>(null)
+  // `pendingId` se actualiza en el siguiente render. Este guard síncrono
+  // cubre los clics consecutivos que llegan antes de que React lo deshabilite.
+  const pendingIdsRef = useRef<Set<string>>(new Set())
   const [, startTransition] = useTransition()
   const refresh = useCallback(() => router.refresh(), [router])
-  // «Se terminó» pinta el estado al instante; revalidatePath reconcilia con el
+  // Cada acción pinta su cambio al instante; revalidatePath reconcilia con el
   // servidor sin recarga global. Si algo falla, refrescamos para resincronizar.
-  const [items, markOut] = useOptimistic(
+  type PantryOptimisticAction =
+    | { type: 'markOut'; id: string }
+    | { type: 'adjust'; id: string; quantity: number }
+    | { type: 'remove'; id: string }
+  const [items, applyOptimistic] = useOptimistic(
     initialItems,
-    (current: PantryListItem[], id: string) =>
-      current.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              approximateState:
-                item.trackingMode === 'approximate'
-                  ? 'out'
-                  : item.approximateState,
-              quantity: item.trackingMode === 'approximate' ? item.quantity : 0,
-            }
-          : item,
-      ),
+    (current: PantryListItem[], action: PantryOptimisticAction) => {
+      switch (action.type) {
+        case 'markOut':
+          return current.map((item) =>
+            item.id === action.id
+              ? {
+                  ...item,
+                  approximateState:
+                    item.trackingMode === 'approximate'
+                      ? 'out'
+                      : item.approximateState,
+                  quantity:
+                    item.trackingMode === 'approximate' ? item.quantity : 0,
+                }
+              : item,
+          )
+        case 'adjust':
+          return current.map((item) =>
+            item.id === action.id
+              ? { ...item, quantity: action.quantity }
+              : item,
+          )
+        case 'remove':
+          return current.filter((item) => item.id !== action.id)
+      }
+    },
   )
 
   useRealtimeRefresh(
@@ -69,9 +95,11 @@ export function PantryWorkspace({
   ) {
     // La única acción de presencia viva es marcar «se terminó».
     if (state !== 'out') return
+    if (pendingIdsRef.current.has(item.id)) return
+    pendingIdsRef.current.add(item.id)
     setStatus('')
     startTransition(async () => {
-      markOut(item.id)
+      applyOptimistic({ type: 'markOut', id: item.id })
       try {
         const result =
           item.trackingMode === 'approximate'
@@ -98,6 +126,8 @@ export function PantryWorkspace({
           'No hemos podido guardar el cambio. Hemos actualizado la lista.',
         )
         refresh()
+      } finally {
+        pendingIdsRef.current.delete(item.id)
       }
     })
   }
@@ -147,41 +177,45 @@ export function PantryWorkspace({
     const quantity = Math.max(0, (item.quantity ?? 0) + delta)
     setPendingId(item.id)
     setStatus('')
-    try {
-      await adjustPantryItem({
-        itemId: item.id,
-        version: item.version,
-        trackingMode: item.trackingMode,
-        approximateState: null,
-        quantity,
-        unitCode: item.unitCode,
-      })
-      setStatus(`${item.name}: cantidad actualizada.`)
-      refresh()
-    } catch {
-      setStatus(
-        'No hemos podido actualizar la cantidad. Hemos actualizado la lista.',
-      )
-      refresh()
-    } finally {
-      setPendingId(null)
-    }
+    startTransition(async () => {
+      applyOptimistic({ type: 'adjust', id: item.id, quantity })
+      try {
+        await adjustPantryItem({
+          itemId: item.id,
+          version: item.version,
+          trackingMode: item.trackingMode,
+          approximateState: null,
+          quantity,
+          unitCode: item.unitCode,
+        })
+        setStatus(`${item.name}: cantidad actualizada.`)
+      } catch {
+        setStatus(
+          'No hemos podido actualizar la cantidad. Hemos actualizado la lista.',
+        )
+        refresh()
+      } finally {
+        setPendingId(null)
+      }
+    })
   }
 
   async function handleRemove(item: PresentedPantryItem) {
     if (pendingId) return
     setPendingId(item.id)
     setStatus('')
-    try {
-      await deletePantryItem(item.id, item.version)
-      setStatus(`${item.name}: eliminado de la despensa.`)
-      refresh()
-    } catch {
-      setStatus('No hemos podido eliminarlo. Hemos actualizado la lista.')
-      refresh()
-    } finally {
-      setPendingId(null)
-    }
+    startTransition(async () => {
+      applyOptimistic({ type: 'remove', id: item.id })
+      try {
+        await deletePantryItem(item.id, item.version)
+        setStatus(`${item.name}: eliminado de la despensa.`)
+      } catch {
+        setStatus('No hemos podido eliminarlo. Hemos actualizado la lista.')
+        refresh()
+      } finally {
+        setPendingId(null)
+      }
+    })
   }
 
   async function handleUpdate(
