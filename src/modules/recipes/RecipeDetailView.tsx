@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { AppShell } from '@/components/ui/AppShell'
 import type { CatalogEntry } from '@/modules/plan/suggestions'
 
 import {
@@ -34,9 +35,11 @@ export function RecipeDetailView({
   ].filter(Boolean)
 
   return (
-    <main className="recipe-detail">
+    // Antes esta pantalla era un <main> suelto, sin el armazón de la app: en
+    // móvil desaparecía la barra inferior y la única salida era «← Recetas».
+    <AppShell contentClassName="recipe-detail" current="recetas">
       <Link className="recipe-back" href="/recetas">
-        ← Recetas
+        <span aria-hidden="true">←</span> Recetas
       </Link>
       <header className="recipe-detail__header">
         <h1>{recipe.title}</h1>
@@ -53,6 +56,9 @@ export function RecipeDetailView({
             Origen:{' '}
             <a href={recipe.sourceUrl} rel="noreferrer" target="_blank">
               {recipe.sourceUrl}
+              {/* Avisar de que se abre fuera: abrir una pestaña nueva sin
+                  anunciarlo desorienta, sobre todo con lector de pantalla. */}
+              <span className="sr-only"> (se abre en una ventana nueva)</span>
             </a>
           </p>
         ) : null}
@@ -123,6 +129,6 @@ export function RecipeDetailView({
       >
         {recipe.status === 'pending' ? 'Revisar receta' : 'Editar'}
       </Link>
-    </main>
+    </AppShell>
   )
 }

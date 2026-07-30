@@ -188,11 +188,19 @@ function LoginForm() {
         {!localMode ? (
           <p className="auth-links">
             {mode === 'register' ? (
-              <button className="text-action" onClick={() => setMode('login')}>
+              <button
+                className="text-action"
+                onClick={() => setMode('login')}
+                type="button"
+              >
                 Ya tengo cuenta
               </button>
             ) : (
-              <button className="text-action" onClick={() => setMode('register')}>
+              <button
+                className="text-action"
+                onClick={() => setMode('register')}
+                type="button"
+              >
                 Crear cuenta
               </button>
             )}
@@ -205,7 +213,11 @@ function LoginForm() {
             hogar que te ayude desde la pantalla Hogar.
           </p>
         ) : null}
-        <p aria-live="polite">{message}</p>
+        {/* role="status" para que el error de acceso se anuncie: solo con
+            aria-live algunos lectores no lo recogen. */}
+        <p aria-live="polite" role="status">
+          {message}
+        </p>
       </section>
     </main>
   )

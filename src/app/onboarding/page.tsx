@@ -98,8 +98,13 @@ function OnboardingContent() {
     }
   }, [])
 
+  // El foco al título se movía solo al montar, no al cambiar de paso: quien
+  // navega con teclado o lector se quedaba en el botón del paso anterior.
   useEffect(() => {
     h1.current?.focus()
+  }, [step])
+
+  useEffect(() => {
     if (isVisualFixture) return
     const initialLoad = setTimeout(() => void refresh(), 0)
     const client = createSupabaseBrowserClient()
@@ -255,18 +260,21 @@ function OnboardingContent() {
               onChange={(event) => setName(event.target.value)}
             />
           </label>
-          <p className="label">Personas del hogar</p>
-          <div className="member">Tú</div>
-          {people.map((value, index) => (
-            <div className="member" key={value}>
-              {value}
-              <button
-                onClick={() => setPeople(people.filter((_, i) => i !== index))}
-              >
-                Quitar a {value} del hogar
-              </button>
-            </div>
-          ))}
+          <h2 className="label">Personas del hogar</h2>
+          <ul className="household-people">
+            <li className="member">Tú</li>
+            {people.map((value, index) => (
+              <li className="member" key={value}>
+                {value}
+                <button
+                  onClick={() => setPeople(people.filter((_, i) => i !== index))}
+                  type="button"
+                >
+                  Quitar a {value} del hogar
+                </button>
+              </li>
+            ))}
+          </ul>
           <input
             aria-label="Nombre o apodo"
             value={person}
@@ -304,7 +312,9 @@ function OnboardingContent() {
             Volver
           </button>
           <p className="eyebrow">Inventario: {step - 1} de 3</p>
-          <div className="progress">
+          {/* La barra duplica el texto «Inventario: N de 3» que va justo
+              encima: decorativa para el lector de pantalla. */}
+          <div aria-hidden="true" className="progress">
             <i style={{ width: `${((step - 1) / 3) * 100}%` }} />
           </div>
           <p aria-live="polite" className="save-status">
@@ -396,7 +406,9 @@ function OnboardingContent() {
   return (
     <main className="onboarding">
       <section className="onboarding-card success">
-        <div className="check">✓</div>
+        <div aria-hidden="true" className="check">
+          ✓
+        </div>
         <h1 ref={h1} tabIndex={-1}>
           Tu despensa está lista
         </h1>

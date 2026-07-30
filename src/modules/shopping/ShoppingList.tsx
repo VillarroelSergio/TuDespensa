@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 
 import { AppShell } from '@/components/ui/AppShell'
@@ -126,15 +127,18 @@ export function ShoppingList({
   }
   return (
     <AppShell current="compra">
-      <div aria-labelledby="shopping-title">
+      <div>
         <header className="shopping-header">
           <div>
             <p className="shopping-kicker">Lista de esta semana</p>
             <h1 id="shopping-title">Compra</h1>
           </div>
+          {/* El aria-label de un <div> sin rol se ignora: el progreso se
+              anuncia con role="group" y se actualiza al cambiar. */}
           <div
-            className="shopping-progress"
             aria-label={`${purchased} de ${items.length} productos comprados`}
+            className="shopping-progress"
+            role="group"
           >
             <strong>{progress.label}</strong>
             <span>
@@ -161,9 +165,9 @@ export function ShoppingList({
         <div className="shopping-progress-bar" aria-hidden="true">
           <span style={{ width: `${progress.ratio * 100}%` }} />
         </div>
-        <a className="shopping-back shopping-ticket-link" href="/compra/ticket">
+        <Link className="shopping-back" href="/compra/ticket">
           Importar de un ticket
-        </a>
+        </Link>
         {status ? (
           <p className="pantry-sync-status" aria-live="polite">
             {status}
@@ -212,13 +216,24 @@ export function ShoppingList({
           ) : null}
         </section>
         {purchased ? (
-          <a className="shopping-confirm" href="/compra/revisar">
+          <Link className="shopping-confirm" href="/compra/revisar">
             Confirmar compra · {purchased}
-          </a>
+          </Link>
         ) : (
-          <button className="shopping-confirm" disabled type="button">
-            Confirmar compra
-          </button>
+          <>
+            {/* Antes el botón estaba apagado sin decir por qué. */}
+            <p className="shopping-next" id="confirm-blocked">
+              Marca lo que ya has comprado para poder confirmar.
+            </p>
+            <button
+              aria-describedby="confirm-blocked"
+              className="shopping-confirm"
+              disabled
+              type="button"
+            >
+              Confirmar compra
+            </button>
+          </>
         )}
       </div>
     </AppShell>

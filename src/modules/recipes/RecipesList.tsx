@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
 
 import { AppShell } from '@/components/ui/AppShell'
@@ -79,7 +80,7 @@ export function RecipesList({
 
   return (
     <AppShell current="recetas">
-      <div aria-labelledby="recipes-title">
+      <div>
         <header className="shopping-header">
           <h1 id="recipes-title">Recetas</h1>
           <button
@@ -110,7 +111,9 @@ export function RecipesList({
             aria-pressed={favoritesOnly}
             onClick={() => setFavoritesOnly((only) => !only)}
           >
-            ★ Favoritas
+            {/* La estrella es decorativa: sin aria-hidden el lector leía
+                «estrella negra Favoritas». */}
+            <span aria-hidden="true">★ </span>Favoritas
           </button>
           <div
             className="recipes-quick-categories"
@@ -124,7 +127,9 @@ export function RecipesList({
                   key={name}
                   type="button"
                   className={`recipes-filter${active ? ' is-active' : ''}`}
-                  aria-current={active ? 'true' : undefined}
+                  // aria-pressed, no aria-current: es un filtro que se activa y
+                  // desactiva, no la página en la que estás.
+                  aria-pressed={active}
                   onClick={() => setCategory(active ? '' : name)}
                 >
                   {name}
@@ -176,13 +181,18 @@ export function RecipesList({
         ) : null}
         <section className="recipes-list" aria-label="Biblioteca de recetas">
           {visibleRecipes.map((recipe) => (
-            <a
+            <Link
               className="recipe-card"
               key={recipe.id}
               href={`/recetas/${recipe.id}`}
             >
               <span className="recipe-card__title">
-                {recipe.isFavorite ? '★ ' : ''}
+                {recipe.isFavorite ? (
+                  <>
+                    <span aria-hidden="true">★ </span>
+                    <span className="sr-only">Favorita: </span>
+                  </>
+                ) : null}
                 {recipe.title}
               </span>
               {recipe.status === 'pending' ? (
@@ -198,7 +208,7 @@ export function RecipesList({
                     .join(' · ')}
                 </span>
               ) : null}
-            </a>
+            </Link>
           ))}
         </section>
         {recipes.length > visibleCount ? (

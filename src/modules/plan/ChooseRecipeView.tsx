@@ -124,9 +124,10 @@ export function ChooseRecipeView({
   return (
     <AppShell current="plan" contentClassName="choose-page">
       <section aria-labelledby="choose-title">
-        <a className="choose-back" href={backHref}>
-          ← Añadir a · {slotLabel(mealDate, mealType)}
-        </a>
+        <Link className="choose-back" href={backHref}>
+          <span aria-hidden="true">←</span> Añadir a ·{' '}
+          {slotLabel(mealDate, mealType)}
+        </Link>
         <header className="choose-header">
           <p className="choose-kicker">Decide una comida</p>
           <h1 className="choose-title" id="choose-title">
@@ -177,7 +178,9 @@ export function ChooseRecipeView({
                 key={name}
                 type="button"
                 className={`recipes-filter${active ? ' is-active' : ''}`}
-                aria-current={active ? 'true' : undefined}
+                // aria-pressed, no aria-current: es un filtro que se activa y
+                // desactiva, no la página en la que estás.
+                aria-pressed={active}
                 onClick={() => setCategory(active ? '' : name)}
               >
                 {name}

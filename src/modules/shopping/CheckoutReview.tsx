@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -95,9 +96,9 @@ export function CheckoutReview({
   return (
     <AppShell current="compra" contentClassName="checkout-content">
       <section aria-labelledby="checkout-title">
-        <a className="shopping-back" href="/compra">
-          ← Volver a la lista
-        </a>
+        <Link className="shopping-back" href="/compra">
+          <span aria-hidden="true">←</span> Volver a la lista
+        </Link>
         <header className="shopping-header">
           <h1 id="checkout-title">Revisa tu compra</h1>
         </header>
@@ -141,12 +142,16 @@ export function CheckoutReview({
                       <span aria-hidden="true">uds.</span>
                     </label>
                     {needsZone ? (
+                      // role="group" + aria-pressed: sin ellos el aria-label se
+                      // ignoraba y la zona elegida solo se veía por el color.
                       <div
-                        className="pantry-detail__chips"
                         aria-label={`¿Dónde guardas ${line.name}?`}
+                        className="pantry-detail__chips"
+                        role="group"
                       >
                         {PANTRY_ZONE_ORDER.map((zone) => (
                           <button
+                            aria-pressed={zoneChoices[line.itemId] === zone}
                             className={
                               zoneChoices[line.itemId] === zone
                                 ? 'is-selected'
@@ -170,7 +175,17 @@ export function CheckoutReview({
                 )
               })}
             </section>
+            {/* El botón se apagaba sin decir qué faltaba por rellenar. */}
+            {!pending && !canConfirm ? (
+              <p className="shopping-next" id="checkout-blocked">
+                Elige dónde guardar cada producto nuevo e indica unidades
+                mayores que cero para poder confirmar.
+              </p>
+            ) : null}
             <button
+              aria-describedby={
+                !pending && !canConfirm ? 'checkout-blocked' : undefined
+              }
               className="shopping-confirm"
               disabled={pending || !canConfirm}
               onClick={handleConfirm}
@@ -182,7 +197,7 @@ export function CheckoutReview({
         ) : (
           <p className="shopping-empty">
             No hay productos marcados para confirmar.{' '}
-            <a href="/compra">Volver a la lista</a>.
+            <Link href="/compra">Volver a la lista</Link>.
           </p>
         )}
       </section>

@@ -98,7 +98,14 @@ export function AppShell({
   contentClassName?: string
 }) {
   return (
-    <main className={`app-shell app-shell--${current}`}>
+    // El contenido es <main> y la navegación queda fuera de él: antes el raíl,
+    // el dock y el contenido vivían dentro de un único <main>, así que con un
+    // lector de pantalla no había forma de saltar de la navegación al
+    // contenido. El enlace de salto es lo primero que recibe el foco (2.4.1).
+    <div className={`app-shell app-shell--${current}`}>
+      <a className="skip-link" href="#contenido">
+        Saltar al contenido
+      </a>
       <aside className="app-shell__rail">
         <Link className="app-shell__brand" href="/plan">
           <span aria-hidden="true" className="app-shell__brand-mark">
@@ -111,9 +118,13 @@ export function AppShell({
           <SignOutButton className="app-shell__sign-out" />
         ) : null}
       </aside>
-      <section className={`app-shell__content ${contentClassName}`}>
+      <main
+        className={`app-shell__content ${contentClassName}`}
+        id="contenido"
+        tabIndex={-1}
+      >
         {children}
-      </section>
+      </main>
       <AppNavigation
         className="app-shell__dock"
         current={current}
@@ -122,6 +133,6 @@ export function AppShell({
       {current === 'hogar' ? (
         <SignOutButton className="app-shell__sign-out-mobile" />
       ) : null}
-    </main>
+    </div>
   )
 }

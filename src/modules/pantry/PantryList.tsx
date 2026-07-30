@@ -50,10 +50,9 @@ function PantryRow({
   showLegacyPresenceControls?: boolean
 }) {
   return (
-    <div
-      className={`pantry-row pantry-row--${item.status}`}
-      style={{ backgroundColor: '#fff' }}
-    >
+    // Sin `style` en línea: un fondo blanco fijo aquí ganaba a las reglas de
+    // :hover y de fila seleccionada, que nunca llegaban a verse.
+    <div className={`pantry-row pantry-row--${item.status}`}>
       {onSelect ? (
         <button
           className="pantry-row__detail pantry-row__detail--button"
@@ -77,7 +76,11 @@ function PantryRow({
         </div>
       )}
       {item.trackingMode === 'units' && item.quantity !== null && onAdjust ? (
-        <div className="pantry-stepper" aria-label={`Ajustar ${item.name}`}>
+        <div
+          className="pantry-stepper"
+          role="group"
+          aria-label={`Ajustar ${item.name}`}
+        >
           <button
             disabled={item.quantity <= 0}
             onClick={() => onAdjust(item, -1)}
@@ -92,7 +95,11 @@ function PantryRow({
         </div>
       ) : null}
       {item.trackingMode === 'measure' && item.quantity !== null && onAdjust ? (
-        <div className="pantry-stepper" aria-label={`Ajustar ${item.name}`}>
+        <div
+          className="pantry-stepper"
+          role="group"
+          aria-label={`Ajustar ${item.name}`}
+        >
           <button
             onClick={() => onAdjust(item, -measureStep(item.unitCode))}
             type="button"
@@ -113,6 +120,7 @@ function PantryRow({
       onSetPresence ? (
         <div
           className="pantry-presence"
+          role="group"
           aria-label={`Estado de ${item.name}`}
           hidden
         >
@@ -219,7 +227,7 @@ export function PantryList({
 
   return (
     <AppShell current="despensa">
-      <div aria-labelledby="pantry-title">
+      <div>
         <header className="pantry-header">
           <h1 id="pantry-title">Despensa</h1>
           <button className="pantry-add" onClick={onAdd} type="button">
@@ -233,7 +241,6 @@ export function PantryList({
           id="pantry-search"
           className="pantry-search"
           type="search"
-          role="searchbox"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Buscar en despensa…"
@@ -260,10 +267,6 @@ export function PantryList({
                   key={zone}
                 >
                   <h2 className="pantry-zone__title">
-                    <span
-                      aria-hidden="true"
-                      className={`pantry-zone-icon pantry-zone-icon--${zone}`}
-                    />
                     {PANTRY_ZONE_META[zone].label}
                     <span className="pantry-zone__count">{items.length}</span>
                   </h2>

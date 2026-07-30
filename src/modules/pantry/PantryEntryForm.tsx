@@ -98,20 +98,24 @@ export function PantryEntryForm({ item, onClose, onSave }: Props) {
         />
       </label>
       <section className="pantry-detail__section">
-        <h3>¿Dónde lo guardas?</h3>
-        <div className="pantry-detail__chips">
+        <h3 id="pantry-entry-zone">¿Dónde lo guardas?</h3>
+        {/* Los chips son un grupo de opciones excluyentes: sin role="group" el
+            aria-label se ignoraba, y sin aria-pressed la zona elegida solo se
+            distinguía por el color de fondo. */}
+        <div
+          className="pantry-detail__chips"
+          role="group"
+          aria-labelledby="pantry-entry-zone"
+        >
           {zoneOptions.map((option) => (
             <button
+              aria-pressed={zone === option.value}
               className={zone === option.value ? 'is-selected' : undefined}
               disabled={pending}
               key={option.value}
               onClick={() => setZone(option.value)}
               type="button"
             >
-              <span
-                aria-hidden="true"
-                className={`pantry-zone-icon pantry-zone-icon--${option.value}`}
-              />
               {option.label}
             </button>
           ))}
@@ -143,7 +147,21 @@ export function PantryEntryForm({ item, onClose, onSave }: Props) {
           </div>
         </section>
       ) : null}
+      {/* Un botón apagado sin explicación deja a la persona sin saber qué le
+          falta; el texto se anuncia al enfocar el botón. */}
+      {!pending && (!foodName.trim() || !hasValidQuantity) ? (
+        <p className="pantry-detail__help" id="pantry-entry-blocked">
+          {!foodName.trim()
+            ? 'Escribe el nombre del producto para poder guardarlo.'
+            : 'Indica una cantidad mayor que cero.'}
+        </p>
+      ) : null}
       <button
+        aria-describedby={
+          !pending && (!foodName.trim() || !hasValidQuantity)
+            ? 'pantry-entry-blocked'
+            : undefined
+        }
         className="pantry-detail__save"
         disabled={pending || !foodName.trim() || !hasValidQuantity}
         onClick={() => void save()}
