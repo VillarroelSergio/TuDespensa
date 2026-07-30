@@ -13,6 +13,10 @@ const projectRoot = fileURLToPath(new URL('../', import.meta.url))
 process.env.NODE_ENV = 'test'
 nextEnv.loadEnvConfig(projectRoot)
 
+// El alta de la primera cuenta exige código de arranque; el arnés se da uno
+// para no depender de que esté en .env.test.local (auditoría 2026-07-29).
+process.env.PILOT_BOOTSTRAP_CODE ??= 'E2E-BOOTSTRAP'
+
 if (!process.env.E2E_BASE_URL)
   freeE2EPort(Number(process.env.E2E_PORT ?? 3001))
 

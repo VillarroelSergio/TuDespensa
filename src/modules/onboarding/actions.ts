@@ -1,8 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { AppError } from '@/lib/errors/AppError'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
+import { callRpc, failure } from '@/lib/supabase/rpc'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import {
   parseFoodName,
@@ -34,23 +34,8 @@ export type OnboardingSnapshot = {
   >
 }
 
-function failure(error: { code?: string; message: string }): never {
-  const code =
-    error.code === '42501'
-      ? 'FORBIDDEN'
-      : error.code === '40001'
-        ? 'CONFLICT'
-        : error.code === '22023' || error.code === '23514'
-          ? 'INVALID_INPUT'
-          : 'UNEXPECTED'
-  throw new AppError(code, error.message)
-}
 async function rpc<T>(name: string, args: Record<string, unknown>) {
-  const supabase = await createSupabaseServerClient()
-  const { data, error } = await supabase.rpc(name as never, args as never)
-  if (error) failure(error)
-  revalidatePath('/onboarding')
-  return data as T
+  return callRpc<T>(name, args, ['/onboarding'])
 }
 export async function createHousehold(input: {
   name: string

@@ -1,9 +1,11 @@
 import Link from 'next/link'
 
 import { AppShell } from '@/components/ui/AppShell'
+import { RealtimeRefresh } from '@/components/ui/RealtimeRefresh'
 import { timeLabel } from '@/modules/recipes/presentation'
 
-import { assignMealAction, moveMealAction, removeMealAction } from './actions'
+import { assignMealAction } from './actions'
+import { SlotMenu } from './SlotMenu'
 import {
   addWeeks,
   buildWeek,
@@ -17,74 +19,6 @@ import type { MealType, PlanSlot, PlannedMeal } from './types'
 
 function chooseHref(mealDate: string, mealType: MealType) {
   return `/plan/elegir?fecha=${mealDate}&servicio=${mealType}`
-}
-
-/**
- * Menú contextual de un hueco planificado. `details` da el abrir/cerrar sin
- * JavaScript de cliente, y cada acción es un formulario independiente.
- */
-function SlotMenu({ meal }: { meal: PlannedMeal }) {
-  const slotId = `${meal.mealDate}-${meal.mealType}`
-  const hidden = (
-    <>
-      <input type="hidden" name="fecha" value={meal.mealDate} />
-      <input type="hidden" name="servicio" value={meal.mealType} />
-      <input type="hidden" name="receta" value={meal.recipeId} />
-    </>
-  )
-
-  return (
-    <details className="plan-menu">
-      <summary
-        aria-label={`Opciones de ${slotLabel(meal.mealDate, meal.mealType)}`}
-      >
-        Opciones
-      </summary>
-      <div className="plan-menu__body">
-        {meal.cookedAt ? null : (
-          <a
-            className="plan-menu__cook"
-            href={`/plan/cocinar?fecha=${meal.mealDate}&servicio=${meal.mealType}`}
-          >
-            Marcar como cocinada
-          </a>
-        )}
-        <a href={chooseHref(meal.mealDate, meal.mealType)}>Cambiar receta</a>
-
-        <form className="plan-menu__form" action={moveMealAction}>
-          <input type="hidden" name="origen-fecha" value={meal.mealDate} />
-          <input type="hidden" name="origen-servicio" value={meal.mealType} />
-          <input type="hidden" name="receta" value={meal.recipeId} />
-          <input type="hidden" name="raciones" value={meal.servings ?? ''} />
-          <label htmlFor={`mover-${slotId}`}>Mover a</label>
-          <input
-            id={`mover-${slotId}`}
-            name="fecha"
-            type="date"
-            defaultValue={meal.mealDate}
-          />
-          <select
-            name="servicio"
-            defaultValue={meal.mealType}
-            aria-label="Servicio de destino"
-          >
-            <option value="lunch">Comida</option>
-            <option value="dinner">Cena</option>
-          </select>
-          <button type="submit">Mover</button>
-        </form>
-
-        {/* Sin confirmación extra: el banner de Deshacer ya cubre el error. */}
-        <form action={removeMealAction}>
-          {hidden}
-          <input type="hidden" name="raciones" value={meal.servings ?? ''} />
-          <button className="plan-menu__remove" type="submit">
-            Quitar de este hueco
-          </button>
-        </form>
-      </div>
-    </details>
-  )
 }
 
 function Slot({ slot }: { slot: PlanSlot }) {
@@ -112,12 +46,12 @@ function Slot({ slot }: { slot: PlanSlot }) {
           <SlotMenu meal={slot.meal} />
         </div>
       ) : (
-        <a
+        <Link
           className="plan-slot__add"
           href={chooseHref(slot.mealDate, slot.mealType)}
         >
           + Añadir {mealLabel(slot.mealType).toLowerCase()}
-        </a>
+        </Link>
       )}
     </div>
   )
@@ -172,30 +106,35 @@ export function WeekView({
 
   return (
     <AppShell current="plan" contentClassName="plan-content">
-      <div aria-labelledby="plan-title">
+      {/* Era la única vista principal sin realtime: un cambio de plan desde
+          otro dispositivo no llegaba hasta recargar (auditoría 2026-07-29). */}
+      <RealtimeRefresh channel="plan-refresh" tables={['planned_meals']} />
+      <div>
         <header className="shopping-header plan-header">
           <h1 id="plan-title">Plan</h1>
-          <div className="plan-weeknav">
-            <a
+          {/* `nav` con nombre: son dos enlaces de paginación, no dos botones
+              sueltos, y así el lector de pantalla los agrupa. */}
+          <nav className="plan-weeknav" aria-label="Cambiar de semana">
+            <Link
               className="plan-weeknav__step"
               href={`/plan?semana=${addWeeks(startIso, -1)}`}
               aria-label="Semana anterior"
               rel="prev"
             >
-              ←
-            </a>
+              <span aria-hidden="true">←</span>
+            </Link>
             <span className="plan-weeknav__range">
               {weekRangeLabel(startIso)}
             </span>
-            <a
+            <Link
               className="plan-weeknav__step"
               href={`/plan?semana=${addWeeks(startIso, 1)}`}
               aria-label="Semana siguiente"
               rel="next"
             >
-              →
-            </a>
-          </div>
+              <span aria-hidden="true">→</span>
+            </Link>
+          </nav>
         </header>
 
         {undo ? <UndoBanner undo={undo} /> : null}
@@ -203,16 +142,18 @@ export function WeekView({
             interrumpir ni exigir una respuesta. */}
         {notice ? (
           <p className="plan-notice" role="status">
-            {notice} · <a href="/compra">Ver Compra</a>
+            {notice} · <Link href="/compra">Ver Compra</Link>
           </p>
         ) : null}
         {cookedNotice ? (
           <p className="plan-notice" role="status">
-            {cookedNotice} · <a href="/despensa">Ver Despensa</a>
+            {cookedNotice} · <Link href="/despensa">Ver Despensa</Link>
           </p>
         ) : null}
 
-        <section className="plan-overview" aria-live="polite">
+        {/* Sin aria-live: es contenido estático de la página, no una
+            actualización; anunciarlo al cargar duplicaba el título. */}
+        <section className="plan-overview" aria-label="Resumen de la semana">
           <div>
             <p className="plan-overview__eyebrow">
               {isCurrentWeek ? 'Esta semana' : 'Semana seleccionada'}
@@ -232,9 +173,9 @@ export function WeekView({
           </div>
         </section>
         {!isCurrentWeek ? (
-          <a className="plan-today" href="/plan">
+          <Link className="plan-today" href="/plan">
             Volver a esta semana
-          </a>
+          </Link>
         ) : null}
         {/* El texto guía se muestra una vez, no por hueco vacío (UX Plan P1). */}
         {planned === 0 ? (

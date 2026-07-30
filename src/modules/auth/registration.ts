@@ -1,5 +1,7 @@
 'use server'
 
+import { createHash, timingSafeEqual } from 'node:crypto'
+
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 import { hashInvitationCode } from './invitation-code'
@@ -11,6 +13,7 @@ export type RegistrationResult =
       reason:
         | 'code_required'
         | 'code_invalid'
+        | 'bootstrap_unavailable'
         | 'email_taken'
         | 'invalid_input'
         | 'unexpected'
@@ -21,6 +24,16 @@ function isValidEmail(email: string): boolean {
   if (at <= 0) return false
   const domain = email.slice(at + 1)
   return domain.includes('.') && domain.length > 2
+}
+
+// Compara por digest para que la duración no dependa del prefijo acertado ni
+// de la longitud: `timingSafeEqual` exige búferes del mismo tamaño y dos
+// SHA-256 siempre lo son.
+function matchesBootstrapCode(candidate: string, expected: string): boolean {
+  return timingSafeEqual(
+    createHash('sha256').update(candidate).digest(),
+    createHash('sha256').update(expected).digest(),
+  )
 }
 
 export async function registerAccount(input: {
@@ -55,6 +68,22 @@ export async function registerAccount(input: {
     }
     codeHash = hashInvitationCode(input.code)
     if (codeHash === null) {
+      return { ok: false, reason: 'code_invalid' }
+    }
+  } else {
+    // Aún no hay hogar. Sin esta puerta, este Server Action era un alta
+    // pública sin ninguna credencial: cualquiera podía crear cuentas en masa
+    // hasta que se creara el primer hogar (auditoría 2026-07-29). El código de
+    // arranque vive solo en el entorno del servidor, nunca viaja al navegador,
+    // y se FALLA CERRADO si no está configurado.
+    const bootstrapCode = process.env.PILOT_BOOTSTRAP_CODE?.trim()
+    if (!bootstrapCode) {
+      return { ok: false, reason: 'bootstrap_unavailable' }
+    }
+    if (!input.code) {
+      return { ok: false, reason: 'code_required' }
+    }
+    if (!matchesBootstrapCode(input.code.trim(), bootstrapCode)) {
       return { ok: false, reason: 'code_invalid' }
     }
   }

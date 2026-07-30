@@ -1,16 +1,16 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
 
 import { AppShell } from '@/components/ui/AppShell'
 import {
-  DISH_TYPE_OPTIONS,
   QUICK_MAIN_INGREDIENT_CATEGORIES,
   dishTypeLabel,
   filterRecipes,
   timeLabel,
 } from './presentation'
-import type { Recipe, RecipeDishType } from './types'
+import type { Recipe } from './types'
 
 /** Recetas por tanda: evita renderizar las 164 de golpe (Fase rendimiento). */
 const PAGE_SIZE = 24
@@ -38,16 +38,14 @@ export function RecipesList({
   const [link, setLink] = useState('')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [category, setCategory] = useState('')
-  const [dishType, setDishType] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const recipes = useMemo(
     () =>
       filterRecipes(initialRecipes, term, {
         favoritesOnly,
         category: category || undefined,
-        dishType: (dishType || undefined) as RecipeDishType | undefined,
       }),
-    [initialRecipes, term, favoritesOnly, category, dishType],
+    [initialRecipes, term, favoritesOnly, category],
   )
   // Vuelve a la primera tanda cuando cambia el filtro: si no, un filtro estrecho
   // podría dejar fuera resultados por el corte de la tanda anterior. Se ajusta
@@ -56,15 +54,13 @@ export function RecipesList({
     term,
     favoritesOnly,
     category,
-    dishType,
   ])
   if (
     appliedFilters[0] !== term ||
     appliedFilters[1] !== favoritesOnly ||
-    appliedFilters[2] !== category ||
-    appliedFilters[3] !== dishType
+    appliedFilters[2] !== category
   ) {
-    setAppliedFilters([term, favoritesOnly, category, dishType])
+    setAppliedFilters([term, favoritesOnly, category])
     setVisibleCount(PAGE_SIZE)
   }
   const visibleRecipes = recipes.slice(0, visibleCount)
@@ -84,7 +80,7 @@ export function RecipesList({
 
   return (
     <AppShell current="recetas">
-      <div aria-labelledby="recipes-title">
+      <div>
         <header className="shopping-header">
           <h1 id="recipes-title">Recetas</h1>
           <button
@@ -115,7 +111,9 @@ export function RecipesList({
             aria-pressed={favoritesOnly}
             onClick={() => setFavoritesOnly((only) => !only)}
           >
-            ★ Favoritas
+            {/* La estrella es decorativa: sin aria-hidden el lector leía
+                «estrella negra Favoritas». */}
+            <span aria-hidden="true">★ </span>Favoritas
           </button>
           <div
             className="recipes-quick-categories"
@@ -129,7 +127,9 @@ export function RecipesList({
                   key={name}
                   type="button"
                   className={`recipes-filter${active ? ' is-active' : ''}`}
-                  aria-current={active ? 'true' : undefined}
+                  // aria-pressed, no aria-current: es un filtro que se activa y
+                  // desactiva, no la página en la que estás.
+                  aria-pressed={active}
                   onClick={() => setCategory(active ? '' : name)}
                 >
                   {name}
@@ -137,22 +137,6 @@ export function RecipesList({
               )
             })}
           </div>
-          <label className="sr-only" htmlFor="recipes-dish-type">
-            Tipo de plato
-          </label>
-          <select
-            id="recipes-dish-type"
-            className="recipes-filter-select"
-            value={dishType}
-            onChange={(event) => setDishType(event.target.value)}
-          >
-            <option value="">Todos los tipos</option>
-            {DISH_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         </div>
         {adding ? (
           <div className="recipes-add">
@@ -197,13 +181,18 @@ export function RecipesList({
         ) : null}
         <section className="recipes-list" aria-label="Biblioteca de recetas">
           {visibleRecipes.map((recipe) => (
-            <a
+            <Link
               className="recipe-card"
               key={recipe.id}
               href={`/recetas/${recipe.id}`}
             >
               <span className="recipe-card__title">
-                {recipe.isFavorite ? '★ ' : ''}
+                {recipe.isFavorite ? (
+                  <>
+                    <span aria-hidden="true">★ </span>
+                    <span className="sr-only">Favorita: </span>
+                  </>
+                ) : null}
                 {recipe.title}
               </span>
               {recipe.status === 'pending' ? (
@@ -219,7 +208,7 @@ export function RecipesList({
                     .join(' · ')}
                 </span>
               ) : null}
-            </a>
+            </Link>
           ))}
         </section>
         {recipes.length > visibleCount ? (
@@ -234,7 +223,7 @@ export function RecipesList({
         {!recipes.length ? (
           <div className="recipes-empty">
             <p>
-              {term.trim() || favoritesOnly || category || dishType
+              {term.trim() || favoritesOnly || category
                 ? 'No hay recetas que coincidan con el filtro.'
                 : 'Guarda recetas para decidir más rápido.'}
             </p>

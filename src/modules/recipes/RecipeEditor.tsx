@@ -1,7 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
+
+import { AppShell } from '@/components/ui/AppShell'
 
 import { saveRecipe, setCategories } from './actions'
 import {
@@ -124,10 +127,12 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
   }
 
   return (
-    <main className="recipe-editor">
-      <a className="recipe-back" href={`/recetas/${recipe.id}`}>
-        ← Volver
-      </a>
+    // Igual que el detalle: sin el armazón, el editor era un callejón sin
+    // salida en móvil (no había barra de navegación).
+    <AppShell contentClassName="recipe-editor" current="recetas">
+      <Link className="recipe-back" href={`/recetas/${recipe.id}`}>
+        <span aria-hidden="true">←</span> Volver
+      </Link>
       <form className="recipe-editor__form" onSubmit={submit}>
         <h1>
           {recipe.status === 'pending' ? 'Revisar receta' : 'Editar receta'}
@@ -137,6 +142,7 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
             Origen:{' '}
             <a href={recipe.sourceUrl} rel="noreferrer" target="_blank">
               {recipe.sourceUrl}
+              <span className="sr-only"> (se abre en una ventana nueva)</span>
             </a>
           </p>
         ) : null}
@@ -236,7 +242,13 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
                     rows.filter((_, position) => position !== index),
                   )
                 }
-                aria-label="Quitar ingrediente"
+                // Con varias filas había N botones llamados exactamente igual:
+                // el nombre tiene que decir cuál se quita.
+                aria-label={
+                  row.name.trim()
+                    ? `Quitar ${row.name.trim()}`
+                    : `Quitar ingrediente ${index + 1}`
+                }
               >
                 ×
               </button>
@@ -287,7 +299,7 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
                     rows.filter((_, position) => position !== index),
                   )
                 }
-                aria-label="Quitar paso"
+                aria-label={`Quitar paso ${index + 1}`}
               >
                 ×
               </button>
@@ -391,7 +403,11 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
                       rows.filter((_, position) => position !== index),
                     )
                   }
-                  aria-label="Quitar categoría"
+                  aria-label={
+                    category.name.trim()
+                      ? `Quitar la categoría ${category.name.trim()}`
+                      : `Quitar categoría ${index + 1}`
+                  }
                 >
                   ×
                 </button>
@@ -418,12 +434,21 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
             {conflict ? (
               <>
                 {' '}
-                <a href={`/recetas/${recipe.id}`}>Ver versión actual</a>
+                <Link href={`/recetas/${recipe.id}`}>Ver versión actual</Link>
               </>
             ) : null}
           </p>
         ) : null}
+        {/* Un guardar apagado sin explicación no dice qué falta. */}
+        {!saving && !title.trim() ? (
+          <p className="recipe-editor__label" id="editor-blocked">
+            Escribe el nombre de la receta para poder guardarla.
+          </p>
+        ) : null}
         <button
+          aria-describedby={
+            !saving && !title.trim() ? 'editor-blocked' : undefined
+          }
           className="recipe-editor__save"
           type="submit"
           disabled={saving || !title.trim()}
@@ -431,6 +456,6 @@ export function RecipeEditor({ recipe }: { recipe: RecipeDetail }) {
           {saving ? 'Guardando…' : 'Guardar receta'}
         </button>
       </form>
-    </main>
+    </AppShell>
   )
 }

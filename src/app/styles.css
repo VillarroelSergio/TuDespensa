@@ -47,21 +47,9 @@ body {
   margin: 0;
 }
 
-main {
-  display: grid;
-  min-height: 100vh;
-  place-items: center;
-  padding: 2rem 1.25rem;
-}
-
-.page-card {
-  width: min(100%, 36rem);
-  padding: clamp(1.5rem, 5vw, 3rem);
-  border: 1px solid var(--border);
-  border-radius: 1.5rem;
-  background: var(--surface);
-  box-shadow: 0 1rem 3rem rgb(17 17 17 / 8%);
-}
+/* La regla genérica `main {}` y `.page-card` solo servían a PageShell, que ya
+   no existe (nadie lo usaba). Con ellas fuera, `.app-shell__content` puede ser
+   el <main> real sin heredar un centrado de pantalla completa. */
 
 .eyebrow {
   margin: 0 0 0.75rem;
@@ -415,7 +403,7 @@ footer {
   align-items: center;
   margin: 0;
   padding: 0 1rem;
-  color: #f2991a;
+  color: var(--warning-strong);
   font-size: 0.75rem;
 }
 .pantry-list__priority h2::before {
@@ -459,13 +447,13 @@ footer {
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 50%;
-  background: #33b266;
+  background: var(--success);
 }
 .pantry-row--out .pantry-row__dot {
-  background: #e54033;
+  background: var(--primary);
 }
 .pantry-row--low .pantry-row__dot {
-  background: #f2991a;
+  background: var(--warning);
 }
 .pantry-row__name {
   font-size: 0.9rem;
@@ -477,14 +465,14 @@ footer {
 }
 .pantry-row__status {
   font-size: 0.75rem;
-  color: #33b266;
+  color: var(--success-strong);
 }
 .pantry-row--out .pantry-row__status {
-  color: #e54033;
+  color: var(--primary-strong);
   font-weight: 700;
 }
 .pantry-row--low .pantry-row__status {
-  color: #f2991a;
+  color: var(--warning-strong);
   font-weight: 700;
 }
 .pantry-quick-action {
@@ -513,7 +501,7 @@ footer {
   border: 1px dashed var(--border);
   border-radius: 0.375rem;
   background: transparent;
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.8125rem;
   font-weight: 700;
 }
@@ -557,18 +545,18 @@ footer {
   font-size: 0.8125rem;
 }
 .pantry-presence .is-available {
-  border-color: #33b266;
-  background: #33b266;
+  border-color: var(--success);
+  background: var(--success);
   color: #fff;
 }
 .pantry-presence .is-low {
-  border-color: #f2991a;
-  color: #b76b00;
+  border-color: var(--warning);
+  color: var(--warning-strong);
 }
 .pantry-presence .is-out,
 .pantry-quick-action--out {
-  border-color: #e54033;
-  color: #c83025;
+  border-color: var(--primary);
+  color: var(--primary-strong);
 }
 .pantry-toast {
   display: flex;
@@ -578,13 +566,13 @@ footer {
   width: min(100%, 44rem);
   margin-top: 1rem;
   border-radius: 0.5rem;
-  background: #262633;
+  background: var(--ink);
   padding: 0.75rem 1rem;
   color: #fff;
   font-size: 0.8125rem;
 }
 .pantry-toast span:last-of-type {
-  color: #b2b2bf;
+  color: rgb(255 253 249 / 78%);
 }
 .pantry-toast button {
   min-height: 32px;
@@ -628,7 +616,7 @@ footer {
   width: fit-content;
   border: 0;
   background: transparent;
-  color: var(--primary);
+  color: var(--primary-strong);
   padding: 0;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -645,18 +633,18 @@ footer {
 .pantry-detail__status {
   border-radius: 0.25rem;
   padding: 0.25rem 0.5rem;
-  background: #d9f2e0;
-  color: #33b266;
+  background: var(--success-soft);
+  color: var(--success-strong);
   font-size: 0.6875rem;
   font-weight: 700;
 }
 .pantry-detail__status--low {
-  background: #fff0dc;
-  color: #f2991a;
+  background: var(--warning-soft);
+  color: var(--warning-strong);
 }
 .pantry-detail__status--out {
-  background: #fbe2e0;
-  color: #e54033;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
 }
 .pantry-detail__section,
 .pantry-detail__field {
@@ -934,7 +922,7 @@ footer {
   align-items: center;
   min-height: 44px;
   margin-bottom: 0.5rem;
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: none;
@@ -948,7 +936,7 @@ footer {
   width: 1.125rem;
   height: 1.125rem;
   border-radius: 999px;
-  background: #33b266;
+  background: var(--success);
 }
 .shopping-checkout-quantity {
   display: inline-flex;
@@ -1005,7 +993,7 @@ footer {
   font-size: 0.8125rem;
 }
 .plan-notice a {
-  color: var(--primary);
+  color: var(--primary-strong);
   font-weight: 700;
 }
 @media (max-width: 768px) {
@@ -1239,8 +1227,8 @@ footer {
   width: fit-content;
   border-radius: 0.25rem;
   padding: 0.125rem 0.375rem;
-  background: #fff0dc;
-  color: #b76b00;
+  background: var(--warning-soft);
+  color: var(--warning-strong);
   font-size: 0.6875rem;
   font-weight: 700;
 }
@@ -1257,7 +1245,7 @@ footer {
 }
 .recipe-back {
   width: fit-content;
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.875rem;
   text-decoration: none;
 }
@@ -1323,7 +1311,7 @@ footer {
   border: 1px solid var(--border);
   border-radius: 0.375rem;
   background: #fff;
-  color: #c83025;
+  color: var(--primary-strong);
   font-size: 1rem;
   font-weight: 700;
 }
@@ -1333,7 +1321,7 @@ footer {
   border: 1px dashed var(--primary-soft-border);
   border-radius: 0.375rem;
   background: #fff;
-  color: var(--primary);
+  color: var(--primary-strong);
   padding: 0 0.75rem;
   font-size: 0.8125rem;
   font-weight: 700;
@@ -1342,7 +1330,7 @@ footer {
   width: fit-content;
   border: 0;
   background: transparent;
-  color: var(--primary);
+  color: var(--primary-strong);
   padding: 0;
   font-size: 0.875rem;
   font-weight: 600;
@@ -1370,7 +1358,7 @@ footer {
 }
 .recipe-editor__status {
   margin: 0;
-  color: #c83025;
+  color: var(--danger);
   font-size: 0.8125rem;
 }
 .recipe-detail__header {
@@ -1417,7 +1405,7 @@ footer {
   background: var(--warning);
 }
 .recipe-ingredient-dot--missing {
-  background: #e54033;
+  background: var(--primary);
 }
 .recipe-ingredient-owned {
   flex-shrink: 0;
@@ -1431,8 +1419,8 @@ footer {
 }
 .recipe-pending {
   border-radius: 0.375rem;
-  background: #fff0dc;
-  color: #b76b00;
+  background: var(--warning-soft);
+  color: var(--warning-strong);
   padding: 0.5rem 0.625rem;
 }
 .recipe-source {
@@ -1479,7 +1467,7 @@ footer {
   border: 1px solid var(--primary);
   border-radius: 0.5rem;
   background: #fff;
-  color: var(--primary);
+  color: var(--primary-strong);
   padding: 0 0.875rem;
   font-weight: 700;
 }
@@ -1515,9 +1503,9 @@ footer {
   font-weight: 700;
 }
 .recipe-favorite.is-active {
-  border-color: #f2991a;
-  background: #fff0dc;
-  color: #b76b00;
+  border-color: var(--warning);
+  background: var(--warning-soft);
+  color: var(--warning-strong);
 }
 .recipe-favorite:disabled,
 .recipe-star:disabled {
@@ -1538,7 +1526,9 @@ footer {
   line-height: 1;
 }
 .recipe-star.is-active {
-  color: #f2991a;
+  /* La estrella comunica la puntuación, así que es un gráfico informativo:
+     necesita 3:1 y el ámbar original se quedaba en 2,2:1 sobre blanco. */
+  color: var(--warning-strong);
 }
 .recipe-detail__categories {
   display: flex;
@@ -1603,7 +1593,7 @@ footer {
 .plan-today {
   display: inline-block;
   margin-top: 0.25rem;
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: none;
@@ -1671,7 +1661,7 @@ footer {
   border: 1px dashed var(--primary-soft-border);
   border-radius: 0.375rem;
   background: #fff;
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.8125rem;
   font-weight: 700;
   text-decoration: none;
@@ -1707,7 +1697,7 @@ footer {
 }
 .plan-menu > summary {
   cursor: pointer;
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.75rem;
   font-weight: 700;
   list-style: none;
@@ -1730,7 +1720,7 @@ footer {
   display: none;
 }
 .plan-menu__body a {
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.75rem;
   font-weight: 600;
   text-decoration: none;
@@ -1765,10 +1755,10 @@ footer {
 .plan-menu__remove {
   min-height: 44px;
   width: 100%;
-  border: 1px solid #b3261e;
+  border: 1px solid var(--danger);
   border-radius: 0.375rem;
   background: #fff;
-  color: #b3261e;
+  color: var(--danger);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -1811,6 +1801,24 @@ footer {
     background: #fff;
   }
 }
+/* «Cerrar» del menú de opciones: en móvil la hoja tapa el disparador, así que
+   sin este botón no había salida evidente con el dedo. */
+.plan-menu__close {
+  min-height: 44px;
+  width: 100%;
+  border: 0;
+  border-radius: 0.375rem;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+@media (min-width: 768px) {
+  /* En escritorio Escape y la pulsación fuera bastan; el botón sobraría. */
+  .plan-menu__close {
+    display: none;
+  }
+}
 .plan-undo {
   display: flex;
   flex-wrap: wrap;
@@ -1830,7 +1838,7 @@ footer {
   border-radius: 0.375rem;
   background: #fff;
   padding: 0 0.875rem;
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.8125rem;
   font-weight: 700;
 }
@@ -1857,7 +1865,7 @@ footer {
   font-weight: 700;
 }
 .choose-suggestion__reason {
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.8125rem;
   font-weight: 600;
 }
@@ -1903,7 +1911,7 @@ footer {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
@@ -1947,7 +1955,7 @@ footer {
   font-size: 0.875rem;
 }
 .choose-empty a {
-  color: var(--primary);
+  color: var(--primary-strong);
   font-weight: 600;
 }
 .choose-list {
@@ -2109,7 +2117,7 @@ footer {
    the in-panel form submits become secondary so three red buttons don't compete. */
 .recipes-add .recipes-form button:not(:disabled) {
   background: #fff;
-  color: var(--primary);
+  color: var(--primary-strong);
   border: 1px solid var(--primary);
 }
 .recipes-add .recipes-form button:not(:disabled):hover {
@@ -2119,7 +2127,7 @@ footer {
 /* Fase 8: revisión de cocina y estado de comida completada. */
 .plan-slot__cooked,
 .plan-menu__cook {
-  color: #33805a !important;
+  color: var(--success-strong) !important;
   font-size: 0.6875rem;
   font-weight: 700;
 }
@@ -2151,7 +2159,7 @@ footer {
   font-size: 0.8125rem;
 }
 .cook-row__remaining {
-  color: var(--primary);
+  color: var(--primary-strong);
   font-size: 0.8125rem;
   font-weight: 700;
 }
@@ -2194,10 +2202,22 @@ footer {
   --primary-strong: #963b27;
   --primary-soft: #f9e6dd;
   --primary-soft-border: #edc7b8;
+  /* Contraste: los grises anteriores (#66726b, #7d877f) daban 3,4-4,3:1 sobre
+     crema y sobre --surface-2, por debajo del 4,5:1 que exige WCAG 1.4.3 para
+     texto pequeño. Estos dos pasan sobre los tres fondos de la app. */
+  --muted: #5f6a63;
+  --muted-2: #626d66;
   --success: #2d7c61;
   --success-soft: #e3f1e9;
   --warning: #b87318;
   --warning-soft: #fff0d8;
+  /* Variantes «strong»: los tonos de marca y de estado sirven como relleno o
+     como borde (≥3:1), pero como color de TEXTO pequeño se quedaban en
+     2,2-4,3:1. Son los mismos colores llevados a ≥4,5:1: úsalos siempre que el
+     color sea el del texto. */
+  --success-strong: #1f6b52;
+  --warning-strong: #8a5410;
+  --danger: #8e3022;
   --radius: 0.875rem;
   --radius-lg: 1.25rem;
   --shadow: 0 1px 2px rgb(63 44 23 / 4%), 0 12px 32px rgb(63 44 23 / 7%);
@@ -2235,9 +2255,19 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-a:focus-visible {
-  outline: 3px solid rgb(45 124 97 / 55%);
-  outline-offset: 3px;
+a:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  /* Era `rgb(45 124 97 / 55%)`: al mezclarse con el crema quedaba en 2,2:1,
+     por debajo del 3:1 que piden WCAG 1.4.11 y 2.4.13 para el indicador de
+     foco. Sólido y oscuro pasa a 6,5:1 sobre cualquiera de los tres fondos. */
+  outline: 3px solid var(--primary-strong);
+  outline-offset: 2px;
+}
+/* Sobre superficies oscuras el anillo oscuro se pierde: ahí se invierte. */
+.pantry-toast button:focus-visible,
+.danger-button:focus-visible {
+  outline-color: var(--surface);
 }
 
 .app-shell {
@@ -2526,19 +2556,7 @@ a:focus-visible {
   background: linear-gradient(90deg, rgb(255 240 216 / 58%), transparent);
 }
 .app-shell .pantry-list__priority h2 {
-  color: var(--warning);
-}
-.app-shell .pantry-row--out .pantry-row__dot {
-  background: var(--primary);
-}
-.app-shell .pantry-row--low .pantry-row__dot {
-  background: var(--warning);
-}
-.app-shell .pantry-row__dot {
-  background: var(--success);
-}
-.app-shell .plan-slot__cooked {
-  color: var(--success) !important;
+  color: var(--warning-strong);
 }
 
 /* Fase 2 — Cocina y selector: decisión guiada, con una sola confirmación. */
@@ -2661,7 +2679,7 @@ a:focus-visible {
 }
 .cook-overview span {
   flex: 0 0 auto;
-  color: var(--success);
+  color: var(--success-strong);
   font-size: 0.76rem;
   font-weight: 800;
   white-space: nowrap;
@@ -2791,7 +2809,7 @@ a:focus-visible {
     height: 1.3rem;
   }
   .app-shell__dock a:focus-visible {
-    outline: 3px solid rgb(194 82 55 / 30%);
+    outline: 3px solid var(--primary-strong);
     outline-offset: -3px;
   }
   .app-shell h1,
@@ -2896,7 +2914,7 @@ a:focus-visible {
   height: 0.5rem;
   margin-right: 0.5rem;
   border-radius: 50%;
-  background: #33b266;
+  background: var(--success);
 }
 .household-invite {
   display: flex;
@@ -2965,9 +2983,9 @@ a:focus-visible {
 }
 .danger-button {
   min-height: 44px;
-  border: 1px solid #8e3022;
+  border: 1px solid var(--danger);
   border-radius: 0.75rem;
-  background: #8e3022;
+  background: var(--danger);
   color: #fff;
   padding: 0.65rem 0.9rem;
   font-weight: 750;
@@ -2976,4 +2994,210 @@ a:focus-visible {
   border-color: var(--border);
   background: var(--surface-2);
   color: var(--muted-2);
+}
+
+/* ── Auditoría UX/accesibilidad ─────────────────────────────────────────
+   Cuatro bloques: (1) saltar al contenido, (2) objetivos táctiles,
+   (3) clases que los componentes usaban sin tener ninguna regla —la página
+   de ticket y la marca de acceso salían sin estilo—, (4) un solo patrón
+   para los cinco enlaces «volver». */
+
+/* 1. Saltar al contenido (WCAG 2.4.1): antes había que tabular las cinco
+   entradas de navegación en cada pantalla para llegar al contenido. */
+.skip-link {
+  position: fixed;
+  z-index: 50;
+  top: 0.5rem;
+  left: 0.5rem;
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: 0.75rem 1rem;
+  color: var(--primary-strong);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transform: translateY(-150%);
+  transition: transform 140ms var(--ease-out);
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* 2. Objetivo táctil de las casillas: 18px quedaba por debajo del mínimo de
+   24px de WCAG 2.5.8 (y es incómodo con el dedo). */
+.shopping-row input[type='checkbox'],
+.shopping-select-all input[type='checkbox'],
+.app-shell .cook-row__toggle input[type='checkbox'] {
+  width: 1.5rem;
+  height: 1.5rem;
+  min-height: 1.5rem;
+  flex: 0 0 auto;
+  accent-color: var(--primary);
+}
+.app-shell .cook-row__toggle input[type='checkbox'] {
+  accent-color: var(--success);
+}
+.shopping-row__label {
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+}
+
+/* 3a. Importar de un ticket: `.ticket-*` no tenía ni una regla, así que la
+   pantalla salía como campos apilados a todo lo ancho. */
+.ticket-textarea {
+  width: 100%;
+  margin-top: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: var(--surface);
+  padding: 0.75rem;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+.ticket-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5rem 6rem 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  padding: 0.625rem 1rem;
+}
+.ticket-row:last-child {
+  border-bottom: 0;
+}
+.ticket-row input,
+.ticket-row select {
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  padding: 0 0.5rem;
+  color: var(--ink);
+}
+.ticket-qty {
+  text-align: right;
+}
+.ticket-remove {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--primary-strong);
+  font-size: 1.125rem;
+  line-height: 1;
+}
+.ticket-add-line {
+  margin-top: 0.75rem;
+}
+@media (max-width: 600px) {
+  .ticket-row {
+    grid-template-columns: minmax(0, 1fr) 4.5rem 2.75rem;
+  }
+  .ticket-unit {
+    grid-column: 2 / 4;
+  }
+}
+
+/* 3b. Acceso y onboarding: la marca no se veía (el `<span>` del símbolo no
+   tenía fondo) y los enlaces de cambio de modo no tenían separación. */
+.brand-lockup,
+.brand--welcome {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.brand-lockup__mark {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  border-radius: 0.75rem;
+  background: linear-gradient(145deg, #d87350, var(--primary-strong));
+  box-shadow: 0 0.4rem 0.9rem rgb(150 59 39 / 22%);
+}
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.25rem 0 0;
+}
+.auth-links .text-action {
+  color: var(--primary-strong);
+  font-weight: 700;
+}
+.combobox-wrap {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* 3c. «Terminados» se veía igual que el resto de la lista. */
+.pantry-list__finished {
+  background: var(--surface-2);
+}
+.pantry-list__finished h3,
+.pantry-list__priority h3 {
+  margin: 0;
+  padding: 0.5rem 1rem 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pantry-list__finished .pantry-row {
+  background: transparent;
+}
+.household-page {
+  padding-bottom: 2rem;
+}
+/* Detalle y editor de receta pasan a vivir dentro del armazón: conservan su
+   medida de lectura en vez de heredar los 78rem del contenido general. */
+.app-shell__content.recipe-detail,
+.app-shell__content.recipe-editor {
+  width: min(100%, 46rem);
+  min-height: 0;
+  margin-inline: auto;
+  background: transparent;
+}
+
+/* Los rótulos de sección que antes eran <p class="label"> ahora son <h2>: se
+   mantienen discretos, pero ya existen como encabezados navegables. */
+h2.label {
+  margin: 0.5rem 0 0;
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* 4. Un solo patrón de «volver» (antes cinco clases con cinco tamaños). */
+.shopping-back,
+.recipe-back,
+.choose-back,
+.cook-back,
+.pantry-detail__back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  width: fit-content;
+  gap: 0.25rem;
+  color: var(--primary-strong);
+  font-size: 0.875rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+.shopping-back:hover,
+.recipe-back:hover,
+.choose-back:hover,
+.cook-back:hover,
+.pantry-detail__back:hover {
+  text-decoration: underline;
 }

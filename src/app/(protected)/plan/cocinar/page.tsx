@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import { AppShell } from '@/components/ui/AppShell'
 import {
   getVisualFixtureCookPreview,
@@ -28,13 +30,18 @@ export default async function CookPage({
   if (!preview) {
     return (
       <AppShell current="plan" contentClassName="cook-page">
-        <section className="cook-empty-state">
-          <a className="cook-back" href="/plan">
-            ← Volver al plan
-          </a>
+        {/* Falta el <h1>: una pantalla sin encabezado deja a quien usa lector
+            de pantalla sin saber dónde ha aterrizado. */}
+        <section aria-labelledby="cook-empty-title">
+          <Link className="cook-back" href="/plan">
+            <span aria-hidden="true">←</span> Volver al plan
+          </Link>
+          <header className="cook-header">
+            <h1 id="cook-empty-title">Cocinar</h1>
+          </header>
           <p className="shopping-empty">
             No hay ninguna comida que cocinar aquí.{' '}
-            <a href="/plan">Volver al plan</a>.
+            <Link href="/plan">Volver al plan</Link>.
           </p>
         </section>
       </AppShell>

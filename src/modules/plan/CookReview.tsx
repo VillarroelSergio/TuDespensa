@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -76,6 +77,7 @@ function CookRow({
         <label className="cook-row__field">
           Se queda en
           <select
+            aria-describedby={`quedara-${line.itemId}`}
             value={edit.state}
             disabled={!edit.included}
             onChange={(event) => onChange({ state: event.target.value })}
@@ -91,6 +93,7 @@ function CookRow({
         <label className="cook-row__field">
           Descontar
           <input
+            aria-describedby={`quedara-${line.itemId}`}
             type="number"
             min={0}
             max={line.quantity ?? undefined}
@@ -104,7 +107,10 @@ function CookRow({
           <span aria-hidden="true">uds.</span>
         </label>
       )}
-      <small className="cook-row__remaining" aria-live="polite">
+      {/* Sin aria-live por fila: con 8 ingredientes había 8 regiones vivas y
+          teclear una cantidad disparaba un anuncio por cada pulsación. El
+          resultado se lee al enfocar el campo, vía aria-describedby. */}
+      <small className="cook-row__remaining" id={`quedara-${line.itemId}`}>
         Quedará: {remainingLabel(line, edit)}
       </small>
     </div>
@@ -142,6 +148,9 @@ export function CookReview({
     [preview.lines, edits],
   )
   const summary = cookReviewSummary(preview.lines)
+  const includedCount = preview.lines.filter(
+    (line) => edits[line.itemId]?.included,
+  ).length
 
   function patch(itemId: string, next: Partial<CookEdit>) {
     setEdits((current) => {
@@ -179,9 +188,9 @@ export function CookReview({
   return (
     <AppShell current="plan" contentClassName="cook-page">
       <section aria-labelledby="cook-title">
-        <a className="cook-back" href="/plan">
-          ← Volver al plan
-        </a>
+        <Link className="cook-back" href="/plan">
+          <span aria-hidden="true">←</span> Volver al plan
+        </Link>
         <header className="cook-header">
           <p className="cook-kicker">{summary.eyebrow}</p>
           <h1 id="cook-title">Cocinar «{preview.title}»</h1>
@@ -197,10 +206,12 @@ export function CookReview({
             {status}
           </p>
         ) : null}
+        {/* El contador estaba fijo en «n/n»: al desmarcar un ingrediente seguía
+            diciendo que estaban todos seleccionados. */}
         <section className="cook-overview" aria-label="Resumen de revisión">
           <p>{summary.message}</p>
-          <span>
-            {preview.lines.length}/{preview.lines.length} seleccionados
+          <span aria-live="polite">
+            {includedCount}/{preview.lines.length} seleccionados
           </span>
         </section>
         {preview.lines.length ? (

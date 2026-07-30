@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 type BrandLockupProps = {
   className?: string
   href?: string
@@ -12,9 +14,9 @@ export function BrandLockup({
   href = '/plan',
 }: BrandLockupProps) {
   return (
-    <a className={className} href={href}>
+    <Link className={className} href={href}>
       <span aria-hidden="true" className="brand-lockup__mark" />
       <span>MiDespensa</span>
-    </a>
+    </Link>
   )
 }

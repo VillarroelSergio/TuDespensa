@@ -27,6 +27,8 @@ const REGISTRATION_ERROR_MESSAGES: Record<RegistrationFailureReason, string> = {
     'Necesitas un código de invitación. Pídeselo a la persona que ya usa MiDespensa.',
   code_invalid:
     'Ese código no es válido o ha caducado. Pídele uno nuevo a la otra persona.',
+  bootstrap_unavailable:
+    'El alta de la primera cuenta está cerrada. Hay que configurar el código de arranque (PILOT_BOOTSTRAP_CODE) en el servidor.',
   email_taken:
     'Ya existe una cuenta con ese correo. Entra con tu contraseña; si te han invitado, podrás escribir el código justo después.',
   invalid_input: 'Revisa el correo y usa una contraseña de ocho caracteres o más.',
@@ -173,7 +175,10 @@ function LoginForm() {
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
               />
-              <p>Si eres la primera persona que usa MiDespensa, déjalo vacío.</p>
+              <p>
+                Si eres la primera persona que usa MiDespensa, escribe el
+                código de arranque del piloto.
+              </p>
             </>
           ) : null}
           <button className="primary-button" disabled={pending}>
@@ -183,11 +188,19 @@ function LoginForm() {
         {!localMode ? (
           <p className="auth-links">
             {mode === 'register' ? (
-              <button className="text-action" onClick={() => setMode('login')}>
+              <button
+                className="text-action"
+                onClick={() => setMode('login')}
+                type="button"
+              >
                 Ya tengo cuenta
               </button>
             ) : (
-              <button className="text-action" onClick={() => setMode('register')}>
+              <button
+                className="text-action"
+                onClick={() => setMode('register')}
+                type="button"
+              >
                 Crear cuenta
               </button>
             )}
@@ -200,7 +213,11 @@ function LoginForm() {
             hogar que te ayude desde la pantalla Hogar.
           </p>
         ) : null}
-        <p aria-live="polite">{message}</p>
+        {/* role="status" para que el error de acceso se anuncie: solo con
+            aria-live algunos lectores no lo recogen. */}
+        <p aria-live="polite" role="status">
+          {message}
+        </p>
       </section>
     </main>
   )

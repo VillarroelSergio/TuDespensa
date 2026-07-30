@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { useRealtimeRefresh } from '@/lib/supabase/useRealtimeRefresh'
 import {
   claimHouseholdPerson,
   createInvitationCode,
@@ -40,21 +41,9 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
   const hasFreeSpot = data.activeMemberCount < 2
   const canInvite = data.isOwner && hasFreeSpot
 
-  useEffect(() => {
-    const client = createSupabaseBrowserClient()
-    const channel = client
-      .channel('household-membership-refresh')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'household_invitations' },
-        () => router.refresh(),
-      )
-      .subscribe()
-
-    return () => {
-      void client.removeChannel(channel)
-    }
-  }, [router])
+  // Antes duplicaba a mano la suscripción del hook común, sin su agrupación de
+  // ráfagas de eventos (auditoría 2026-07-29).
+  useRealtimeRefresh('household-membership-refresh', ['household_invitations'])
 
   function generateCode() {
     startTransition(async () => {
@@ -119,7 +108,7 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
           `Copia descargada: ${backup.counts.recipes} recetas, ${backup.counts.shoppingItems} productos de Compra y ${backup.counts.pantryItems} productos de Despensa.`,
         )
       } catch {
-        setStatus('No hemos podido crear la copia. IntÃ©ntalo de nuevo.')
+        setStatus('No hemos podido crear la copia. Inténtalo de nuevo.')
       }
     })
   }
@@ -168,8 +157,13 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
           : 'Dos personas tienen acceso a este hogar.'}
       </p>
 
-      <>
-        <p className="label">Cuentas con acceso</p>
+      {/* Los rótulos de sección eran <p class="label">: visualmente parecían
+          títulos, pero no existían como encabezados, así que con lector de
+          pantalla la pantalla Hogar tenía un solo título para siete bloques. */}
+      <section aria-labelledby="hogar-accesos">
+        <h2 className="label" id="hogar-accesos">
+          Cuentas con acceso
+        </h2>
         <ul className="household-people">
           {data.activeMembers.map((member) => (
             <li key={member.id}>
@@ -192,18 +186,22 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
             </li>
           ))}
         </ul>
-      </>
+      </section>
 
       {data.needsNameClaim ? (
         <section className="household-security">
-          <p className="label">¿Cómo te llamas?</p>
+          <h2 className="label">¿Cómo te llamas?</h2>
           {data.unclaimedPeople.length ? (
             <p>Elige tu nombre de la lista, o escribe el tuyo si no está.</p>
           ) : (
             <p>Escribe tu nombre para que el resto del hogar te reconozca.</p>
           )}
           {data.unclaimedPeople.length ? (
-            <div className="pantry-detail__chips">
+            <div
+              aria-label="Nombres disponibles"
+              className="pantry-detail__chips"
+              role="group"
+            >
               {data.unclaimedPeople.map((person) => (
                 <button
                   key={person.id}
@@ -238,14 +236,14 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
       ) : null}
 
       <section className="household-security">
-        <p className="label">Tu cuenta</p>
+        <h2 className="label">Tu cuenta</h2>
         <Link className="text-action" href="/auth/update-password">
           Cambiar mi contraseña
         </Link>
       </section>
 
       <section className="household-backup">
-        <p className="label">Copia de seguridad</p>
+        <h2 className="label">Copia de seguridad</h2>
         <p>
           Descarga una copia completa de tus Recetas, Compra y Despensa. No
           cambia nada en el hogar.
@@ -261,7 +259,7 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
 
       {data.isOwner ? (
         <section className="household-restore">
-          <p className="label">Restaurar una copia</p>
+          <h2 className="label">Restaurar una copia</h2>
           <p>
             Recupera los datos de una copia de este mismo hogar. Antes se
             descargará automáticamente una copia del estado actual.
@@ -309,8 +307,8 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
       ) : null}
 
       {data.isOwner ? (
-        <div className="household-invite">
-          <p className="label">Invitar a otra persona</p>
+        <section className="household-invite">
+          <h2 className="label">Invitar a otra persona</h2>
           {generatedCode ? (
             <div className="household-invite-code" aria-live="polite">
               <p className="household-invite-code__value">
@@ -339,14 +337,16 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
           >
             Generar código de invitación
           </PrimaryButton>
-        </div>
+        </section>
       ) : (
         <p>Solo quien creó el hogar puede invitar a otra persona.</p>
       )}
 
       {data.pendingInvitations.length ? (
-        <>
-          <p className="label">Invitaciones pendientes</p>
+        <section aria-labelledby="hogar-invitaciones">
+          <h2 className="label" id="hogar-invitaciones">
+            Invitaciones pendientes
+          </h2>
           <ul className="household-invitations">
             {data.pendingInvitations.map((invitation) => (
               <li key={invitation.id}>
@@ -369,14 +369,14 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
               </li>
             ))}
           </ul>
-        </>
+        </section>
       ) : canInvite ? (
         <p className="center">Aún no has invitado a nadie.</p>
       ) : null}
 
       {data.isOwner ? (
         <section className="household-reset">
-          <p className="label">Reiniciar pruebas</p>
+          <h2 className="label">Reiniciar pruebas</h2>
           <p>
             Borra este hogar, sus datos y las {data.activeMemberCount}{' '}
             {data.activeMemberCount === 1 ? 'cuenta activa' : 'cuentas activas'}
@@ -403,7 +403,11 @@ export function HouseholdManager({ data }: { data: HouseholdManagement }) {
         </section>
       ) : null}
 
-      <p aria-live="polite">{status}</p>
+      {/* role="status" además de aria-live: algunos lectores solo anuncian la
+          región si tiene rol, y aquí llegan tanto confirmaciones como errores. */}
+      <p aria-live="polite" role="status">
+        {status}
+      </p>
     </section>
   )
 }

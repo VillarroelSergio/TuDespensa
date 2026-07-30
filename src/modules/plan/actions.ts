@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { AppError } from '@/lib/errors/AppError'
 import { demoFixturesEnabled, demoWeekMeals } from '@/lib/dev/demo-fixtures'
 import { createIdempotencyKey } from '@/lib/idempotency/keys'
+import { failure } from '@/lib/supabase/rpc'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { parseIdempotencyKey } from '@/lib/validation/onboarding'
 
@@ -26,18 +27,6 @@ import {
 } from './suggestions'
 import type { Suggestion } from './suggestions'
 import type { MealType, PlannedMeal } from './types'
-
-function failure(error: { code?: string; message: string }): never {
-  const code =
-    error.code === '42501'
-      ? 'FORBIDDEN'
-      : error.code === '40001'
-        ? 'CONFLICT'
-        : error.code === '22023' || error.code === '23514'
-          ? 'INVALID_INPUT'
-          : 'UNEXPECTED'
-  throw new AppError(code, error.message)
-}
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

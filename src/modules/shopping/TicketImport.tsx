@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -68,9 +69,9 @@ export function TicketImport() {
   return (
     <AppShell current="compra" contentClassName="ticket-content">
       <section aria-labelledby="ticket-title">
-        <a className="shopping-back" href="/compra">
-          ← Volver a la lista
-        </a>
+        <Link className="shopping-back" href="/compra">
+          <span aria-hidden="true">←</span> Volver a la lista
+        </Link>
         <header className="shopping-header">
           <h1 id="ticket-title">Importar de un ticket</h1>
         </header>
@@ -92,7 +93,13 @@ export function TicketImport() {
               rows={8}
               placeholder={'Tomate 500 g\nLeche 1,5 l\nManzanas 3'}
             />
+            {!text.trim() ? (
+              <p className="shopping-next" id="ticket-blocked">
+                Pega el texto del ticket para poder detectar los productos.
+              </p>
+            ) : null}
             <button
+              aria-describedby={!text.trim() ? 'ticket-blocked' : undefined}
               className="shopping-confirm"
               disabled={!text.trim()}
               onClick={detect}
@@ -174,8 +181,10 @@ export function TicketImport() {
                 </div>
               ))}
             </section>
+            {/* Era un botón vestido de enlace «volver»: mismo peso visual que
+                una navegación, cuando es una acción de la propia lista. */}
             <button
-              className="shopping-back ticket-add-line"
+              className="recipe-row-add ticket-add-line"
               onClick={() =>
                 setLines((current) => [...(current ?? []), EMPTY_LINE])
               }

@@ -14,11 +14,13 @@ export function RecipePreferences({
 }) {
   const [preference, setPreferenceState] = useState(initial)
   const [pending, setPending] = useState(false)
+  const [error, setError] = useState('')
 
   async function persist(next: RecipePreference) {
     const previous = preference
     setPreferenceState(next)
     setPending(true)
+    setError('')
     try {
       await setPreference({
         recipeId,
@@ -26,7 +28,10 @@ export function RecipePreferences({
         rating: next.rating,
       })
     } catch {
+      // Antes solo revertía en silencio: la estrella volvía a su sitio y no
+      // había manera de saber que el guardado había fallado.
       setPreferenceState(previous)
+      setError('No hemos podido guardar tu valoración. Inténtalo de nuevo.')
     } finally {
       setPending(false)
     }
@@ -43,7 +48,8 @@ export function RecipePreferences({
           persist({ ...preference, isFavorite: !preference.isFavorite })
         }
       >
-        {preference.isFavorite ? '★ Favorita' : '☆ Marcar favorita'}
+        <span aria-hidden="true">{preference.isFavorite ? '★' : '☆'} </span>
+        {preference.isFavorite ? 'Favorita' : 'Marcar favorita'}
       </button>
       <div className="recipe-rating" role="group" aria-label="Tu puntuación">
         {[1, 2, 3, 4, 5].map((value) => (
@@ -52,7 +58,7 @@ export function RecipePreferences({
             type="button"
             disabled={pending}
             className={`recipe-star${preference.rating && value <= preference.rating ? ' is-active' : ''}`}
-            aria-label={`${value} de 5`}
+            aria-label={`Puntuar con ${value} de 5`}
             aria-pressed={preference.rating === value}
             onClick={() =>
               persist({
@@ -61,10 +67,15 @@ export function RecipePreferences({
               })
             }
           >
-            ★
+            <span aria-hidden="true">★</span>
           </button>
         ))}
       </div>
+      {error ? (
+        <p className="recipe-editor__status" role="status">
+          {error}
+        </p>
+      ) : null}
     </div>
   )
 }
