@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { BrandLockup } from '@/components/ui/BrandLockup'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SignOutButton } from '@/components/ui/SignOutButton'
 import { redeemInvitationCode } from '@/modules/household/actions'
@@ -33,6 +34,7 @@ export default function JoinHouseholdPage() {
   return (
     <main className="auth-main">
       <section className="onboarding-card">
+        <BrandLockup className="brand brand--welcome" href="/" />
         <h1>Únete a tu hogar</h1>
         <p>
           La persona que ya usa MiDespensa puede generar un código en la

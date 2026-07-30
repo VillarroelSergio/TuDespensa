@@ -41,6 +41,10 @@ export function RecipeDetailView({
       <Link className="recipe-back" href="/recetas">
         <span aria-hidden="true">←</span> Recetas
       </Link>
+      <div
+        aria-hidden="true"
+        className={`recipe-detail__banner recipe-card__thumb--${recipe.dishType ?? 'other'}`}
+      />
       <header className="recipe-detail__header">
         <h1>{recipe.title}</h1>
         {recipe.status === 'pending' ? (
@@ -89,7 +93,10 @@ export function RecipeDetailView({
                 catalog,
               )
               return (
-                <li className="recipe-detail__ingredient" key={ingredient.position}>
+                <li
+                  className="recipe-detail__ingredient"
+                  key={ingredient.position}
+                >
                   <span
                     aria-hidden="true"
                     className={`recipe-ingredient-dot recipe-ingredient-dot--${availability}`}

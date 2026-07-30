@@ -121,7 +121,6 @@ export function CheckoutReview({
                   line.action === 'add' && line.suggestedZone === null
                 return (
                   <div key={line.itemId} className="shopping-row">
-                    <span aria-hidden="true" className="shopping-review-icon" />
                     <span>{line.name}</span>
                     <small>{checkoutActionLabel(line)}</small>
                     <label className="shopping-checkout-quantity">

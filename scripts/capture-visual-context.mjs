@@ -46,6 +46,18 @@ const views = [
     path: '/plan/cocinar?fecha=2026-07-20&servicio=lunch',
     fixture: 'empty',
   },
+  { name: 'hogar', path: '/hogar', fixture: 'empty' },
+  { name: 'unirme', path: '/unirme' },
+  {
+    name: 'receta-detalle',
+    path: '/recetas/fixture-recipe-lentejas',
+    fixture: 'empty',
+  },
+  {
+    name: 'receta-editar',
+    path: '/recetas/fixture-recipe-lentejas/editar',
+    fixture: 'empty',
+  },
   { name: 'despensa', path: '/despensa', fixture: 'everyday' },
   { name: 'compra', path: '/compra', fixture: 'everyday' },
   { name: 'compra-revisar', path: '/compra/revisar', fixture: 'everyday' },
@@ -59,6 +71,17 @@ const views = [
   {
     name: 'plan-cocinar',
     path: '/plan/cocinar?fecha=2026-07-20&servicio=lunch',
+    fixture: 'everyday',
+  },
+  { name: 'hogar', path: '/hogar', fixture: 'everyday' },
+  {
+    name: 'receta-detalle',
+    path: '/recetas/fixture-recipe-tortilla-calabacin',
+    fixture: 'everyday',
+  },
+  {
+    name: 'receta-editar',
+    path: '/recetas/fixture-recipe-tortilla-calabacin/editar',
     fixture: 'everyday',
   },
 ]

@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
 
   /* Modern neutral palette + tomato accent (all pairings pass WCAG AA) */
   --bg: #f6f6f4; /* neutral near-white page */
@@ -103,7 +103,7 @@ a:focus-visible {
 .onboarding-card {
   width: min(100%, 480px);
   min-height: min(100dvh - 48px, 760px);
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
@@ -142,7 +142,7 @@ input {
   border-radius: 6px;
   padding: 10px 12px;
   color: var(--ink);
-  background: #fff;
+  background: var(--surface);
 }
 .primary-button {
   display: inline-flex;
@@ -165,7 +165,7 @@ input {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: white;
+  background: var(--surface);
   color: var(--ink);
   padding: 12px;
   text-decoration: none;
@@ -218,7 +218,7 @@ footer {
 .chip {
   min-height: 36px;
   padding: 6px 12px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 999px;
 }
@@ -267,7 +267,7 @@ footer {
   .onboarding-card footer {
     position: sticky;
     bottom: 0;
-    background: #fff;
+    background: var(--surface);
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
@@ -306,7 +306,7 @@ footer {
   flex-direction: column;
   gap: 2rem;
   padding: 1.5rem;
-  background: #fff;
+  background: var(--surface);
 }
 .pantry-brand {
   display: inline-flex;
@@ -374,13 +374,13 @@ footer {
   max-width: 42rem;
   border: 0;
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
 }
 .pantry-list {
   max-width: 70rem;
   margin-top: 1rem;
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   overflow: hidden;
 }
 .pantry-zone__title {
@@ -419,7 +419,7 @@ footer {
   min-height: 52px;
   align-items: center;
   gap: 0.75rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0 1rem;
 }
 .pantry-row__detail {
@@ -446,11 +446,15 @@ footer {
 .pantry-row__dot {
   width: 0.625rem;
   height: 0.625rem;
-  border-radius: 50%;
+  /* Cuadrado, no círculo: la dirección 02 usa etiquetas, no puntos, como
+     idioma visual de estado — coherente con las pestañas de categoría. */
+  border-radius: 0.2rem;
   background: var(--success);
 }
 .pantry-row--out .pantry-row__dot {
-  background: var(--primary);
+  /* No usar --primary: ahora es la marca (oliva) y compite en significado con
+     --success (también verde) para un estado que en realidad es "falta". */
+  background: var(--danger);
 }
 .pantry-row--low .pantry-row__dot {
   background: var(--warning);
@@ -468,7 +472,7 @@ footer {
   color: var(--success-strong);
 }
 .pantry-row--out .pantry-row__status {
-  color: var(--primary-strong);
+  color: var(--danger-strong);
   font-weight: 700;
 }
 .pantry-row--low .pantry-row__status {
@@ -479,7 +483,7 @@ footer {
   min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   padding: 0 0.625rem;
   font-size: 0.75rem;
@@ -524,7 +528,7 @@ footer {
   min-height: 36px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   padding: 0 0.5rem;
   font-size: 0.75rem;
@@ -566,13 +570,13 @@ footer {
   width: min(100%, 44rem);
   margin-top: 1rem;
   border-radius: 0.5rem;
-  background: var(--ink);
+  background: var(--overlay);
   padding: 0.75rem 1rem;
   color: #fff;
   font-size: 0.8125rem;
 }
 .pantry-toast span:last-of-type {
-  color: rgb(255 253 249 / 78%);
+  color: rgb(var(--surface-rgb) / 78%);
 }
 .pantry-toast button {
   min-height: 32px;
@@ -607,7 +611,7 @@ footer {
   min-height: 32rem;
   padding: 1.5rem 2rem;
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
 }
 .pantry-detail__back {
   display: flex;
@@ -718,7 +722,7 @@ footer {
   min-height: 40px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.5rem;
 }
 .pantry-detail__help,
@@ -753,7 +757,7 @@ footer {
   flex-direction: column;
   gap: 2rem;
   padding: 1.5rem;
-  background: #fff;
+  background: var(--surface);
 }
 .shopping-sidebar__nav,
 .shopping-bottom-nav {
@@ -831,7 +835,7 @@ footer {
   margin-top: 1rem;
   overflow: hidden;
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
 }
 .shopping-row {
   display: grid;
@@ -931,12 +935,6 @@ footer {
   margin: 0.25rem 0 0;
   color: var(--muted);
   font-size: 0.875rem;
-}
-.shopping-review-icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  border-radius: 999px;
-  background: var(--success);
 }
 .shopping-checkout-quantity {
   display: inline-flex;
@@ -1065,7 +1063,7 @@ footer {
     gap: 0;
     padding: 0.5rem 0.25rem env(safe-area-inset-bottom);
     border-top: 1px solid var(--border);
-    background: #fff;
+    background: var(--surface);
   }
   .pantry-bottom-nav a {
     justify-content: center;
@@ -1095,7 +1093,7 @@ footer {
     gap: 0;
     padding: 0.5rem 0.25rem env(safe-area-inset-bottom);
     border-top: 1px solid var(--border);
-    background: #fff;
+    background: var(--surface);
   }
   .shopping-bottom-nav a {
     justify-content: center;
@@ -1118,7 +1116,7 @@ footer {
   margin-top: 1rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.875rem;
   font-size: 0.9375rem;
 }
@@ -1127,7 +1125,7 @@ footer {
   gap: 0.5rem;
   margin-top: 0.75rem;
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   padding: 1rem;
 }
 .recipes-form input,
@@ -1135,7 +1133,7 @@ footer {
   min-height: 40px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.625rem;
   font-size: 0.875rem;
 }
@@ -1168,8 +1166,44 @@ footer {
   gap: 0.25rem;
   min-height: 4.5rem;
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   padding: 1rem;
+}
+.recipe-card__thumb {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.6rem;
+  background: var(--muted-2);
+}
+.recipe-detail__banner {
+  height: 5rem;
+  margin: 0 0 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--muted-2);
+}
+/* Sin fotografía real todavía (exigiría subida de imagen y cambio de
+   esquema): un color fijo por tipo de plato da pistas visuales reales sin
+   inventar una imagen que no existe. */
+.recipe-card__thumb--breakfast {
+  background: var(--accent);
+}
+.recipe-card__thumb--starter {
+  background: #8ba565;
+}
+.recipe-card__thumb--main {
+  background: var(--primary);
+}
+.recipe-card__thumb--side {
+  background: #b4784f;
+}
+.recipe-card__thumb--dessert {
+  background: #c17a6b;
+}
+.recipe-card__thumb--drink {
+  background: #4d7a72;
+}
+.recipe-card__thumb--other {
+  background: var(--muted-2);
 }
 .recipe-card__title {
   color: var(--ink);
@@ -1268,7 +1302,7 @@ footer {
   min-height: 40px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0.5rem 0.625rem;
   font-size: 0.9375rem;
   font-family: inherit;
@@ -1310,7 +1344,7 @@ footer {
   min-height: 40px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--primary-strong);
   font-size: 1rem;
   font-weight: 700;
@@ -1320,7 +1354,7 @@ footer {
   width: fit-content;
   border: 1px dashed var(--primary-soft-border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--primary-strong);
   padding: 0 0.75rem;
   font-size: 0.8125rem;
@@ -1358,7 +1392,7 @@ footer {
 }
 .recipe-editor__status {
   margin: 0;
-  color: var(--danger);
+  color: var(--danger-strong);
   font-size: 0.8125rem;
 }
 .recipe-detail__header {
@@ -1398,14 +1432,14 @@ footer {
   width: 0.625rem;
   height: 0.625rem;
   flex-shrink: 0;
-  border-radius: 50%;
+  border-radius: 0.2rem;
   background: var(--success);
 }
 .recipe-ingredient-dot--low {
   background: var(--warning);
 }
 .recipe-ingredient-dot--missing {
-  background: var(--primary);
+  background: var(--danger);
 }
 .recipe-ingredient-owned {
   flex-shrink: 0;
@@ -1442,7 +1476,7 @@ footer {
   min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.75rem;
   color: var(--ink);
   font-size: 0.8125rem;
@@ -1457,7 +1491,7 @@ footer {
   min-height: 36px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.75rem;
   font-size: 0.8125rem;
 }
@@ -1466,7 +1500,7 @@ footer {
   margin-top: 0.75rem;
   border: 1px solid var(--primary);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--primary-strong);
   padding: 0 0.875rem;
   font-weight: 700;
@@ -1482,7 +1516,7 @@ footer {
   margin-top: 1rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--primary-strong);
   font-weight: 700;
 }
@@ -1496,7 +1530,7 @@ footer {
   min-height: 40px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.875rem;
   color: var(--ink);
   font-size: 0.8125rem;
@@ -1573,7 +1607,7 @@ footer {
   justify-content: center;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   font-size: 1rem;
   text-decoration: none;
@@ -1605,7 +1639,12 @@ footer {
 }
 .plan-week {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* Antes: repeat(7,...) forzaba una tira de una sola fila que dejaba ~70%
+     del alto de escritorio vacío debajo. auto-fill reparte los 7 días en
+     rejilla (varias filas), ocupando el alto disponible en vez de solo el
+     ancho. Solo afecta a ≥1200px: tablet/móvil ya funcionan bien (ver
+     media queries de abajo, que siguen mandando por debajo de ese ancho). */
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
   gap: 0.75rem;
   margin: 1rem 0 0;
   padding: 0;
@@ -1616,7 +1655,7 @@ footer {
   align-content: start;
   gap: 0.5rem;
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0.75rem;
 }
 .plan-day__title {
@@ -1660,7 +1699,7 @@ footer {
   min-height: 44px;
   border: 1px dashed var(--primary-soft-border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--primary-strong);
   font-size: 0.8125rem;
   font-weight: 700;
@@ -1739,7 +1778,7 @@ footer {
   min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.5rem;
   font-size: 0.8125rem;
 }
@@ -1747,7 +1786,7 @@ footer {
   min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   font-size: 0.75rem;
   font-weight: 700;
@@ -1757,8 +1796,8 @@ footer {
   width: 100%;
   border: 1px solid var(--danger);
   border-radius: 0.375rem;
-  background: #fff;
-  color: var(--danger);
+  background: var(--surface);
+  color: var(--danger-strong);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -1774,7 +1813,7 @@ footer {
     border-top: 1px solid var(--border);
     border-radius: 1rem 1rem 0 0;
     box-shadow: var(--shadow);
-    background: #fff;
+    background: var(--surface);
     padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
     max-height: 70vh;
     overflow-y: auto;
@@ -1798,7 +1837,7 @@ footer {
     border: 1px solid var(--border);
     border-radius: 0.75rem;
     box-shadow: var(--shadow);
-    background: #fff;
+    background: var(--surface);
   }
 }
 /* «Cerrar» del menú de opciones: en móvil la hoja tapa el disparador, así que
@@ -1827,7 +1866,7 @@ footer {
   margin-top: 1rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0.625rem 0.75rem;
   color: var(--ink);
   font-size: 0.8125rem;
@@ -1836,7 +1875,7 @@ footer {
   min-height: 36px;
   border: 1px solid var(--primary);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.875rem;
   color: var(--primary-strong);
   font-size: 0.8125rem;
@@ -1892,7 +1931,7 @@ footer {
 }
 .choose-suggestion--secondary {
   border-color: var(--border);
-  background: #fff;
+  background: var(--surface);
 }
 .choose-suggestion--secondary .choose-suggestion__title {
   font-size: 0.875rem;
@@ -1936,7 +1975,7 @@ footer {
   min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.75rem;
   font-size: 0.9375rem;
 }
@@ -1944,7 +1983,7 @@ footer {
   min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0 1rem;
   font-size: 0.875rem;
   font-weight: 700;
@@ -1975,7 +2014,7 @@ footer {
   min-height: 52px;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0.75rem;
   text-align: left;
 }
@@ -2116,7 +2155,7 @@ footer {
 /* One primary CTA per screen: the header "Añadir receta" stays the only filled action;
    the in-panel form submits become secondary so three red buttons don't compete. */
 .recipes-add .recipes-form button:not(:disabled) {
-  background: #fff;
+  background: var(--surface);
   color: var(--primary-strong);
   border: 1px solid var(--primary);
 }
@@ -2141,7 +2180,7 @@ footer {
   gap: 0.375rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0.75rem;
 }
 .cook-row__toggle {
@@ -2176,7 +2215,7 @@ footer {
   min-height: 40px;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--surface);
   padding: 0 0.5rem;
   font-size: 0.875rem;
 }
@@ -2194,14 +2233,22 @@ footer {
   --bg: #f8f5ef;
   --surface: #fffdf9;
   --surface-2: #f1ece3;
+  --surface-rgb: 255 253 249;
   --ink: #26332d;
   --muted: #66726b;
   --muted-2: #7d877f;
   --border: #e4ddd2;
-  --primary: #bf5539;
-  --primary-strong: #963b27;
-  --primary-soft: #f9e6dd;
-  --primary-soft-border: #edc7b8;
+  --border-rgb: 228 221 210;
+  /* Dirección 02 «Etiquetas de despensa» (elegida 2026-07-30, ver artefacto
+     de rediseño): oliva como color de marca, ocre como acento de categoría. */
+  --primary: #5b6e3d;
+  --primary-strong: #3c4a28;
+  --primary-soft: #eaefdf;
+  --primary-soft-border: #cdd9b4;
+  --accent: #d98e2b;
+  --accent-strong: #8f5a0d;
+  --accent-soft: #fbe9d0;
+  --accent-soft-border: #f0c98a;
   /* Contraste: los grises anteriores (#66726b, #7d877f) daban 3,4-4,3:1 sobre
      crema y sobre --surface-2, por debajo del 4,5:1 que exige WCAG 1.4.3 para
      texto pequeño. Estos dos pasan sobre los tres fondos de la app. */
@@ -2218,11 +2265,27 @@ footer {
   --success-strong: #1f6b52;
   --warning-strong: #8a5410;
   --danger: #8e3022;
+  /* --danger sirve de relleno (botón + texto blanco) y de color de texto
+     (estado "falta"). En claro un solo tono cubre los dos papeles; en oscuro
+     no (ver media query de abajo), así que separamos el de texto aquí para
+     que ambos temas usen la misma regla CSS sin condicionales. */
+  --danger-strong: #8e3022;
+  --danger-soft: #f7e1dc;
+  --danger-soft-border: #edbfb2;
+  --shadow-rgb: 63 44 23;
+  /* Fijos a propósito, NO se redefinen en el media query oscuro: los usa un
+     aviso flotante que es una barra oscura con texto blanco fijo en los dos
+     temas, así que no deben seguir la inversión de --ink/--surface. */
+  --overlay: #26332d;
+  --overlay-ink: #fffdf9;
   --radius: 0.875rem;
   --radius-lg: 1.25rem;
-  --shadow: 0 1px 2px rgb(63 44 23 / 4%), 0 12px 32px rgb(63 44 23 / 7%);
+  --shadow: 0 1px 2px rgb(var(--shadow-rgb) / 4%), 0 12px 32px rgb(var(--shadow-rgb) / 7%);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --font-display: Georgia, 'Times New Roman', serif;
+  /* Antes Georgia (fallback de sistema, sin webfont real). La dirección 02
+     usa mayúsculas gruesas: Inter en 800 ya cargada cubre esto sin añadir
+     una tipografía nueva. */
+  --font-display: var(--font-inter), system-ui, sans-serif;
 }
 
 body {
@@ -2236,13 +2299,67 @@ body {
     var(--bg);
 }
 
+/* Modo oscuro: sigue la preferencia del sistema (sin interruptor manual, no
+   pedido). Todos los componentes leen los tokens de arriba, así que basta con
+   redefinirlos aquí — ninguna regla de componente necesita tocarse. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c211b;
+    --surface: #262b22;
+    --surface-2: #2f3629;
+    --surface-rgb: 38 43 34;
+    --ink: #eef1e8;
+    --muted: #b3bcac;
+    --muted-2: #9aa393;
+    --border: #6b7660;
+    --border-rgb: 107 118 96;
+    /* --primary se mantiene: ya da ≥5:1 con texto blanco en ambos temas
+       (es un relleno de botón, no depende del fondo de la página). Solo la
+       variante «strong» (texto/enlaces sobre el fondo) se aclara. */
+    --primary-strong: #b7d38c;
+    --primary-soft: #2c3624;
+    --primary-soft-border: #4a5a3a;
+    --accent-strong: #e0aa4f;
+    --accent-soft: #3d3320;
+    --accent-soft-border: #5c4a28;
+    --success: #4fae86;
+    --success-soft: #173225;
+    --success-strong: #7fd1ab;
+    --warning: #d99b3f;
+    --warning-soft: #3d2f14;
+    --warning-strong: #e8b563;
+    /* --danger (relleno de botón + texto blanco) y --danger-strong (texto
+       "falta" sobre el fondo) divergen aquí: un solo rojo no puede ser a la
+       vez oscuro (para que el blanco encima cumpla 4,5:1) y claro (para
+       leerse como texto sobre un fondo casi negro). */
+    --danger: #b8412f;
+    --danger-strong: #ea867c;
+    --danger-soft: #3a201a;
+    --danger-soft-border: #5c2e23;
+    --shadow-rgb: 0 0 0;
+  }
+  /* El lavado ambiental cálido/verde estaba pensado para un fondo crema: en
+     oscuro sobra, un fondo plano se lee mejor. */
+  body {
+    background: var(--bg);
+  }
+}
+
 h1,
 h2,
 h3,
 .choose-title {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.035em;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+/* Excepción: estos dos h1 muestran el título de una receta (texto largo y
+   variable, no una etiqueta corta). Mayúsculas ahí perjudican la lectura. */
+.recipe-detail__header h1,
+#cook-title {
+  text-transform: none;
+  letter-spacing: -0.02em;
 }
 
 button,
@@ -2267,7 +2384,7 @@ summary:focus-visible,
 /* Sobre superficies oscuras el anillo oscuro se pierde: ahí se invierte. */
 .pantry-toast button:focus-visible,
 .danger-button:focus-visible {
-  outline-color: var(--surface);
+  outline-color: var(--overlay-ink);
 }
 
 .app-shell {
@@ -2286,8 +2403,8 @@ summary:focus-visible,
   height: 100dvh;
   flex-direction: column;
   gap: 2.75rem;
-  border-right: 1px solid rgb(228 221 210 / 80%);
-  background: rgb(255 253 249 / 76%);
+  border-right: 1px solid rgb(var(--border-rgb) / 80%);
+  background: rgb(var(--surface-rgb) / 76%);
   padding: 1.75rem 1.25rem;
   backdrop-filter: blur(16px);
 }
@@ -2306,8 +2423,8 @@ summary:focus-visible,
   height: 2.35rem;
   place-items: center;
   border-radius: 0.85rem;
-  background: linear-gradient(145deg, #d87350, var(--primary-strong));
-  box-shadow: 0 0.45rem 1rem rgb(150 59 39 / 22%);
+  background: linear-gradient(145deg, #8fa864, var(--primary-strong));
+  box-shadow: 0 0.45rem 1rem rgb(60 74 40 / 22%);
   color: white;
   font-family: var(--font-display);
   font-size: 1.2rem;
@@ -2365,7 +2482,7 @@ summary:focus-visible,
 .onboarding-sign-out .text-action {
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: rgb(255 253 249 / 92%);
+  background: rgb(var(--surface-rgb) / 92%);
   padding: 0.5rem 0.8rem;
   box-shadow: var(--shadow);
 }
@@ -2419,7 +2536,7 @@ summary:focus-visible,
 .app-shell textarea {
   border-color: var(--border);
   border-radius: 0.8rem;
-  background: rgb(255 253 249 / 92%);
+  background: rgb(var(--surface-rgb) / 92%);
 }
 .app-shell .pantry-search,
 .app-shell .recipes-search {
@@ -2435,7 +2552,7 @@ summary:focus-visible,
 .app-shell .pantry-detail__save,
 .app-shell .primary-button {
   border-radius: 0.8rem;
-  box-shadow: 0 0.55rem 1.25rem rgb(150 59 39 / 16%);
+  box-shadow: 0 0.55rem 1.25rem rgb(60 74 40 / 16%);
   transition:
     transform 140ms var(--ease-out),
     background 160ms var(--ease-out),
@@ -2454,13 +2571,11 @@ summary:focus-visible,
   margin-top: 1.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(
-    135deg,
-    rgb(249 230 221 / 88%),
-    rgb(255 253 249 / 84%)
-  );
+  /* Antes un tinte terracota fijo (resto de la dirección anterior): con
+     --primary-soft sigue la paleta oliva/ocre vigente en los dos temas. */
+  background: linear-gradient(135deg, var(--primary-soft), var(--surface));
   padding: 1.1rem 1.2rem;
-  box-shadow: 0 0.55rem 1.3rem rgb(63 44 23 / 5%);
+  box-shadow: 0 0.55rem 1.3rem rgb(var(--shadow-rgb) / 5%);
 }
 .plan-overview__eyebrow {
   margin: 0;
@@ -2500,18 +2615,18 @@ summary:focus-visible,
   border-radius: 0.8rem;
 }
 .app-shell .plan-slot__recipe {
-  background: rgb(255 253 249 / 78%);
+  background: rgb(var(--surface-rgb) / 78%);
 }
 .app-shell .plan-slot__add {
   border-style: solid;
   border-color: var(--primary-soft-border);
-  background: rgb(255 253 249 / 80%);
+  background: rgb(var(--surface-rgb) / 80%);
   color: var(--primary-strong);
 }
 .app-shell .recipe-card {
   min-height: 9rem;
   padding: 1.15rem;
-  background: linear-gradient(160deg, #fffdf9, #fdf8f1);
+  background: linear-gradient(160deg, var(--surface), var(--surface-2));
 }
 .app-shell .shopping-row {
   min-height: 64px;
@@ -2553,16 +2668,30 @@ summary:focus-visible,
   min-height: 60px;
 }
 .app-shell .pantry-list__priority {
-  background: linear-gradient(90deg, rgb(255 240 216 / 58%), transparent);
+  /* Antes un aviso cálido fijo (crema/58%): con --warning-soft el degradado
+     usa el mismo tono en los dos temas en vez de quedar gris en oscuro. */
+  background: linear-gradient(90deg, var(--warning-soft), transparent);
 }
 .app-shell .pantry-list__priority h2 {
   color: var(--warning-strong);
 }
 
 /* Fase 2 — Cocina y selector: decisión guiada, con una sola confirmación. */
-.app-shell .choose-page,
 .app-shell .cook-page {
   width: min(100%, 44rem);
+}
+/* Elegir receta tenía el mismo hueco muerto que el Plan: contenido a 44rem
+   dentro de un armazón de 78rem. Se amplía un poco (sigue siendo ancho de
+   lectura para el buscador) y las tarjetas pasan a 2 columnas en
+   escritorio cuando hay sitio para ello (auto-fit, ver media query). */
+.app-shell .choose-page {
+  width: min(100%, 56rem);
+}
+@media (min-width: 1200px) {
+  .app-shell .choose-suggestions,
+  .app-shell .choose-list {
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
 }
 .choose-header,
 .cook-header {
@@ -2603,11 +2732,7 @@ summary:focus-visible,
   gap: 0.34rem;
   min-height: 6.7rem;
   padding: 1rem 1.1rem;
-  background: linear-gradient(
-    135deg,
-    rgb(249 230 221 / 94%),
-    rgb(255 253 249 / 90%)
-  );
+  background: linear-gradient(135deg, var(--primary-soft), var(--surface));
 }
 .app-shell .choose-suggestion__title {
   font-family: var(--font-display);
@@ -2620,7 +2745,7 @@ summary:focus-visible,
 .app-shell .choose-suggestion--secondary {
   min-height: auto;
   padding: 0.75rem 0.9rem;
-  background: rgb(255 253 249 / 88%);
+  background: rgb(var(--surface-rgb) / 88%);
   box-shadow: none;
 }
 .app-shell .choose-suggestion--secondary .choose-suggestion__title {
@@ -2635,7 +2760,7 @@ summary:focus-visible,
   padding: 1rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: rgb(255 253 249 / 72%);
+  background: rgb(var(--surface-rgb) / 72%);
   box-shadow: var(--shadow);
 }
 .app-shell .choose-search button {
@@ -2649,7 +2774,7 @@ summary:focus-visible,
 .app-shell .choose-recipe {
   min-height: 4.5rem;
   padding: 1rem 1.1rem;
-  background: rgb(255 253 249 / 88%);
+  background: rgb(var(--surface-rgb) / 88%);
 }
 .app-shell .choose-recipe__title {
   font-family: var(--font-display);
@@ -2666,7 +2791,7 @@ summary:focus-visible,
   background: linear-gradient(
     135deg,
     var(--success-soft),
-    rgb(255 253 249 / 92%)
+    rgb(var(--surface-rgb) / 92%)
   );
   padding: 1rem 1.1rem;
   box-shadow: var(--shadow);
@@ -2726,7 +2851,7 @@ summary:focus-visible,
 
 @media (hover: hover) and (pointer: fine) {
   .app-shell__rail-nav a:hover {
-    background: rgb(255 253 249 / 92%);
+    background: rgb(var(--surface-rgb) / 92%);
     color: var(--ink);
     transform: translateX(2px);
   }
@@ -2734,7 +2859,7 @@ summary:focus-visible,
   .app-shell .choose-recipe:hover,
   .app-shell .choose-suggestion:hover {
     transform: translateY(-3px);
-    box-shadow: 0 16px 34px rgb(63 44 23 / 12%);
+    box-shadow: 0 16px 34px rgb(var(--shadow-rgb) / 12%);
   }
 }
 .app-shell button:active:not(:disabled),
@@ -2763,11 +2888,11 @@ summary:focus-visible,
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0.2rem;
-    border: 1px solid rgb(228 221 210 / 88%);
+    border: 1px solid rgb(var(--border-rgb) / 88%);
     border-radius: 1.15rem;
-    background: rgb(255 253 249 / 88%);
+    background: rgb(var(--surface-rgb) / 88%);
     padding: 0.4rem;
-    box-shadow: 0 0.9rem 2rem rgb(63 44 23 / 16%);
+    box-shadow: 0 0.9rem 2rem rgb(var(--shadow-rgb) / 16%);
     backdrop-filter: blur(18px);
   }
   .app-shell__sign-out-mobile {
@@ -2780,7 +2905,7 @@ summary:focus-visible,
   .app-shell__sign-out-mobile .text-action {
     border: 1px solid var(--border);
     border-radius: 999px;
-    background: rgb(255 253 249 / 92%);
+    background: rgb(var(--surface-rgb) / 92%);
     padding: 0.5rem 0.8rem;
     box-shadow: var(--shadow);
   }
@@ -2917,9 +3042,14 @@ summary:focus-visible,
   background: var(--success);
 }
 .household-invite {
-  display: flex;
-  flex-direction: column;
+  /* Antes era el único bloque de Hogar sin tarjeta: título y botón flotaban
+     sueltos mientras el resto de secciones sí tenía borde+fondo. */
+  display: grid;
   gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgb(var(--surface-rgb) / 82%);
+  padding: 1rem;
 }
 .household-invite-code {
   display: grid;
@@ -2960,7 +3090,7 @@ summary:focus-visible,
   gap: 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: rgb(255 253 249 / 82%);
+  background: rgb(var(--surface-rgb) / 82%);
   padding: 1rem;
 }
 .household-security p,
@@ -2975,8 +3105,14 @@ summary:focus-visible,
   font-size: 0.9rem;
 }
 .household-reset {
-  border-color: var(--primary-soft-border);
-  background: linear-gradient(135deg, var(--primary-soft), rgb(255 253 249 / 92%));
+  /* Antes reutilizaba el tinte oliva de marca (acogedor) para una acción
+     destructiva («borrar hogar y cuentas»). Un tinte de peligro avisa antes
+     de leer el texto, no solo después. */
+  border-color: var(--danger-soft-border);
+  background: linear-gradient(135deg, var(--danger-soft), var(--surface));
+}
+.household-reset h2 {
+  color: var(--danger-strong);
 }
 .household-reset input {
   max-width: 14rem;
@@ -3120,8 +3256,8 @@ summary:focus-visible,
   height: 2.25rem;
   flex: 0 0 auto;
   border-radius: 0.75rem;
-  background: linear-gradient(145deg, #d87350, var(--primary-strong));
-  box-shadow: 0 0.4rem 0.9rem rgb(150 59 39 / 22%);
+  background: linear-gradient(145deg, #8fa864, var(--primary-strong));
+  box-shadow: 0 0.4rem 0.9rem rgb(60 74 40 / 22%);
 }
 .auth-links {
   display: flex;
