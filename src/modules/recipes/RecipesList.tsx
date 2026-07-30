@@ -186,10 +186,6 @@ export function RecipesList({
               key={recipe.id}
               href={`/recetas/${recipe.id}`}
             >
-              <span
-                aria-hidden="true"
-                className={`recipe-card__thumb recipe-card__thumb--${recipe.dishType ?? 'other'}`}
-              />
               <span className="recipe-card__title">
                 {recipe.isFavorite ? (
                   <>

@@ -1,10 +1,9 @@
-import type { HouseholdManagement } from '@/modules/household/actions'
 import type { PantryListItem } from '@/modules/pantry/presentation'
 import type { PlannedMeal } from '@/modules/plan/types'
 import type { MealType } from '@/modules/plan/types'
 import type { Suggestion } from '@/modules/plan/suggestions'
 import type { CookPreview } from '@/modules/plan/actions'
-import type { Recipe, RecipeDetail } from '@/modules/recipes/types'
+import type { Recipe } from '@/modules/recipes/types'
 import type { CheckoutLine, ShoppingItem } from '@/modules/shopping/types'
 
 export type VisualFixtureScenario = 'empty' | 'everyday'
@@ -408,100 +407,12 @@ export function getVisualFixtureWeekMeals(
   })
 }
 
-const household: HouseholdManagement = {
-  isOwner: true,
-  householdName: 'Casa Villarroel',
-  activeMemberCount: 2,
-  activeMembers: [
-    { id: 'fixture-user-tu', label: 'Tú', role: 'owner', isSelf: true },
-    {
-      id: 'fixture-user-otra',
-      label: 'Marta',
-      role: 'member',
-      isSelf: false,
-    },
-  ],
-  pendingInvitations: [],
-  needsNameClaim: false,
-  unclaimedPeople: [],
-}
-
-const emptyHousehold: HouseholdManagement = {
-  isOwner: true,
-  householdName: 'Mi hogar',
-  activeMemberCount: 1,
-  activeMembers: [
-    { id: 'fixture-user-tu', label: 'Tú', role: 'owner', isSelf: true },
-  ],
-  pendingInvitations: [
-    { id: 'fixture-invite-1', expiresAt: '2026-08-10T00:00:00.000Z' },
-  ],
-  needsNameClaim: false,
-  unclaimedPeople: [],
-}
-
-const recipeDetail: RecipeDetail = {
-  id: recipeIds.tortilla,
-  title: 'Tortilla de calabacín',
-  dishType: 'main',
-  totalMinutes: 25,
-  servings: 2,
-  status: 'ready',
-  isFavorite: true,
-  categories: ['Mediterránea', 'Rápida', 'Verduras'],
-  version: 1,
-  sourceUrl: null,
-  ingredients: [
-    { position: 0, name: 'Calabacín', quantity: 2, unitCode: 'unit' },
-    { position: 1, name: 'Huevos', quantity: 4, unitCode: 'unit' },
-    { position: 2, name: 'Cebolla', quantity: 1, unitCode: 'unit' },
-    { position: 3, name: 'Aceite de oliva', quantity: 30, unitCode: 'ml' },
-    { position: 4, name: 'Queso feta', quantity: 100, unitCode: 'g' },
-  ],
-  steps: [
-    { position: 0, instruction: 'Corta el calabacín y la cebolla en láminas finas.' },
-    { position: 1, instruction: 'Pocha las verduras con el aceite a fuego medio 15 minutos.' },
-    { position: 2, instruction: 'Bate los huevos, añade las verduras y el queso.' },
-    { position: 3, instruction: 'Cuaja la tortilla por ambos lados y sirve.' },
-  ],
-  recipeCategories: [
-    { dimension: 'mediterranean', name: 'Mediterránea' },
-    { dimension: 'time', name: 'Rápida' },
-    { dimension: 'main_ingredient', name: 'Verduras' },
-  ],
-  preference: { isFavorite: true, rating: 4 },
-}
-
-const emptyRecipeDetail: RecipeDetail = {
-  id: recipeIds.lentejas,
-  title: 'Lentejas especiadas',
-  dishType: 'main',
-  totalMinutes: 50,
-  servings: 2,
-  status: 'pending',
-  isFavorite: false,
-  categories: ['Legumbres'],
-  version: 1,
-  sourceUrl: 'https://example.com/lentejas-especiadas',
-  ingredients: [],
-  steps: [],
-  recipeCategories: [{ dimension: 'main_ingredient', name: 'Legumbres' }],
-  preference: { isFavorite: false, rating: null },
-}
-
-export function getVisualFixtureRecipeDetail(
-  scenario: VisualFixtureScenario,
-): RecipeDetail {
-  return scenario === 'empty' ? emptyRecipeDetail : recipeDetail
-}
-
 export const visualFixture = {
   pantry,
   recipes,
   shopping,
   checkout,
   suggestions,
-  household,
 }
 
 export const emptyVisualFixture = {
@@ -510,7 +421,6 @@ export const emptyVisualFixture = {
   shopping: [] as ShoppingItem[],
   checkout: [] as CheckoutLine[],
   suggestions: [] as Suggestion[],
-  household: emptyHousehold,
 }
 
 /** Cocina usa datos locales en las capturas: jamás consulta la despensa real. */

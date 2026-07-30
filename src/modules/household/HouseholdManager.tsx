@@ -26,13 +26,7 @@ function formatExpiry(iso: string): string {
   })
 }
 
-export function HouseholdManager({
-  data,
-  isVisualFixture = false,
-}: {
-  data: HouseholdManagement
-  isVisualFixture?: boolean
-}) {
+export function HouseholdManager({ data }: { data: HouseholdManagement }) {
   const router = useRouter()
   const [resetConfirmation, setResetConfirmation] = useState('')
   const [status, setStatus] = useState('')
@@ -49,9 +43,7 @@ export function HouseholdManager({
 
   // Antes duplicaba a mano la suscripción del hook común, sin su agrupación de
   // ráfagas de eventos (auditoría 2026-07-29).
-  useRealtimeRefresh('household-membership-refresh', ['household_invitations'], {
-    enabled: !isVisualFixture,
-  })
+  useRealtimeRefresh('household-membership-refresh', ['household_invitations'])
 
   function generateCode() {
     startTransition(async () => {
