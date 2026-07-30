@@ -43,3 +43,6 @@ jobs:
 
       - name: Test
         run: npx vitest run
+
+      - name: Build
+        run: npm run build
