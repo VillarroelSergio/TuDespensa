@@ -4,17 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "6383c01bfaa29749",
+        "id": "f5dda54542eecbdd",
         "type": "tabs",
         "children": [
           {
-            "id": "836feb6005e04efe",
+            "id": "b6444a655b6a4f7d",
             "type": "leaf",
             "state": {
-              "type": "graph",
+              "type": "empty",
               "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Vista gráfica"
+              "icon": "lucide-file",
+              "title": "Nueva pestaña"
             }
           }
         ]
@@ -176,8 +176,9 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "836feb6005e04efe",
+  "active": "42dcd4fc9c1f4c6b",
   "lastOpenFiles": [
+    "Sin título.base",
     "00-Project/00-MiDespensa-Hub.md",
     "05-Architecture/POC-TDD-EVIDENCE.md",
     "adr/0001-monolito-modular-nextjs.md",

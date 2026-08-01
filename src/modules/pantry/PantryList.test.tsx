@@ -76,4 +76,33 @@ describe('PantryList', () => {
     )
     expect(screen.queryByLabelText('Ajustar Yogures')).not.toBeInTheDocument()
   })
+
+  it('offers adding a finished item to the shopping list', () => {
+    const onAddToShopping = vi.fn()
+    render(
+      <PantryList
+        initialItems={[
+          {
+            id: 'milk',
+            foodId: 'f-milk',
+            name: 'Leche',
+            version: 2,
+            trackingMode: 'units',
+            approximateState: null,
+            attentionState: 'none',
+            quantity: 0,
+            unitCode: 'unit',
+          },
+        ]}
+        onAddToShopping={onAddToShopping}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Añadir Leche a la compra' }),
+    )
+    expect(onAddToShopping).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'milk' }),
+    )
+  })
 })
