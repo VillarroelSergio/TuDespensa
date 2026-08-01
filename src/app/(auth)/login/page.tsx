@@ -32,6 +32,8 @@ const REGISTRATION_ERROR_MESSAGES: Record<RegistrationFailureReason, string> = {
   email_taken:
     'Ya existe una cuenta con ese correo. Entra con tu contraseña; si te han invitado, podrás escribir el código justo después.',
   invalid_input: 'Revisa el correo y usa una contraseña de ocho caracteres o más.',
+  rate_limited:
+    'Demasiados intentos seguidos. Espera un cuarto de hora y vuelve a probar.',
   unexpected: 'No hemos podido crear la cuenta. Inténtalo de nuevo.',
 }
 

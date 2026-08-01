@@ -24,6 +24,13 @@ export async function logRpcConflict(
     typeof args.version === 'number' ? args.version : undefined
   const fingerprint = `${operation}:${itemId ?? 'none'}:${requestedVersion ?? 'none'}`
   const now = Date.now()
+  // La huella lleva ítem y versión, así que habría una entrada distinta por
+  // cada combinación y el mapa solo crecería: se purga lo ya caducado en cada
+  // paso (auditoría 2026-07-31). Es un recorrido O(n) sobre un mapa que esta
+  // misma purga mantiene pequeño.
+  for (const [key, loggedAt] of lastLoggedAt) {
+    if (now - loggedAt >= LOG_INTERVAL_MS) lastLoggedAt.delete(key)
+  }
   const last = lastLoggedAt.get(fingerprint)
   // Una tormenta no debe trasladarse a los logs de Vercel. Conservamos una
   // muestra por mutación/ítem/versión cada minuto para poder identificarla.

@@ -98,5 +98,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Los ficheros estáticos de /public también se excluyen (auditoría
+  // 2026-07-31): antes cada uno pagaba una llamada de red a Supabase Auth solo
+  // para acabar devolviendo el fichero.
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest)$).*)',
+  ],
 }

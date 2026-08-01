@@ -164,13 +164,28 @@ export async function assignMealAction(formData: FormData) {
 export async function moveMealAction(formData: FormData) {
   const from = parseSlot(formData, 'origen-')
   const to = parseSlot(formData)
-  const recipeId = parseRecipeId(formData)
-  const servings = parseServings(formData)
+  // Se siguen validando aunque la RPC ya no los reciba: mover un hueco sin
+  // receta o con raciones fuera de rango sigue siendo una petición inválida.
+  parseRecipeId(formData)
+  parseServings(formData)
   if (to.mealDate !== from.mealDate || to.mealType !== from.mealType) {
-    // Escribimos el destino antes de vaciar el origen: si lo segundo falla, la
-    // comida aparece duplicada, que es preferible a perderla.
-    await setMeal({ ...to, recipeId, servings })
-    await clearMeal(from)
+    // Una sola RPC transaccional (migración 20260731110000). Antes eran dos
+    // escrituras y, si fallaba la segunda, la comida quedaba duplicada en la
+    // semana (auditoría 2026-07-31).
+    const supabase = await createSupabaseServerClient()
+    const { error } = await supabase.rpc(
+      'plan_move_meal' as never,
+      {
+        from_date_value: from.mealDate,
+        from_type_value: from.mealType,
+        to_date_value: to.mealDate,
+        to_type_value: to.mealType,
+        idempotency_key: parseIdempotencyKey(
+          createIdempotencyKey('plan_move_meal'),
+        ),
+      } as never,
+    )
+    if (error) failure(error)
   }
   backToWeek(to.mealDate)
 }

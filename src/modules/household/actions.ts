@@ -133,11 +133,21 @@ export async function resetPilotHousehold(confirmation: string): Promise<void> {
   })
   if (error) failure(error)
 
+  // El hogar ya está borrado en la base de datos. Abortar en el primer fallo
+  // dejaba cuentas de acceso huérfanas y sin decir cuántas (auditoría
+  // 2026-07-31): se intentan todas y solo después se informa del resultado.
   const memberIds = data ?? []
   const admin = createSupabaseAdminClient()
+  const failed: string[] = []
   for (const memberId of memberIds) {
     const { error: deleteError } = await admin.auth.admin.deleteUser(memberId)
-    if (deleteError) failure(deleteError)
+    if (deleteError) failed.push(memberId)
+  }
+  if (failed.length) {
+    throw new AppError(
+      'UNEXPECTED',
+      `El hogar se ha borrado, pero han quedado ${failed.length} cuenta(s) de acceso sin eliminar`,
+    )
   }
 }
 

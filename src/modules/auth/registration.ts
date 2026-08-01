@@ -2,6 +2,8 @@
 
 import { createHash, timingSafeEqual } from 'node:crypto'
 
+import { headers } from 'next/headers'
+
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 import { hashInvitationCode } from './invitation-code'
@@ -16,8 +18,50 @@ export type RegistrationResult =
         | 'bootstrap_unavailable'
         | 'email_taken'
         | 'invalid_input'
+        | 'rate_limited'
         | 'unexpected'
     }
+
+// Esta acción es invocable SIN sesión, tantas veces como se quiera: sin freno,
+// el código de arranque (que lo escribe una persona a mano, no lo genera la
+// app) se puede probar por fuerza bruta (auditoría 2026-07-31).
+//
+// ponytail: contador en memoria del proceso. Techo conocido: Vercel puede
+// tener varias instancias vivas, así que el límite real es N_instancias × 5.
+// Basta para convertir "horas" en "inviable" en un piloto de dos cuentas; si
+// hiciera falta un límite exacto, toca Vercel Firewall o un contador en Redis.
+const MAX_ATTEMPTS = 5
+const ATTEMPT_WINDOW_MS = 15 * 60_000
+const attempts = new Map<string, { count: number; firstAt: number }>()
+
+async function callerFingerprint(): Promise<string> {
+  const requestHeaders = await headers()
+  return (
+    requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    requestHeaders.get('x-real-ip') ||
+    'unknown'
+  )
+}
+
+/** True si esta procedencia ya agotó sus intentos fallidos en la ventana. */
+function isRateLimited(key: string): boolean {
+  const now = Date.now()
+  for (const [entry, { firstAt }] of attempts) {
+    if (now - firstAt >= ATTEMPT_WINDOW_MS) attempts.delete(entry)
+  }
+  return (attempts.get(key)?.count ?? 0) >= MAX_ATTEMPTS
+}
+
+/** Solo cuentan los intentos FALLIDOS: un alta correcta no gasta cupo. */
+function recordFailedAttempt(key: string): void {
+  const now = Date.now()
+  const current = attempts.get(key)
+  if (!current || now - current.firstAt >= ATTEMPT_WINDOW_MS) {
+    attempts.set(key, { count: 1, firstAt: now })
+    return
+  }
+  current.count += 1
+}
 
 function isValidEmail(email: string): boolean {
   const at = email.indexOf('@')
@@ -37,6 +81,18 @@ function matchesBootstrapCode(candidate: string, expected: string): boolean {
 }
 
 export async function registerAccount(input: {
+  email: string
+  password: string
+  code?: string
+}): Promise<RegistrationResult> {
+  const caller = await callerFingerprint()
+  if (isRateLimited(caller)) return { ok: false, reason: 'rate_limited' }
+  const result = await attemptRegistration(input)
+  if (!result.ok) recordFailedAttempt(caller)
+  return result
+}
+
+async function attemptRegistration(input: {
   email: string
   password: string
   code?: string

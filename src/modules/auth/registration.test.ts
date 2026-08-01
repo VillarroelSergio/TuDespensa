@@ -11,6 +11,19 @@ vi.mock('@/lib/supabase/admin', () => ({
   })),
 }))
 
+// El límite de intentos cuenta por procedencia. Cada prueba estrena la suya
+// para no gastarse el cupo entre unas y otras; la prueba del propio límite fija
+// la suya a propósito.
+const caller = { ip: '' }
+let callerSeq = 0
+
+vi.mock('next/headers', () => ({
+  headers: () =>
+    Promise.resolve({
+      get: (name: string) => (name === 'x-forwarded-for' ? caller.ip : null),
+    }),
+}))
+
 import { registerAccount } from './registration'
 import { hashInvitationCode } from './invitation-code'
 
@@ -44,6 +57,8 @@ const BOOTSTRAP_CODE = 'arranque-piloto'
 
 beforeEach(() => {
   vi.clearAllMocks()
+  callerSeq += 1
+  caller.ip = `203.0.113.${callerSeq}`
   process.env.PILOT_BOOTSTRAP_CODE = BOOTSTRAP_CODE
   createUser.mockResolvedValue({
     data: { user: { id: 'new-user-id' } },
@@ -235,5 +250,38 @@ describe('registerAccount', () => {
 
     expect(result).toEqual({ ok: false, reason: 'invalid_input' })
     expect(createUser).not.toHaveBeenCalled()
+  })
+
+  // Sin este freno, el código de arranque —que lo escribe una persona a mano—
+  // se puede probar por fuerza bruta: la acción es invocable sin sesión y sin
+  // límite (auditoría 2026-07-31).
+  it('stops brute force after five failed attempts from the same caller', async () => {
+    mockRpc({ householdExists: false })
+    const attempt = () =>
+      registerAccount({
+        email: 'first@example.com',
+        password: 'password1',
+        code: 'codigo-incorrecto',
+      })
+
+    for (let index = 0; index < 5; index += 1) {
+      expect(await attempt()).toEqual({ ok: false, reason: 'code_invalid' })
+    }
+
+    expect(await attempt()).toEqual({ ok: false, reason: 'rate_limited' })
+    expect(createUser).not.toHaveBeenCalled()
+  })
+
+  it('does not spend the quota of an unrelated caller', async () => {
+    mockRpc({ householdExists: false })
+    caller.ip = '198.51.100.7'
+
+    const result = await registerAccount({
+      email: 'first@example.com',
+      password: 'password1',
+      code: BOOTSTRAP_CODE,
+    })
+
+    expect(result).toEqual({ ok: true })
   })
 })

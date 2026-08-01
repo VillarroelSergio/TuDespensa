@@ -7,7 +7,8 @@
     "node": "24.x"
   },
   "overrides": {
-    "postcss": "8.5.25"
+    "postcss": "8.5.25",
+    "sharp": "^0.35.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -20,7 +21,7 @@
     "dev:stop": "npx supabase stop",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --ignore-pattern \".git-worktrees/**\" --max-warnings=0",
+    "lint": "eslint . --ignore-pattern \".git-worktrees/**\" --ignore-pattern \"supabase/.temp/**\" --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",

@@ -8,6 +8,19 @@
 -- Las tablas poc_* nunca han contenido datos de la aplicación, solo los del
 -- ensayo de concurrencia con el que se validó el diseño de dos sesiones.
 
+-- ORDEN IMPORTANTE: las tablas van primero (auditoría 2026-07-31). Cuatro
+-- políticas RLS de las tablas poc_* invocan poc_is_household_member(uuid), así
+-- que borrar la función antes que las tablas fallaba con "policy … depends on
+-- function" y abortaba la migración entera: `supabase db reset` —y por tanto
+-- reconstruir el proyecto desde cero— no funcionaba. Las políticas caen solas
+-- con su tabla, y después ya no queda nada que dependa de la función. Todos
+-- los drops son `if exists`, así que reordenarlos es inocuo allí donde la
+-- migración ya se hubiera aplicado.
+drop table if exists public.poc_idempotency_keys;
+drop table if exists public.poc_pantry_items;
+drop table if exists public.poc_household_members;
+drop table if exists public.poc_households;
+
 drop function if exists public.poc_consume_pantry_item(uuid, integer, text);
 drop function if exists public.poc_update_pantry_item(uuid, integer, text);
 drop function if exists public.poc_is_household_member(uuid);
@@ -15,8 +28,3 @@ drop function if exists public.poc_is_household_member(uuid);
 -- El trigger de dos miembros activos cae con su tabla, pero la función queda
 -- suelta si no se nombra.
 drop function if exists public.poc_enforce_two_active_members() cascade;
-
-drop table if exists public.poc_idempotency_keys;
-drop table if exists public.poc_pantry_items;
-drop table if exists public.poc_household_members;
-drop table if exists public.poc_households;

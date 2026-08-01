@@ -558,13 +558,20 @@ footer {
   border-color: var(--primary);
   color: var(--primary-strong);
 }
+/* Estaba en flujo, al final de una lista larga: el usuario marcaba un producto
+   arriba y nunca llegaba a ver «Añadir a compra». Fijo y siempre visible. */
 .pantry-toast {
+  position: fixed;
+  z-index: 30;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: 50%;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
-  width: min(100%, 44rem);
-  margin-top: 1rem;
+  width: min(calc(100% - 2rem), 44rem);
+  transform: translateX(-50%);
+  box-shadow: 0 0.9rem 2rem rgb(63 44 23 / 28%);
   border-radius: 0.5rem;
   background: var(--ink);
   padding: 0.75rem 1rem;
@@ -2769,6 +2776,10 @@ summary:focus-visible,
     padding: 0.4rem;
     box-shadow: 0 0.9rem 2rem rgb(63 44 23 / 16%);
     backdrop-filter: blur(18px);
+  }
+  .pantry-toast {
+    /* Por encima del dock fijo. */
+    bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 4.75rem);
   }
   .app-shell__sign-out-mobile {
     position: fixed;

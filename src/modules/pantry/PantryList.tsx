@@ -36,6 +36,7 @@ function PantryRow({
   onSetPresence,
   onRemove,
   onSelect,
+  onAddToShopping,
   showLegacyPresenceControls = false,
 }: {
   item: PresentedPantryItem
@@ -47,6 +48,7 @@ function PantryRow({
   ) => void
   onRemove?: (item: PresentedPantryItem) => void
   onSelect?: (item: PresentedPantryItem) => void
+  onAddToShopping?: (item: PresentedPantryItem) => void
   showLegacyPresenceControls?: boolean
 }) {
   return (
@@ -155,6 +157,16 @@ function PantryRow({
           aria-label={`Marcar ${item.name} como terminado`}
         >
           Se terminó
+        </button>
+      ) : null}
+      {onAddToShopping ? (
+        <button
+          className="pantry-quick-action"
+          onClick={() => onAddToShopping(item)}
+          type="button"
+          aria-label={`Añadir ${item.name} a la compra`}
+        >
+          Añadir a compra
         </button>
       ) : null}
       {onMarkLow &&
@@ -332,6 +344,7 @@ export function PantryList({
                           onSetPresence={onSetPresence}
                           onRemove={onRemove}
                           onSelect={onSelect}
+                          onAddToShopping={onAddToShopping}
                         />
                       ))}
                     </div>

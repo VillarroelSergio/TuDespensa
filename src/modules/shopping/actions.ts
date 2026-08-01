@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
+import { AppError } from '@/lib/errors/AppError'
 import {
   demoCheckoutLines,
   demoFixturesEnabled,
@@ -18,6 +19,26 @@ import type { CheckoutLine, ShoppingItem } from './types'
 
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
   return callRpc<T>(name, args, ['/compra'])
+}
+
+// Las RPC de lote solo comprueban que llegue una lista, no cuántos elementos
+// trae, y cada elemento dispara una búsqueda de alimento (auditoría
+// 2026-07-31). Con un ticket mal pegado eso se convierte en miles de
+// operaciones dentro de una sola transacción.
+//
+// ponytail: el tope vive aquí, en el borde. Techo conocido: quien tenga la
+// clave anónima puede llamar a la RPC saltándose este código, así que el tope
+// definitivo va en las propias funciones de PostgreSQL; esto cubre el uso real
+// de la aplicación mientras tanto.
+const MAX_BATCH_ITEMS = 200
+
+function assertBatchSize(items: readonly unknown[], what: string): void {
+  if (items.length > MAX_BATCH_ITEMS) {
+    throw new AppError(
+      'INVALID_INPUT',
+      `No podemos procesar más de ${MAX_BATCH_ITEMS} ${what} de una vez`,
+    )
+  }
 }
 
 export async function addShoppingItem(input: {
@@ -44,6 +65,7 @@ export async function addPlanItems(
   key?: string,
 ) {
   if (!items.length) return { added: 0 }
+  assertBatchSize(items, 'ingredientes')
   return rpc<{ added: number }>('shopping_add_plan_items', {
     items: items.map((item) => ({
       name: item.name.trim(),
@@ -69,6 +91,7 @@ export async function importTicketItems(
     .map((item) => ({ ...item, name: item.name.trim() }))
     .filter((item) => item.name.length > 0 && item.name.length <= 120)
   if (!clean.length) return { added: 0 }
+  assertBatchSize(clean, 'productos')
   return rpc<{ added: number }>('shopping_add_ticket_items', {
     items: clean.map((item) => ({
       name: item.name,
@@ -213,6 +236,7 @@ export async function confirmPurchase(
   lines: { itemId: string; version: number; zone?: PantryZone }[],
   key?: string,
 ) {
+  assertBatchSize(lines, 'productos')
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.rpc(
     'shopping_confirm_purchase' as never,
@@ -236,6 +260,7 @@ export async function confirmPurchase(
 export async function setPurchaseQuantities(
   lines: { itemId: string; version: number; quantity: number }[],
 ) {
+  assertBatchSize(lines, 'productos')
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.rpc(
     'shopping_set_purchase_quantities' as never,
